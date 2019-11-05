@@ -3,9 +3,11 @@ import Sequelize from "sequelize";
 import { DB_CONNECTION_STRING } from "../config";
 import { IVideoAttributes, IVideoInstance, EventsFactory } from "./video";
 import { ICommentInstance, ICommentAttributes, CommentsFactory } from "./comments";
+import { IUserInstance, IUserAttributes, UsersFactory } from "./user";
 
 export interface IDBInterface {
   videos: Sequelize.Model<IVideoInstance, IVideoAttributes>;
+  users: Sequelize.Model<IUserInstance, IUserAttributes>;
   comment: Sequelize.Model<ICommentInstance, ICommentAttributes>;
   sequelize: Sequelize.Sequelize;
 }
@@ -17,6 +19,7 @@ const sequelize: Sequelize.Sequelize = new Sequelize(DB_CONNECTION_STRING, {
 const db: IDBInterface = {
   sequelize,
   videos: EventsFactory(sequelize, Sequelize),
+  users: UsersFactory(sequelize, Sequelize),
   comment: CommentsFactory(sequelize, Sequelize),
 };
 
