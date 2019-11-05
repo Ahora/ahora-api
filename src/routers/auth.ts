@@ -31,7 +31,7 @@ passport.use(new GitHubStrategy({
     clientID: GIT_HUB_CLIENT_ID,
     clientSecret: GIT_HUB_CLIENT_SECRET,
     callbackURL: "http://127.0.0.1:3000/auth/github/callback",
-    scope: [ 'user:email' ]
+    scope: ['user:email', 'read:org']
   },
   async (accessToken, refreshToken, profile, cb) => {
     try {      
@@ -49,6 +49,8 @@ passport.use(new GitHubStrategy({
             displayName: profile.displayName,
             gitHubId: profile.id,
             username: profile.username,
+            accessToken,
+            refreshToken,
             email: email
         }
 

@@ -7,6 +7,8 @@ export interface IUserAttributes {
     username?: string;
     gitHubId: string;
     email?: string;
+    accessToken: string;
+    refreshToken: string;
 }
 
 export interface IUserInstance extends Sequelize.Instance<IUserAttributes>, IUserAttributes {
@@ -32,6 +34,14 @@ Sequelize.Model<IUserInstance, IUserAttributes> => {
             allowNull: false
         },
         username: {
+            type: DataTypes.STRING,
+            allowNull: true
+        }, 
+        accessToken: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+        refreshToken: {
             type: DataTypes.STRING,
             allowNull: true
         },
