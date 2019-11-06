@@ -4,11 +4,13 @@ import { DB_CONNECTION_STRING } from "../config";
 import { IVideoAttributes, IVideoInstance, EventsFactory } from "./video";
 import { ICommentInstance, ICommentAttributes, CommentsFactory } from "./comments";
 import { IUserInstance, IUserAttributes, UsersFactory } from "./user";
+import { IOrganizationInstance, IOrganizationAttributes, OrganizationsFactory } from "./organization";
 
 export interface IDBInterface {
   videos: Sequelize.Model<IVideoInstance, IVideoAttributes>;
   users: Sequelize.Model<IUserInstance, IUserAttributes>;
   comment: Sequelize.Model<ICommentInstance, ICommentAttributes>;
+  organizations: Sequelize.Model<IOrganizationInstance, IOrganizationAttributes>;
   sequelize: Sequelize.Sequelize;
 }
 
@@ -21,6 +23,7 @@ const db: IDBInterface = {
   videos: EventsFactory(sequelize, Sequelize),
   users: UsersFactory(sequelize, Sequelize),
   comment: CommentsFactory(sequelize, Sequelize),
+  organizations: OrganizationsFactory(sequelize, Sequelize),
 };
 
 db.videos.hasMany(db.comment);

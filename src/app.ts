@@ -25,7 +25,7 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use("/api/videos", videosRouter)
-app.use("/api/orgs", orgsRouter)
+app.use("/api/organizations", orgsRouter)
 app.use("/auth", authRouter)
 
 export default app;
