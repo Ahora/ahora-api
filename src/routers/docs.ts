@@ -1,12 +1,12 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import db from "../models";
-import { IVideoInstance } from "../models/video";
+import { IDocInstance } from "../models/docs";
 
 const router: Router = express.Router();
 
 router.get("/", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const videos: IVideoInstance[] = await db.videos.findAll({
+        const videos: IDocInstance[] = await db.videos.findAll({
             where: req.query
         });
         res.send(videos);
@@ -17,7 +17,7 @@ router.get("/", async (req: Request, res: Response, next: NextFunction): Promise
 
 router.post("/", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const event: IVideoInstance = await db.videos.create(req.body);
+        const event: IDocInstance = await db.videos.create(req.body);
         res.send(event);
     } catch (error) {
         next(error);
@@ -49,7 +49,7 @@ router.put("/:id", async (req: Request, res: Response, next: NextFunction): Prom
 
 router.get("/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const video: IVideoInstance | null = await db.videos.findOne({
+        const video: IDocInstance | null = await db.videos.findOne({
             where:  {
                 id: req.params.id
             }

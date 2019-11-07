@@ -1,23 +1,24 @@
 import * as Sequelize from "sequelize";
 import { SequelizeAttributes } from "./base";
 
-export interface IVideoAttributes {
+export interface IDocAttributes {
     id: number;
     subject: string;
     description: string;
     docType: string;
     userAlias: string;
     metadata: any;
+    organizationId: number;
 }
 
-export interface IVideoInstance extends Sequelize.Instance<IVideoAttributes>, IVideoAttributes {
+export interface IDocInstance extends Sequelize.Instance<IDocAttributes>, IDocAttributes {
 }
 
 // tslint:disable-next-line:typedef
 export const EventsFactory =
 (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-Sequelize.Model<IVideoInstance, IVideoAttributes> => {
-    let attributes:SequelizeAttributes<IVideoAttributes> = {
+Sequelize.Model<IDocInstance, IDocAttributes> => {
+    let attributes:SequelizeAttributes<IDocAttributes> = {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -41,10 +42,14 @@ Sequelize.Model<IVideoInstance, IVideoAttributes> => {
         },
         userAlias: {
             type: DataTypes.STRING
+        },
+        organizationId: {
+            type: DataTypes.INTEGER,
+            allowNull: false
         }
     };
 
-    return sequelize.define<IVideoInstance, IVideoAttributes>("videos", attributes, {
+    return sequelize.define<IDocInstance, IDocAttributes>("docs", attributes, {
         timestamps: true
     });
   };

@@ -21,20 +21,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user: any = req.user;
-        const octokit = new Octokit({
-            auth: user.accessToken
-        });
-        const orgResponse: Octokit.Response<Octokit.OrgsGetResponse> = await octokit.orgs.get( {
-            org: req.body.login
-        });
-
-        const orgFromDB: IOrganizationInstance = await  db.organizations.create({
-            description: orgResponse.data.description,
-            login: orgResponse.data.login,
-            node_id: orgResponse.data.node_id
-        });
-
+        const orgFromDB: IOrganizationInstance = await  db.organizations.create(req.body);
         res.send(orgFromDB);
     } catch (error) {
         next(error);

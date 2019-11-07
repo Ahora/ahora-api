@@ -6,8 +6,6 @@ const router: Router = express.Router();
 
 router.get("/:eventId/comments", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        console.log("params", req.params);
-
         const comments: ICommentInstance[] = await db.comment.findAll({
             where: {
                 eventId: parseInt(req.params.eventId)

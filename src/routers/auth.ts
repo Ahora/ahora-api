@@ -2,7 +2,7 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import passport from "passport";
 import GitHubStrategy from "passport-github";
 import db from "../models";
-import { IUserInstance, IUserAttributes } from "../models/user";
+import { IUserInstance, IUserAttributes } from "../models/users";
 import { GIT_HUB_CLIENT_ID, GIT_HUB_CLIENT_SECRET } from "../config";
 
 // Configure Passport authenticated session persistence.
