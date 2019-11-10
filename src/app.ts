@@ -34,7 +34,7 @@ app.post("/", (req: Request, res: Response, next: NextFunction) => {
 });
 
 
-app.use(routeCreate("/api/organizations/:organizationId/tags", db.tags));
+app.use(routeCreate("/api/organizations/:organizationId/labels", db.labels));
 app.use(routeCreate("/api/organizations/:organizationId/docs", db.docs));
 app.use(routeCreate("/api/organizations/:organizationId/docs/:docId/comments", db.comment));
 app.use(routeCreate("/api/organizations", db.organizations));

@@ -5,14 +5,14 @@ import { IDocInstance, IDocAttributes, EventsFactory } from "./docs";
 import { ICommentInstance, ICommentAttributes, CommentsFactory } from "./comments";
 import { IUserInstance, IUserAttributes, UsersFactory } from "./users";
 import { IOrganizationInstance, IOrganizationAttributes, OrganizationsFactory } from "./organization";
-import { ITagInstance, TagsFactory } from "./tags";
+import { ILabelInstance, LabelsFactory, ILabelAttributes } from "./labels";
 
 export interface IDBInterface {
   docs: Sequelize.Model<IDocInstance, IDocAttributes>;
   users: Sequelize.Model<IUserInstance, IUserAttributes>;
   comment: Sequelize.Model<ICommentInstance, ICommentAttributes>;
   organizations: Sequelize.Model<IOrganizationInstance, IOrganizationAttributes>;
-  tags: Sequelize.Model<ITagInstance, ITagInstance>;
+  labels: Sequelize.Model<ILabelInstance, ILabelAttributes>;
   sequelize: Sequelize.Sequelize;
 }
 
@@ -26,11 +26,11 @@ const db: IDBInterface = {
   users: UsersFactory(sequelize, Sequelize),
   comment: CommentsFactory(sequelize, Sequelize),
   organizations: OrganizationsFactory(sequelize, Sequelize),
-  tags: TagsFactory(sequelize, Sequelize),
+  labels: LabelsFactory(sequelize, Sequelize),
 };
 
 db.docs.hasMany(db.comment);
-db.organizations.hasMany(db.tags);
+db.organizations.hasMany(db.labels);
 
 db.sequelize.sync().then(()=> {
   console.log("Database synced successfully")

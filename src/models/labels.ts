@@ -1,21 +1,21 @@
 import * as Sequelize from "sequelize";
 import { SequelizeAttributes } from "./base";
 
-export interface ITagsAttributes {
+export interface ILabelAttributes {
     id?: number;
     name: string;
     color: string;
 }
 
-export interface ITagInstance extends Sequelize.Instance<ITagsAttributes>, ITagsAttributes {
+export interface ILabelInstance extends Sequelize.Instance<ILabelAttributes>, ILabelAttributes {
     id: number;
 }
 
 // tslint:disable-next-line:typedef
-export const TagsFactory =
+export const LabelsFactory =
 (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-Sequelize.Model<ITagInstance, ITagsAttributes> => {
-    let attributes:SequelizeAttributes<ITagsAttributes> = {
+Sequelize.Model<ILabelInstance, ILabelAttributes> => {
+    let attributes:SequelizeAttributes<ILabelAttributes> = {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -31,7 +31,7 @@ Sequelize.Model<ITagInstance, ITagsAttributes> => {
         }
     };
 
-    return sequelize.define<ITagInstance, ITagsAttributes>("tags", attributes, {
+    return sequelize.define<ILabelInstance, ILabelAttributes>("tags", attributes, {
         timestamps: true
     });
   };
