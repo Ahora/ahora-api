@@ -51,7 +51,7 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
     });
 
 
-    router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    router.get(path + "/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             const entity: TInstance | null = await model.findOne({
                 where:  {

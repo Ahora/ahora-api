@@ -5,6 +5,7 @@ export interface ILabelAttributes {
     id?: number;
     name: string;
     color: string;
+    description: string;
 }
 
 export interface ILabelInstance extends Sequelize.Instance<ILabelAttributes>, ILabelAttributes {
@@ -26,6 +27,10 @@ Sequelize.Model<ILabelInstance, ILabelAttributes> => {
             allowNull: false
         }, 
         color: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        description: {
             type: DataTypes.STRING,
             allowNull: true
         }

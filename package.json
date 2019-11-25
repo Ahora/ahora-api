@@ -57,7 +57,6 @@
     "@types/express": "^4.16.0",
     "@types/sequelize": "^4.27.32",
     "connect-sqlite3": "^0.9.11",
-    "couchbase": "^2.6.8",
     "express": "^4.16.4",
     "express-session": "^1.17.0",
     "install": "^0.13.0",
