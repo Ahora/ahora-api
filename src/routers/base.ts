@@ -7,10 +7,10 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
         
     router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const videos: TInstance[] = await model.findAll({
+            const entity: TInstance[] = await model.findAll({
                 where:  { ...req.query, ...req.params  }
             });
-            res.send(videos);
+            res.send(entity);
         } catch (error) {
             next(error);
         }
@@ -18,11 +18,13 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
 
     router.post(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const event: TInstance = await model.create({
+            if(req.user)
+                req.body.userAlias = (req.user! as any).username;
+            const entity: TInstance = await model.create({
                 ...req.body,
                 ...req.params
             });
-            res.send(event);
+            res.send(entity);
         } catch (error) {
             next(error);
         }
@@ -44,7 +46,7 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
             await model.update(req.body, {
                 where: { id: req.params.id, ...req.params  }
             });
-            res.send();
+            res.send(req.body);
         } catch (error) {
             next(error);
         }

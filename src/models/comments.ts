@@ -4,8 +4,7 @@ import { SequelizeAttributes } from "./base";
 export interface ICommentAttributes {
     id: number;
     comment: string;
-    authorId: number,
-    image: string;
+    userAlias: number,
 
 }
 
@@ -26,12 +25,11 @@ export const CommentsFactory = (sequelize: Sequelize.Sequelize, DataTypes: Seque
             type: DataTypes.TEXT,
             allowNull: false,
         },
-        authorId: {
-            type: DataTypes.INTEGER
-        },
-        image: {
-            type: DataTypes.STRING
-        },
+        userAlias: {
+            type: DataTypes.STRING,
+            allowNull: false,
+
+        }
 
     };
 

@@ -28,10 +28,14 @@ app.get("/api/status", (req: Request, res: Response, next: NextFunction) => {
   res.send({ok: "ok", user: req.user, auth: (req as any).auth});
 });
 
+app.get("/api/me", (req: Request, res: Response, next: NextFunction) => {
+  res.send(req.user);
+});
+
 
 app.use(routeCreate("/api/organizations/:organizationId/labels", db.labels));
 app.use(routeCreate("/api/organizations/:organizationId/docs", db.docs));
-app.use(routeCreate("/api/organizations/:organizationId/docs/:docId/comments", db.comment));
+app.use("/api/organizations/:organizationId", routeCreate("/docs/:docId/comments", db.comment));
 app.use(routeCreate("/api/organizations/:organizationId/docs/:docId/labels", db.docLabels));
 app.use(routeCreate("/api/organizations", db.organizations));
 app.use("/auth", authRouter)
