@@ -32,7 +32,7 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
 
     });
 
-    router.delete(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    router.delete(path + "/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             await model.destroy({
                 where: { id: req.params.id, ...req.params }
@@ -42,7 +42,7 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
             next(error);
         }
     });
-    router.put(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    router.put(path + "/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             await model.update(req.body, {
                 where: { id: req.params.id, ...req.params  }

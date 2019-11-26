@@ -21,7 +21,7 @@ router.get("/:eventId/comments", async (req: Request, res: Response, next: NextF
 router.post("/:eventId/comments", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         req.body.eventId = parseInt(req.params.eventId);
-        req.body.authorId = req.user.id
+        req.body.authorId = req.user!.id
 
         const comment: ICommentInstance = await db.comment.create(req.body);
         res.send(comment);
