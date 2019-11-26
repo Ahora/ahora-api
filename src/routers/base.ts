@@ -1,6 +1,7 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import { IDocInstance } from "../models/docs";
 import Sequelize from "sequelize";
+import marked from "marked";
 
 export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>) => {
     const router: Router = express.Router();
@@ -60,7 +61,17 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
                     id: req.params.id, ...req.params 
                 }
             });
-            res.send(entity);
+
+            if((entity as any).description) {
+                marked((entity as any).description, (error: any, parsedResult: string) => {
+                    (entity as any).dataValues.htmlDescription = parsedResult;
+                    res.send(entity);
+           
+                });
+            }
+            else {
+                res.send(entity);
+            }
         } catch (error) {
             next(error);
         }
