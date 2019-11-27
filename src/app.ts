@@ -65,6 +65,7 @@ const generateCommentHTML = async (comment: ICommentAttributes): Promise<ICommen
 
 
 app.use(routeCreate("/api/organizations/:organizationId/labels", db.labels));
+app.use(routeCreate("/api/organizations/:organizationId/statuses", db.docStatuses));
 app.use(routeCreate("/api/organizations/:organizationId/docs", db.docs, { beforePut: generateDocHTML, beforePost: generateDocHTML}));
 app.use("/api/organizations/:organizationId", routeCreate("/docs/:docId/comments", db.comment, { beforePut: generateCommentHTML, beforePost: generateCommentHTML}));
 app.use(routeCreate("/api/organizations/:organizationId/docs/:docId/labels", db.docLabels));

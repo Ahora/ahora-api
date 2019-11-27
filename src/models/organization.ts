@@ -2,7 +2,7 @@ import * as Sequelize from "sequelize";
 import { SequelizeAttributes } from "./base";
 
 export interface IOrganizationAttributes {
-    id: number;
+    id?: number;
     login: string;
     node_id?: string;
     description?: string;

@@ -10,6 +10,7 @@ export interface IDocAttributes {
     userAlias: string;
     metadata: any;
     organizationId: number;
+    status: number;
 }
 
 export interface IDocInstance extends Sequelize.Instance<IDocAttributes>, IDocAttributes {
@@ -35,6 +36,10 @@ Sequelize.Model<IDocInstance, IDocAttributes> => {
         },
         metadata: {
             type: DataTypes.JSON,
+            allowNull: true
+        },
+        status: {
+            type: DataTypes.INTEGER,
             allowNull: true
         },
         description: {
