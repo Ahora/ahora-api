@@ -4,6 +4,7 @@ import { SequelizeAttributes } from "./base";
 export interface ICommentAttributes {
     id: number;
     comment: string;
+    htmlComment: string;
     userAlias: number,
 
 }
@@ -22,6 +23,10 @@ export const CommentsFactory = (sequelize: Sequelize.Sequelize, DataTypes: Seque
             primaryKey: true
         },
         comment: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+        },
+        htmlComment: {
             type: DataTypes.TEXT,
             allowNull: false,
         },

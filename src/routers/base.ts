@@ -3,7 +3,12 @@ import { IDocInstance } from "../models/docs";
 import Sequelize from "sequelize";
 import marked from "marked";
 
-export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>) => {
+export interface RouterHooks<TAttributes> {
+    beforePut(entity: TAttributes): Promise<TAttributes>;
+    beforePost(entity: TAttributes): Promise<TAttributes>;
+}
+
+export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>, hooks: RouterHooks<TAttributes> | null = null) => {
     const router: Router = express.Router();
         
     router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -21,6 +26,10 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
         try {
             if(req.user)
                 req.body.userAlias = (req.user! as any).username;
+
+            if(hooks && hooks.beforePost) {
+                req.body = await hooks.beforePost(req.body);
+            }
             const entity: TInstance = await model.create({
                 ...req.body,
                 ...req.params
@@ -44,6 +53,9 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
     });
     router.put(path + "/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
+            if(hooks && hooks.beforePut) {
+                req.body = await hooks.beforePut(req.body);
+            }
             await model.update(req.body, {
                 where: { id: req.params.id, ...req.params  }
             });
