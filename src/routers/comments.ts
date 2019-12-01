@@ -1,56 +1,30 @@
 import express, { Router, Request, Response, NextFunction } from "express";
-import db from "../models";
-import { ICommentInstance } from "../models/comments";
+import Sequelize from "sequelize";
+import { IDocInstance, IDocAttributes } from "../models/docs";
+import routeCreate, { RouterHooks } from "./base";
+import db from "../models/index";
+import marked from "marked";
+import { ICommentAttributes, ICommentInstance } from "../models/comments";
 
-const router: Router = express.Router();
-
-router.get("/:eventId/comments", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-        const comments: ICommentInstance[] = await db.comment.findAll({
-            where: {
-                eventId: parseInt(req.params.eventId)
-            },
-            order: [["createdAt", "desc"]]
+const generateDocHTML = async (comment: ICommentAttributes): Promise<ICommentAttributes> => {
+    return new Promise<ICommentAttributes>((resolve, reject) => {
+        marked(comment.comment, (error: any, parsedResult: string) => {
+        if(error) {
+            reject(error);
+        }
+        else {
+            comment.htmlComment = parsedResult;
+            resolve(comment);
+        }
         });
-        res.send(comments);
-    } catch (error) {
-        next(error);
-    }
-});
+    });
+}
 
-router.post("/:eventId/comments", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-        req.body.eventId = parseInt(req.params.eventId);
-        req.body.authorId = req.user!.id
+export default (path: string) => {
 
-        const comment: ICommentInstance = await db.comment.create(req.body);
-        res.send(comment);
-    } catch (error) {
-        next(error);
-    }
-
-});
-
-router.delete("/:eventId/comments/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-        await db.comment.destroy({
-            where: { id: req.params.id }
-        });
-        res.send();
-    } catch (error) {
-        next(error);
-    }
-});
-
-router.put("/:eventId/comments/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-        await db.comment.update(req.body, {
-            where: { id: req.params.id }
-        });
-        res.send();
-    } catch (error) {
-        next(error);
-    }
-});
-
-export default router;
+    const router  = routeCreate<ICommentInstance, ICommentAttributes>(path, db.comment, {
+        post: { before: generateDocHTML },
+        put: { before: generateDocHTML }
+    });
+    return router;
+};

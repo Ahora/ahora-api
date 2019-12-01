@@ -4,8 +4,16 @@ import Sequelize from "sequelize";
 import marked from "marked";
 
 export interface RouterHooks<TAttributes> {
-    beforePut?(entity: TAttributes, req?: Request): Promise<TAttributes>;
-    beforePost?(entity: TAttributes, req?: Request): Promise<TAttributes>;
+    put?: MethodHook<TAttributes>;
+    get?: MethodHook<TAttributes>;
+    post?: MethodHook<TAttributes>;
+    delete?: MethodHook<TAttributes>;
+}
+
+export interface MethodHook<TAttributes> {
+    before?(entity: TAttributes, req: Request): Promise<TAttributes>;
+    getAdditionalParams?(req: Request): any;
+    before?(after: TAttributes, req?: Request): Promise<TAttributes>;
 }
 
 export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>, hooks: RouterHooks<TAttributes> | null = null) => {
@@ -13,11 +21,11 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
         
     router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            const query = { ...req.query };
-            if(req.org) {
-                query.organizationId = req.org.id;
+
+            if(hooks && hooks.get && hooks.get.getAdditionalParams) {
+                req.query = {...req.query, ...hooks.get.getAdditionalParams(req)}
             }
-            const entity: TInstance[] = await model.findAll({where:  query });
+            const entity: TInstance[] = await model.findAll({where: req.query });
             res.send(entity);
         } catch (error) {
             next(error);
@@ -30,8 +38,8 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
             if(req.user)
                 req.body.userAlias = (req.user! as any).username;
 
-            if(hooks && hooks.beforePost) {
-                req.body = await hooks.beforePost(req.body, req);
+            if(hooks && hooks.post && hooks.post.before) {
+                req.body = await hooks.post.before(req.body, req);
             }
             const entity: TInstance = await model.create({
                 ...req.body
@@ -46,7 +54,7 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
     router.delete(path + "/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             await model.destroy({
-                where: { id: req.params.id, organizationId: req.org!.id  }
+                where: { id: req.params.id  }
             });
             res.send();
         } catch (error) {
@@ -55,11 +63,11 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
     });
     router.put(path + "/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            if(hooks && hooks.beforePut) {
-                req.body = await hooks.beforePut(req.body, req);
+            if(hooks && hooks.put && hooks.put.before) {
+                req.body = await hooks.put.before(req.body, req);
             }
             await model.update(req.body, {
-                where: { id: req.params.id, organizationId: req.org!.id   }
+                where: { id: req.params.id  }
             });
             res.send(req.body);
         } catch (error) {
@@ -72,7 +80,7 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
         try {
             const entity: TInstance | null = await model.findOne({
                 where:  {
-                    id: req.params.id, organizationId: req.org!.id 
+                    id: req.params.id
                 }
             });
 
