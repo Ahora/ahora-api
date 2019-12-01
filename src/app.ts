@@ -8,6 +8,7 @@ import session from "express-session";
 const connectSQLite = require("connect-sqlite3");
 
 import routeCreate from "./routers/base";
+import routeDocCreate from "./routers/docs";
 import { IDocAttributes } from "./models/docs";
 import { ICommentAttributes } from "./models/comments";
 
@@ -34,21 +35,6 @@ app.get("/api/me", (req: Request, res: Response, next: NextFunction) => {
   res.send(req.user);
 });
 
-const generateDocHTML = async (doc: IDocAttributes): Promise<IDocAttributes> => {
-  return new Promise<IDocAttributes>((resolve, reject) => {
-    marked(doc.description, (error: any, parsedResult: string) => {
-      if(error) {
-        reject(error);
-      }
-      else {
-        doc.htmlDescription = parsedResult;
-        resolve(doc);
-      }
-    });
-  });
-} 
-
-
 const generateCommentHTML = async (comment: ICommentAttributes): Promise<ICommentAttributes> => {
   return new Promise<ICommentAttributes>((resolve, reject) => {
     marked(comment.comment, (error: any, parsedResult: string) => {
@@ -61,14 +47,21 @@ const generateCommentHTML = async (comment: ICommentAttributes): Promise<ICommen
       }
     });
   });
-} 
+}
 
+app.use("/api/organizations/:login", async (req: Request, res: Response, next: NextFunction) => {
+  const org = await db.organizations.findOne({ where: { login: req.params.login }});
+  if(org) {
+    req.org = org;
+  }
+  next();
+});
 
-app.use(routeCreate("/api/organizations/:organizationId/labels", db.labels));
-app.use(routeCreate("/api/organizations/:organizationId/statuses", db.docStatuses));
-app.use(routeCreate("/api/organizations/:organizationId/docs", db.docs, { beforePut: generateDocHTML, beforePost: generateDocHTML}));
-app.use("/api/organizations/:organizationId", routeCreate("/docs/:docId/comments", db.comment, { beforePut: generateCommentHTML, beforePost: generateCommentHTML}));
-app.use(routeCreate("/api/organizations/:organizationId/docs/:docId/labels", db.docLabels));
+app.use(routeCreate("/api/organizations/:login/labels", db.labels));
+app.use(routeCreate("/api/organizations/:login/statuses", db.docStatuses));
+app.use(routeDocCreate("/api/organizations/:login/docs"));
+app.use("/api/organizations/:login", routeCreate("/docs/:docId/comments", db.comment, { beforePut: generateCommentHTML, beforePost: generateCommentHTML}));
+app.use(routeCreate("/api/organizations/:login/docs/:docId/labels", db.docLabels));
 app.use(routeCreate("/api/organizations", db.organizations));
 app.use("/auth", authRouter)
 

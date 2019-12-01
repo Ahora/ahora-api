@@ -6,6 +6,7 @@ export interface IOrganizationAttributes {
     login: string;
     node_id?: string;
     description?: string;
+    defaultStatus?: number;
 }
 
 export interface IOrganizationInstance extends Sequelize.Instance<IOrganizationAttributes>, IOrganizationAttributes {
@@ -19,16 +20,22 @@ Sequelize.Model<IOrganizationInstance, IOrganizationAttributes> => {
     let attributes:SequelizeAttributes<IOrganizationAttributes> = {
         id: {
             type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true
-        },
-        node_id: {
-            type: DataTypes.STRING,
-            allowNull: false
+            allowNull: false,
+            primaryKey: true,
+            autoIncrement: true
         },
         login: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: false,
+            unique: true
+        },
+        node_id: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        defaultStatus: {
+            type: DataTypes.INTEGER,
+            allowNull: true
         }, 
         description: {
             type: DataTypes.STRING,

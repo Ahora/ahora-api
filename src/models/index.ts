@@ -39,6 +39,7 @@ db.docs.hasMany(db.comment);
 db.organizations.hasMany(db.labels);
 db.docs.hasMany(db.docLabels);
 db.docs.hasOne(db.docStatuses);
+db.organizations.hasOne(db.docStatuses);
 
 db.organizations.hasMany(db.docStatuses);
 db.docs.hasMany(db.docStatuses);
@@ -46,10 +47,10 @@ db.docs.hasMany(db.docStatuses);
 db.labels.hasMany(db.docLabels);
 
 db.sequelize.sync({ force: true }).then(async ()=> {
-
   const org = await db.organizations.create({
     login: "ahora",
-    node_id: "ahora"
+    node_id: "ahora",
+    defaultStatus: 1
   });
 
   await db.docStatuses.bulkCreate([

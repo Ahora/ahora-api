@@ -26,7 +26,7 @@ Sequelize.Model<IDocStatusInstance, IDocStatusAttributes> => {
         name: {
             type: DataTypes.STRING,
             allowNull: false
-        }, 
+        },
         color: {
             type: DataTypes.STRING,
             allowNull: true
