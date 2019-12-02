@@ -2,7 +2,7 @@ import { IOrganizationInstance } from "./models/organization";
 
 export {}
 
-export interface AhoraUser extends Express.User {
+export interface User {
   username: string;
 
 }
@@ -11,7 +11,7 @@ declare global {
    export namespace Express {
      export interface Request {
        org?: IOrganizationInstance;
-       user: AhoraUser | undefined;
+       user?: User;
      }
    }
  }

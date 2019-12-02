@@ -5,22 +5,24 @@ import marked from "marked";
 import db from "./models/index";
 import passport from "passport";
 import session from "express-session";
-const connectSQLite = require("connect-sqlite3");
-
 import routeCreate from "./routers/base";
 import routeDocCreate from "./routers/docs";
 import routeCommentCreate from "./routers/comments";
+import { COOKIE_SECRET, DB_CONNECTION_STRING } from "./config";
+import pgSession from "connect-pg-simple";
 
 const app: Express = ExpressInstance();
-const SQLiteStore = connectSQLite(session);
+
 app.use(session({
-    store: new SQLiteStore({
-    }),
-    secret: 'keyboard cat',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false }
-  }))
+  store: new (pgSession(session))({
+    conString: DB_CONNECTION_STRING
+  }),
+  secret: COOKIE_SECRET,
+  resave: false,
+  saveUninitialized: true,
+  cookie: { maxAge: 365 * 24 * 60 * 60 * 1000 } // 30 days
+}));
+
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(bodyParser.urlencoded({extended: true}));
