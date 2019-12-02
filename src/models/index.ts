@@ -46,7 +46,7 @@ db.docs.hasMany(db.docStatuses);
 
 db.labels.hasMany(db.docLabels);
 
-db.sequelize.sync({ force: true }).then(async ()=> {
+db.sequelize.sync({ force: false }).then(async ()=> {
   const org = await db.organizations.create({
     login: "ahora",
     node_id: "ahora",

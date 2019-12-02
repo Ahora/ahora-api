@@ -23,7 +23,7 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
         try {
 
             if(hooks && hooks.get && hooks.get.getAdditionalParams) {
-                req.query = {...req.query, ...hooks.get.getAdditionalParams(req)}
+                req.query = {...req.query, ...await hooks.get.getAdditionalParams(req)}
             }
             const entity: TInstance[] = await model.findAll({where: req.query });
             res.send(entity);
