@@ -3,7 +3,7 @@ import passport from "passport";
 import GitHubStrategy from "passport-github";
 import db from "../models";
 import { IUserInstance, IUserAttributes } from "../models/users";
-import { GIT_HUB_CLIENT_ID, GIT_HUB_CLIENT_SECRET } from "../config";
+import { GIT_HUB_CLIENT_ID, GIT_HUB_CLIENT_SECRET, GIT_HUB_CALLBACK_URL } from "../config";
 
 // Configure Passport authenticated session persistence.
 //
@@ -30,7 +30,7 @@ passport.deserializeUser(async (id: number, cb) => {
 passport.use(new GitHubStrategy({
     clientID: GIT_HUB_CLIENT_ID,
     clientSecret: GIT_HUB_CLIENT_SECRET,
-    callbackURL: "http://127.0.0.1:3000/auth/github/callback",
+    callbackURL: GIT_HUB_CALLBACK_URL,
     scope: ['user:email', 'read:org']
   },
   async (accessToken, refreshToken, profile, cb) => {
