@@ -28,8 +28,8 @@ app.use(passport.session());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
-app.get("/api/status", (req: Request, res: Response, next: NextFunction) => {
-  res.send({ok: "ok", user: req.user, auth: (req as any).auth});
+app.get("/status", (req: Request, res: Response, next: NextFunction) => {
+  res.send();
 });
 
 app.get("/api/me", (req: Request, res: Response, next: NextFunction) => {
