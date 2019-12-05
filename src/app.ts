@@ -1,12 +1,12 @@
 import ExpressInstance, {Express, Request, Response, NextFunction } from "express";
 import bodyParser from "body-parser";
 import authRouter from "./routers/auth";
-import marked from "marked";
 import db from "./models/index";
 import passport from "passport";
 import session from "express-session";
 import routeCreate from "./routers/base";
 import routeDocCreate from "./routers/docs";
+import routeOrgCreate from "./routers/organizations";
 import routeCommentCreate from "./routers/comments";
 import { COOKIE_SECRET, DB_CONNECTION_STRING } from "./config";
 import pgSession from "connect-pg-simple";
@@ -49,7 +49,7 @@ app.use(routeCreate("/api/organizations/:login/statuses", db.docStatuses));
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments"));
 app.use(routeCreate("/api/organizations/:login/docs/:docId/labels", db.docLabels));
-app.use(routeCreate("/api/organizations", db.organizations));
+app.use(routeOrgCreate("/api/organizations"));
 app.use("/auth", authRouter)
 
 export default app;

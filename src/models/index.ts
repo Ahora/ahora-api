@@ -45,22 +45,11 @@ db.organizations.hasMany(db.docStatuses);
 db.docs.hasMany(db.docStatuses);
 
 db.labels.hasMany(db.docLabels);
-/*
-db.sequelize.sync({ force: false }).then(async ()=> {
-  const org = await db.organizations.create({
-    login: "ahora",
-    node_id: "ahora",
-    defaultStatus: 1
-  });
 
-  await db.docStatuses.bulkCreate([
-    {name: "Opened", organizationId: org.id }, 
-    {name: "Closed", organizationId: org.id }
-  ]);
-
+db.sequelize.sync({ force: true }).then(async ()=> {
   console.log("Database synced successfully")
 }).error((error) => {
   console.error("database sync failed", error);
 });
-*/
+
 export default db;

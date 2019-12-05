@@ -1,12 +1,18 @@
 import * as Sequelize from "sequelize";
 import { SequelizeAttributes } from "./base";
 
+export enum OrganizationType {
+    Public=0,
+    Private = 1
+}
+
 export interface IOrganizationAttributes {
     id?: number;
     login: string;
     node_id?: string;
     description?: string;
     defaultStatus?: number;
+    orgType: OrganizationType
 }
 
 export interface IOrganizationInstance extends Sequelize.Instance<IOrganizationAttributes>, IOrganizationAttributes {
@@ -40,6 +46,11 @@ Sequelize.Model<IOrganizationInstance, IOrganizationAttributes> => {
         description: {
             type: DataTypes.STRING,
             allowNull: true
+        },
+        orgType: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: OrganizationType.Public
         }
     };
 

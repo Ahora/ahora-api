@@ -13,10 +13,10 @@ export interface RouterHooks<TAttributes> {
 export interface MethodHook<TAttributes> {
     before?(entity: TAttributes, req: Request): Promise<TAttributes>;
     getAdditionalParams?(req: Request): any;
-    before?(after: TAttributes, req?: Request): Promise<TAttributes>;
+    after?(entity: TAttributes, req?: Request): Promise<TAttributes>;
 }
 
-export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>, hooks: RouterHooks<TAttributes> | null = null) => {
+export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>, hooks: RouterHooks<TAttributes> | null = null) => {
     const router: Router = express.Router();
         
     router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -34,16 +34,21 @@ export default <TInstance, TAttributes, TCreationAttributes = TAttributes>(path:
 
     router.post(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            req.body = { ...req.body, organizationId: req.org!.id }
+            if(hooks && hooks.post && hooks.post.getAdditionalParams) {
+                req.body = { ...req.body, ...await hooks.post.getAdditionalParams(req)}
+            }
             if(req.user)
                 req.body.userAlias = (req.user! as any).username;
 
             if(hooks && hooks.post && hooks.post.before) {
                 req.body = await hooks.post.before(req.body, req);
             }
-            const entity: TInstance = await model.create({
-                ...req.body
-            });
+            let entity: TAttributes = await model.create(req.body);
+            
+            if(hooks && hooks.post && hooks.post.after) {
+                entity = await hooks.post.after(entity);
+            }
+
             res.send(entity);
         } catch (error) {
             next(error);

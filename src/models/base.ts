@@ -1,6 +1,5 @@
 
 import { DataTypeAbstract, DefineAttributeColumnOptions } from "sequelize";
-import Sequelize from "sequelize";
 
 export type SequelizeAttribute = string | DataTypeAbstract | DefineAttributeColumnOptions;
 
