@@ -45,11 +45,11 @@ db.organizations.hasMany(db.docStatuses);
 db.docs.hasMany(db.docStatuses);
 
 db.labels.hasMany(db.docLabels);
-
+/*
 db.sequelize.sync({ force: true }).then(async ()=> {
   console.log("Database synced successfully")
 }).error((error) => {
   console.error("database sync failed", error);
 });
-
+*/
 export default db;

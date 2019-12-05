@@ -15,7 +15,7 @@ const afterPost = async (doc: IOrganizationAttributes, req: Request): Promise<IO
 
     await db.organizations.update({
         defaultStatus: openedStatus.id
-    });
+    }, { where: { organizationId: orgId } });
     
     return doc;
 };
