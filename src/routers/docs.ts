@@ -12,6 +12,7 @@ const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttrib
     const updatedDoc =  await generateDocHTML(doc);
     if(req && req.org) {
         updatedDoc.status = req.org.defaultStatus;
+        updatedDoc.organizationId = req.org.id;
     }
 
     return updatedDoc;
