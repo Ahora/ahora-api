@@ -23,6 +23,9 @@ app.use(session({
   cookie: { maxAge: 365 * 24 * 60 * 60 * 1000 } // 30 days
 }));
 
+app.disable('etag');
+app.disable('view cache');
+
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(bodyParser.urlencoded({extended: true}));
