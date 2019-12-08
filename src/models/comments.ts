@@ -6,6 +6,7 @@ export interface ICommentAttributes {
     comment: string;
     htmlComment: string;
     userAlias: number,
+    docId: number;
 
 }
 

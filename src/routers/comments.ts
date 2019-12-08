@@ -6,8 +6,15 @@ import db from "../models/index";
 import marked from "marked";
 import { ICommentAttributes, ICommentInstance } from "../models/comments";
 
-const generateDocHTML = async (comment: ICommentAttributes): Promise<ICommentAttributes> => {
+const generateQuery = async (req: Request): Promise<any> => {
+    return {
+        docId: parseInt(req.params.docId)
+    }
+}
+
+const generateDocHTML = async (comment: ICommentAttributes, req: Request): Promise<ICommentAttributes> => {
     return new Promise<ICommentAttributes>((resolve, reject) => {
+        comment.docId = parseInt(req.params.docId);
         marked(comment.comment, (error: any, parsedResult: string) => {
         if(error) {
             reject(error);
@@ -23,6 +30,7 @@ const generateDocHTML = async (comment: ICommentAttributes): Promise<ICommentAtt
 export default (path: string) => {
 
     const router  = routeCreate<ICommentInstance, ICommentAttributes>(path, db.comment, {
+        get: { getAdditionalParams: generateQuery },
         post: { before: generateDocHTML },
         put: { before: generateDocHTML }
     });
