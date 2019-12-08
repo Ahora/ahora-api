@@ -34,7 +34,10 @@ export const CommentsFactory = (sequelize: Sequelize.Sequelize, DataTypes: Seque
         userAlias: {
             type: DataTypes.STRING,
             allowNull: false,
-
+        },
+        docId: {
+            type: DataTypes.INTEGER,
+            allowNull: false
         }
 
     };
