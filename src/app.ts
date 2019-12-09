@@ -20,8 +20,8 @@ app.use(session({
   }),
   secret: COOKIE_SECRET,
   resave: false,
-  saveUninitialized: true,
-  cookie: { maxAge: 365 * 24 * 60 * 60 * 1000 } // 30 days
+  saveUninitialized: false,
+  cookie: { maxAge: 365 * 24 * 60 * 60 * 1000 } // 365 days
 }));
 
 app.disable('etag');

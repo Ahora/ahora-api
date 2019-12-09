@@ -31,7 +31,7 @@ passport.use(new GitHubStrategy({
     clientID: GIT_HUB_CLIENT_ID,
     clientSecret: GIT_HUB_CLIENT_SECRET,
     callbackURL: GIT_HUB_CALLBACK_URL,
-    scope: ['user:email', 'read:org']
+    scope: ['user:email']
   },
   async (accessToken, refreshToken, profile, cb) => {
     try {      
