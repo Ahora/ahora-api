@@ -7,6 +7,7 @@ import session from "express-session";
 import routeCreate from "./routers/base";
 import routeDocCreate from "./routers/docs";
 import routeOrgCreate from "./routers/organizations";
+import organizationChildCreate from "./routers/organizationChildBase";
 import routeCommentCreate from "./routers/comments";
 import { COOKIE_SECRET, DB_CONNECTION_STRING } from "./config";
 import pgSession from "connect-pg-simple";
@@ -47,8 +48,8 @@ app.use("/api/organizations/:login", async (req: Request, res: Response, next: N
   next();
 });
 
-app.use(routeCreate("/api/organizations/:login/labels", db.labels));
-app.use(routeCreate("/api/organizations/:login/statuses", db.docStatuses));
+app.use(organizationChildCreate("/api/organizations/:login/labels", db.labels));
+app.use(organizationChildCreate("/api/organizations/:login/statuses", db.docStatuses));
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments"));
 app.use(routeCreate("/api/organizations/:login/docs/:docId/labels", db.docLabels));

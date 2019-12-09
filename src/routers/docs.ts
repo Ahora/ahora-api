@@ -19,9 +19,9 @@ const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttrib
 };
 
 const generateQuery = async (req: Request): Promise<any> => {
-    const query: any = {};
 
     const currentOrg: IOrganizationInstance = req.org!;
+    const query: any = { organizationId: currentOrg.id };
 
     const statuses: IDocStatusInstance[] = await db.docStatuses.findAll({ where: { organizationId: currentOrg.id }});
     const Statusmap: Map<string, IDocStatusInstance> = new Map();
