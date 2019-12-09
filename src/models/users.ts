@@ -3,7 +3,7 @@ import { SequelizeAttributes } from "./base";
 
 export interface IUserAttributes {
     id?: number;
-    displayName: string;
+    displayName?: string;
     username?: string;
     gitHubId: string;
     email?: string;
@@ -27,7 +27,7 @@ Sequelize.Model<IUserInstance, IUserAttributes> => {
         },
         displayName: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: true
         }, 
         gitHubId: {
             type: DataTypes.STRING,
