@@ -48,7 +48,7 @@ passport.use(new GitHubStrategy({
         const userToUpdateOrCreate: IUserAttributes = {
             displayName: profile.displayName,
             gitHubId: profile.id,
-            username: profile.username,
+            username: profile.username!,
             accessToken,
             refreshToken,
             email: email

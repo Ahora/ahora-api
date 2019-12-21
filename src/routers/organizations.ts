@@ -1,8 +1,6 @@
-import express, { Router, Request, Response, NextFunction } from "express";
-import { IDocInstance, IDocAttributes } from "../models/docs";
-import routeCreate, { RouterHooks } from "./base";
+import {Request } from "express";
+import routeCreate from "./base";
 import db from "../models/index";
-import marked from "marked";
 import { IOrganizationInstance, IOrganizationAttributes } from "../models/organization";
 import { IDocStatusInstance } from "../models/docStatuses";
 
@@ -27,10 +25,22 @@ const afterPost = async (org: IOrganizationAttributes, req: Request): Promise<IO
     
     return org;
 };
+
+const getAdditionalParams = async (req: Request): Promise<any> => {
+    const currentUserPermissions = await db.organizationUsers.findAll({
+        attributes: ["organizationId"],
+        where: { userId: req.user!.id}
+    });
+    return { id: currentUserPermissions.map(per => per.organizationId) }
+}
+
 export default (path: string) => {
 
     const router  = routeCreate<IOrganizationInstance, IOrganizationAttributes>(path, db.organizations, { 
         post: { after: afterPost },
+        get: {
+            getAdditionalParams: getAdditionalParams
+        }
     });
     return router;
 };

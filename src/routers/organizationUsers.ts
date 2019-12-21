@@ -9,6 +9,13 @@ interface PostValues {
     permission: number
 }
 
+const getAdditionalParams = async (req: Request): Promise<any> => {
+    if(req && req.org) {
+        return { organizationId:  req.org.id};
+    }
+}
+
+
 const beforePost = async (userToAdd: IOrganizationUserAttribute, req: Request): Promise<IOrganizationUserAttribute> => {
     if(req && req.org) {
         userToAdd.organizationId = req.org.id;
@@ -44,6 +51,7 @@ const afterPost = async (userToAdd: IOrganizationUserAttribute, req: Request): P
 export default (path: string) => {
     const router  = routeCreate<IOrganizationUserInstance, IOrganizationUserAttribute>(path, db.organizationUsers, {
         get: {
+            getAdditionalParams,
             include: [
                 { model:db.users, attributes: ["displayName", "username"]}
             ]

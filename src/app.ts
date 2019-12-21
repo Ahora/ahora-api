@@ -49,6 +49,14 @@ app.use("/api/organizations/:login", async (req: Request, res: Response, next: N
   next();
 });
 
+app.get("/api/organizations/:login", async (req: Request, res: Response) => {
+  if(req.org) {
+    res.send(req.org);
+  } else {
+    res.status(404).send();
+  }
+});
+
 app.use(organizationChildCreate("/api/organizations/:login/labels", db.labels));
 app.use(organizationUsersCreate("/api/organizations/:login/users"));
 app.use(organizationChildCreate("/api/organizations/:login/statuses", db.docStatuses));

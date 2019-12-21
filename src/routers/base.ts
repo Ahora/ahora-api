@@ -99,10 +99,22 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
     router.get(path + "/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
+            let include;
+            if(hooks && hooks.get && hooks.get) {
+                include = hooks.get.include
+            }
+
+            if(hooks && hooks.get && hooks.get.getAdditionalParams) {
+                req.query = {...req.query, ...await hooks.get.getAdditionalParams(req)}
+            }
+
+
             const entity: TInstance | null = await model.findOne({
                 where:  {
-                    id: req.params.id
-                }
+                    ...req.query,
+                    id: req.params.id,
+                },
+                include
             });
 
             if((entity as any).description) {
