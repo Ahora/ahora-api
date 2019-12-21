@@ -1,13 +1,17 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import { IDocInstance } from "../models/docs";
-import Sequelize from "sequelize";
+import Sequelize, { Model, IncludeOptions } from "sequelize";
 import marked from "marked";
 
 export interface RouterHooks<TAttributes> {
     put?: MethodHook<TAttributes>;
-    get?: MethodHook<TAttributes>;
+    get?: GetMethodHook<TAttributes>;
     post?: MethodHook<TAttributes>;
     delete?: MethodHook<TAttributes>;
+}
+
+export interface GetMethodHook<TAttributes> extends MethodHook<TAttributes>{
+    include?: Array<Model<any, any> | IncludeOptions>;
 }
 
 export interface MethodHook<TAttributes> {
@@ -25,7 +29,13 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
             if(hooks && hooks.get && hooks.get.getAdditionalParams) {
                 req.query = {...req.query, ...await hooks.get.getAdditionalParams(req)}
             }
-            const entity: TInstance[] = await model.findAll({where: req.query });
+
+            let include;
+            if(hooks && hooks.get && hooks.get) {
+                include = hooks.get.include
+            }
+            
+            const entity: TInstance[] = await model.findAll({where: req.query, include });
             res.send(entity);
         } catch (error) {
             next(error);
@@ -43,10 +53,16 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
             if(hooks && hooks.post && hooks.post.before) {
                 req.body = await hooks.post.before(req.body, req);
             }
-            let entity: TAttributes = await model.create(req.body);
+
+            let include;
+            if(hooks && hooks.get && hooks.get) {
+                include = hooks.get.include
+            }
+
+            let entity: TAttributes = await model.create(req.body, {include});
             
             if(hooks && hooks.post && hooks.post.after) {
-                entity = await hooks.post.after(entity);
+                entity = await hooks.post.after(entity, req);
             }
 
             res.send(entity);

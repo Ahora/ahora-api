@@ -52,15 +52,20 @@ const generateQuery = async (req: Request): Promise<any> => {
 
 const generateDocHTML = async (doc: IDocAttributes): Promise<IDocAttributes> => {
     return new Promise<IDocAttributes>((resolve, reject) => {
-        marked(doc.description, (error: any, parsedResult: string) => {
-        if(error) {
-            reject(error);
+        if(doc.description) {
+            marked(doc.description, (error: any, parsedResult: string) => {
+                if(error) {
+                    reject(error);
+                }
+                else {
+                    doc.htmlDescription = parsedResult;
+                    resolve(doc);
+                }
+            });
         }
         else {
-            doc.htmlDescription = parsedResult;
             resolve(doc);
         }
-        });
     });
 }
 

@@ -7,6 +7,7 @@ import session from "express-session";
 import routeCreate from "./routers/base";
 import routeDocCreate from "./routers/docs";
 import routeOrgCreate from "./routers/organizations";
+import organizationUsersCreate from "./routers/organizationUsers";
 import organizationChildCreate from "./routers/organizationChildBase";
 import routeCommentCreate from "./routers/comments";
 import { COOKIE_SECRET, DB_CONNECTION_STRING } from "./config";
@@ -49,6 +50,7 @@ app.use("/api/organizations/:login", async (req: Request, res: Response, next: N
 });
 
 app.use(organizationChildCreate("/api/organizations/:login/labels", db.labels));
+app.use(organizationUsersCreate("/api/organizations/:login/users"));
 app.use(organizationChildCreate("/api/organizations/:login/statuses", db.docStatuses));
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments"));

@@ -4,11 +4,11 @@ import { SequelizeAttributes } from "./base";
 export interface IUserAttributes {
     id?: number;
     displayName?: string;
-    username?: string;
-    gitHubId: string;
+    username: string;
+    gitHubId?: string;
     email?: string;
-    accessToken: string;
-    refreshToken: string;
+    accessToken?: string;
+    refreshToken?: string;
 }
 
 export interface IUserInstance extends Sequelize.Instance<IUserAttributes>, IUserAttributes {
@@ -31,7 +31,7 @@ Sequelize.Model<IUserInstance, IUserAttributes> => {
         }, 
         gitHubId: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: true
         },
         username: {
             type: DataTypes.STRING,
@@ -39,7 +39,7 @@ Sequelize.Model<IUserInstance, IUserAttributes> => {
         }, 
         accessToken: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: true
         },
         refreshToken: {
             type: DataTypes.STRING,

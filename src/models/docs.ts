@@ -4,8 +4,8 @@ import { SequelizeAttributes } from "./base";
 export interface IDocAttributes {
     id: number;
     subject: string;
-    description: string;
-    htmlDescription: string;
+    description?: string;
+    htmlDescription?: string;
     docType: string;
     userAlias: string;
     metadata: any;

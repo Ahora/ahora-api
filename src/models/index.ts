@@ -8,6 +8,7 @@ import { IOrganizationInstance, IOrganizationAttributes, OrganizationsFactory } 
 import { ILabelInstance, LabelsFactory, ILabelAttributes } from "./labels";
 import { IDocLabelInstance, DocsLabelFactory, IDocLabelAttributes } from "./docLabel";
 import { IDocStatusAttributes, IDocStatusInstance, StatusesFactory } from "./docStatuses";
+import { IOrganizationUserAttribute, IOrganizationUserInstance, OrganizationPermissionFactory } from "./organizationUsers";
 
 export interface IDBInterface {
   docs: Sequelize.Model<IDocInstance, IDocAttributes>;
@@ -17,11 +18,12 @@ export interface IDBInterface {
   labels: Sequelize.Model<ILabelInstance, ILabelAttributes>;
   docLabels: Sequelize.Model<IDocLabelInstance, IDocLabelAttributes>;
   docStatuses: Sequelize.Model<IDocStatusInstance, IDocStatusAttributes>;
+  organizationUsers: Sequelize.Model<IOrganizationUserInstance, IOrganizationUserAttribute>;
   sequelize: Sequelize.Sequelize;
 }
 
 const sequelize: Sequelize.Sequelize = new Sequelize(DB_CONNECTION_STRING, {
-  logging: false
+  logging: true
 });
 
 const db: IDBInterface = {
@@ -32,7 +34,8 @@ const db: IDBInterface = {
   organizations: OrganizationsFactory(sequelize, Sequelize),
   labels: LabelsFactory(sequelize, Sequelize),
   docLabels: DocsLabelFactory(sequelize, Sequelize),
-  docStatuses: StatusesFactory(sequelize, Sequelize)
+  docStatuses: StatusesFactory(sequelize, Sequelize),
+  organizationUsers: OrganizationPermissionFactory(sequelize, Sequelize)
 };
 
 db.docs.hasMany(db.comment);
@@ -40,11 +43,17 @@ db.organizations.hasMany(db.labels);
 db.docs.hasMany(db.docLabels);
 db.docs.hasOne(db.docStatuses);
 db.organizations.hasOne(db.docStatuses);
-
 db.organizations.hasMany(db.docStatuses);
 db.docs.hasMany(db.docStatuses);
-
 db.labels.hasMany(db.docLabels);
+
+
+
+db.organizations.hasMany(db.organizationUsers);
+
+db.organizationUsers.belongsTo(db.users,{foreignKey: 'userId'});
+db.users.hasMany(db.organizationUsers,{foreignKey : 'userId'});
+
 /*
 db.sequelize.sync({ force: true }).then(()=> {
   console.log("Database synced successfully")
@@ -52,5 +61,4 @@ db.sequelize.sync({ force: true }).then(()=> {
   console.error("database sync failed", error);
 });
 */
-
 export default db;
