@@ -43,11 +43,11 @@ Sequelize.Model<IDocInstance, IDocAttributes> => {
             allowNull: true
         },
         description: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: true
         },
         htmlDescription: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: true
         },
         userAlias: {

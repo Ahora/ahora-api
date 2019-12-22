@@ -27,15 +27,16 @@ const afterPost = async (org: IOrganizationAttributes, req: Request): Promise<IO
 };
 
 const getAdditionalParams = async (req: Request): Promise<any> => {
-    const currentUserPermissions = await db.organizationUsers.findAll({
-        attributes: ["organizationId"],
-        where: { userId: req.user!.id}
-    });
-    return { id: currentUserPermissions.map(per => per.organizationId) }
+    if(req.user) {
+        const currentUserPermissions = await db.organizationUsers.findAll({
+            attributes: ["organizationId"],
+            where: { userId: req.user!.id}
+        });
+        return { id: currentUserPermissions.map(per => per.organizationId) }
+    }
 }
 
 export default (path: string) => {
-
     const router  = routeCreate<IOrganizationInstance, IOrganizationAttributes>(path, db.organizations, { 
         post: { after: afterPost },
         get: {
