@@ -47,8 +47,6 @@ db.organizations.hasMany(db.docStatuses);
 db.docs.hasMany(db.docStatuses);
 db.labels.hasMany(db.docLabels);
 
-
-
 db.organizations.hasMany(db.organizationUsers);
 
 db.organizationUsers.belongsTo(db.users,{foreignKey: 'userId'});

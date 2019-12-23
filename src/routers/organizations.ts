@@ -1,4 +1,4 @@
-import {Request } from "express";
+import {Request, Response, NextFunction } from "express";
 import routeCreate from "./base";
 import db from "../models/index";
 import { IOrganizationInstance, IOrganizationAttributes } from "../models/organization";
@@ -26,6 +26,15 @@ const afterPost = async (org: IOrganizationAttributes, req: Request): Promise<IO
     return org;
 };
 
+const handlePostError = (error: any, req: Request, res: Response, next: NextFunction) => {
+    if(error.name === "SequelizeUniqueConstraintError") {
+        res.status(409).send();
+    }
+    else {
+        next(error);
+    }
+}
+
 const getAdditionalParams = async (req: Request): Promise<any> => {
     if(req.user) {
         const currentUserPermissions = await db.organizationUsers.findAll({
@@ -34,11 +43,14 @@ const getAdditionalParams = async (req: Request): Promise<any> => {
         });
         return { id: currentUserPermissions.map(per => per.organizationId) }
     }
+    else {
+        return null;
+    }
 }
 
 export default (path: string) => {
     const router  = routeCreate<IOrganizationInstance, IOrganizationAttributes>(path, db.organizations, { 
-        post: { after: afterPost },
+        post: { after: afterPost, handleError: handlePostError },
         get: {
             getAdditionalParams: getAdditionalParams
         }

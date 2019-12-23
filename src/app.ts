@@ -12,6 +12,8 @@ import organizationChildCreate from "./routers/organizationChildBase";
 import routeCommentCreate from "./routers/comments";
 import { COOKIE_SECRET, DB_CONNECTION_STRING } from "./config";
 import pgSession from "connect-pg-simple";
+import { OrganizationType } from "./models/organization";
+import { IOrganizationUserInstance } from "./models/organizationUsers";
 
 const app: Express = ExpressInstance();
 
@@ -51,10 +53,28 @@ app.use("/api/organizations/:login", async (req: Request, res: Response, next: N
 
 app.get("/api/organizations/:login", async (req: Request, res: Response) => {
   if(req.org) {
-    res.send(req.org);
+    if(req.org.orgType == OrganizationType.Public) {
+      res.send(req.org);
+    } else {
+      if(req.user) {
+        const userPermission: IOrganizationUserInstance | null = await  db.organizationUsers.findOne({ 
+          where: { userId: req.user!.id, organizationId: req.org!.id}
+        });
+
+        if(userPermission) {
+          res.send(req.org);
+        } else {
+          res.status(401).send();
+        }
+      }
+      else {
+        res.status(401).send();
+      }
+    }
   } else {
     res.status(404).send();
   }
+  
 });
 
 app.use(organizationChildCreate("/api/organizations/:login/labels", db.labels));

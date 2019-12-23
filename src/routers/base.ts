@@ -18,6 +18,7 @@ export interface MethodHook<TAttributes> {
     before?(entity: TAttributes, req: Request): Promise<TAttributes>;
     getAdditionalParams?(req: Request): any;
     after?(entity: TAttributes, req?: Request): Promise<TAttributes>;
+    handleError?(error: any, req: Request, res: Response, next: NextFunction): void;
 }
 
 export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>, hooks: RouterHooks<TAttributes> | null = null) => {
@@ -25,9 +26,15 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
         
     router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-
             if(hooks && hooks.get && hooks.get.getAdditionalParams) {
-                req.query = {...req.query, ...await hooks.get.getAdditionalParams(req)}
+                const additionalParams: any = await hooks.get.getAdditionalParams(req);
+                if(additionalParams !== null) {
+                    req.query = {...req.query, ...additionalParams }
+                }
+                else {
+                    res.send([]);
+                    return;
+                }
             }
 
             let include;
@@ -67,7 +74,11 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
             res.send(entity);
         } catch (error) {
-            next(error);
+            if(hooks && hooks.post && hooks.post.handleError) {
+                hooks.post.handleError(error, req, res, next);
+            } else {
+                next(error);
+            }
         }
 
     });

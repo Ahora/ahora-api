@@ -9,6 +9,7 @@ export enum OrganizationType {
 export interface IOrganizationAttributes {
     id?: number;
     login: string;
+    displayName: string;
     node_id?: string;
     description?: string;
     defaultStatus?: number;
@@ -32,8 +33,11 @@ Sequelize.Model<IOrganizationInstance, IOrganizationAttributes> => {
         },
         login: {
             type: DataTypes.STRING,
-            allowNull: false,
-            unique: true
+            allowNull: false
+        },
+        displayName: {
+            type: DataTypes.STRING,
+            allowNull: false
         },
         node_id: {
             type: DataTypes.STRING,
@@ -55,6 +59,13 @@ Sequelize.Model<IOrganizationInstance, IOrganizationAttributes> => {
     };
 
     return sequelize.define<IOrganizationInstance, IOrganizationAttributes>("organizations", attributes, {
-        timestamps: true
+        timestamps: true,
+        indexes: [
+            { 
+              unique: true,   
+              name: 'login',  
+              fields: [sequelize.fn('lower', sequelize.col('login'))]   
+            }
+          ]
     });
   };
