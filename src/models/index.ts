@@ -38,7 +38,6 @@ const db: IDBInterface = {
   organizationUsers: OrganizationPermissionFactory(sequelize, Sequelize)
 };
 
-db.docs.hasMany(db.comment);
 db.organizations.hasMany(db.labels);
 db.docs.hasMany(db.docLabels);
 db.docs.hasOne(db.docStatuses);
@@ -51,6 +50,12 @@ db.organizations.hasMany(db.organizationUsers);
 
 db.organizationUsers.belongsTo(db.users,{foreignKey: 'userId'});
 db.users.hasMany(db.organizationUsers,{foreignKey : 'userId'});
+
+db.comment.belongsTo(db.docs,{foreignKey: 'docId'});
+db.docs.hasMany(db.comment,{foreignKey : 'docId'});
+
+db.comment.belongsTo(db.users,{foreignKey: 'authorUserId'});
+db.users.hasMany(db.users,{foreignKey : 'authorUserId'});
 
 /*
 db.sequelize.sync({ force: true }).then(()=> {

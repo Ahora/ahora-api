@@ -5,13 +5,16 @@ export interface ICommentAttributes {
     id: number;
     comment: string;
     htmlComment: string;
-    userAlias: number,
+    pinned: boolean
     docId: number;
-
+    authorUserId: number;
 }
 
 export interface ICommentInstance extends Sequelize.Instance<ICommentAttributes>, ICommentAttributes {
-    eventId: number;
+    user: {
+        username: string;
+        displayName?: string;
+    }
 }
 
 // tslint:disable-next-line:typedef
@@ -31,13 +34,18 @@ export const CommentsFactory = (sequelize: Sequelize.Sequelize, DataTypes: Seque
             type: DataTypes.TEXT,
             allowNull: false,
         },
-        userAlias: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        },
         docId: {
             type: DataTypes.INTEGER,
             allowNull: false
+        },
+        authorUserId: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        pinned: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
         }
 
     };

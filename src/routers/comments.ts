@@ -13,25 +13,51 @@ const generateQuery = async (req: Request): Promise<any> => {
 }
 
 const generateDocHTML = async (comment: ICommentAttributes, req: Request): Promise<ICommentAttributes> => {
+    comment.authorUserId = req.user!.id;
+    comment.docId = parseInt(req.params.docId);
     return new Promise<ICommentAttributes>((resolve, reject) => {
-        comment.docId = parseInt(req.params.docId);
-        marked(comment.comment, (error: any, parsedResult: string) => {
-        if(error) {
-            reject(error);
-        }
-        else {
-            comment.htmlComment = parsedResult;
+        if(comment.comment) {
+            marked(comment.comment, (error: any, parsedResult: string) => {
+                if(error) {
+                    reject(error);
+                }
+                else {
+                    comment.htmlComment = parsedResult;
+                    resolve(comment);
+                }
+                });
+        } else {
             resolve(comment);
         }
-        });
+    });
+}
+
+const afterPost = async (comment: ICommentInstance, req: Request): Promise<ICommentAttributes> => {
+    return new Promise<ICommentAttributes>((resolve) => {
+        const returnValue: any = {
+            authorUserId: comment.authorUserId,
+            id: comment.id,
+            comment: comment.comment,
+            htmlComment: comment.htmlComment,
+            pinned: comment.pinned,
+            docId: comment.docId
+        };
+        returnValue.user = {
+            displayName: req.user!.displayName,
+            username: req.user!.username
+        };
+        resolve(returnValue);
     });
 }
 
 export default (path: string) => {
 
     const router  = routeCreate<ICommentInstance, ICommentAttributes>(path, db.comment, {
-        get: { getAdditionalParams: generateQuery },
-        post: { before: generateDocHTML },
+        get: { 
+            getAdditionalParams: generateQuery,
+            include: [{ model:db.users, attributes: ["displayName", "username"]}]
+        },
+        post: { before: generateDocHTML, after: afterPost},
         put: { before: generateDocHTML }
     });
     return router;
