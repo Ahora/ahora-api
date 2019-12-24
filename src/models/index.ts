@@ -48,14 +48,16 @@ db.labels.hasMany(db.docLabels);
 
 db.organizations.hasMany(db.organizationUsers);
 
-db.organizationUsers.belongsTo(db.users,{foreignKey: 'userId'});
-db.users.hasMany(db.organizationUsers,{foreignKey : 'userId'});
+db.organizationUsers.belongsTo(db.users, { foreignKey: 'userId' });
+db.users.hasMany(db.organizationUsers, { foreignKey: 'userId' });
 
-db.comment.belongsTo(db.docs,{foreignKey: 'docId'});
-db.docs.hasMany(db.comment,{foreignKey : 'docId'});
+db.comment.belongsTo(db.docs, { foreignKey: 'docId' });
+db.docs.hasMany(db.comment, { foreignKey: 'docId' });
 
-db.comment.belongsTo(db.users,{foreignKey: 'authorUserId'});
-db.users.hasMany(db.users,{foreignKey : 'authorUserId'});
+db.comment.belongsTo(db.users, { foreignKey: 'authorUserId' });
+
+db.docs.belongsTo(db.users, { as: "assignee", foreignKey: 'assigneeUserId' });
+db.users.hasMany(db.docs, { foreignKey: 'assigneeUserId' });
 
 /*
 db.sequelize.sync({ force: true }).then(()=> {

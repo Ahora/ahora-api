@@ -6,8 +6,8 @@ export interface IDocAttributes {
     subject: string;
     description?: string;
     htmlDescription?: string;
+    assigneeUserId?: number;
     docType: string;
-    userAlias: string;
     metadata: any;
     organizationId: number;
     status?: number;
@@ -50,12 +50,13 @@ Sequelize.Model<IDocInstance, IDocAttributes> => {
             type: DataTypes.TEXT,
             allowNull: true
         },
-        userAlias: {
-            type: DataTypes.STRING
-        },
         organizationId: {
             type: DataTypes.INTEGER,
             allowNull: false
+        },
+        assigneeUserId: {
+            type: DataTypes.INTEGER,
+            allowNull: true
         }
     };
 

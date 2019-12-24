@@ -9,10 +9,14 @@ import { stringify } from "querystring";
 import { isArray } from "util";
 
 const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttributes> => {
-    const updatedDoc =  await generateDocHTML(doc);
-    if(req && req.org) {
+    const updatedDoc = await generateDocHTML(doc);
+    if (req && req.org) {
         updatedDoc.status = req.org.defaultStatus;
         updatedDoc.organizationId = req.org.id;
+    }
+
+    if (req.user) {
+        doc.assigneeUserId = req.user.id;
     }
 
     return updatedDoc;
@@ -23,23 +27,23 @@ const generateQuery = async (req: Request): Promise<any> => {
     const currentOrg: IOrganizationInstance = req.org!;
     const query: any = { organizationId: currentOrg.id };
 
-    const statuses: IDocStatusInstance[] = await db.docStatuses.findAll({ where: { organizationId: currentOrg.id }});
+    const statuses: IDocStatusInstance[] = await db.docStatuses.findAll({ where: { organizationId: currentOrg.id } });
     const Statusmap: Map<string, IDocStatusInstance> = new Map();
     statuses.forEach(status => {
         Statusmap.set(status.name.toLowerCase(), status);
     });
 
-    if(req.query.status) {
-        if(typeof(req.query.status) === "string") {
+    if (req.query.status) {
+        if (typeof (req.query.status) === "string") {
             req.query.status = [req.query.status];
         }
     }
-    
-    if(isArray(req.query.status)) {
+
+    if (isArray(req.query.status)) {
         const statusIds: number[] = [];
         req.query.status.forEach((statusName: string) => {
             const value: IDocStatusInstance | undefined = Statusmap.get(statusName.toLowerCase());
-            if(value) {
+            if (value) {
                 statusIds.push(value.id);
             }
         });
@@ -52,9 +56,9 @@ const generateQuery = async (req: Request): Promise<any> => {
 
 const generateDocHTML = async (doc: IDocAttributes): Promise<IDocAttributes> => {
     return new Promise<IDocAttributes>((resolve, reject) => {
-        if(doc.description) {
+        if (doc.description) {
             marked(doc.description, (error: any, parsedResult: string) => {
-                if(error) {
+                if (error) {
                     reject(error);
                 }
                 else {
@@ -71,8 +75,13 @@ const generateDocHTML = async (doc: IDocAttributes): Promise<IDocAttributes> => 
 
 export default (path: string) => {
 
-    const router  = routeCreate<IDocInstance, IDocAttributes>(path, db.docs, { 
-        get: { getAdditionalParams: generateQuery },
+    const router = routeCreate<IDocInstance, IDocAttributes>(path, db.docs, {
+        get: {
+            getAdditionalParams: generateQuery,
+            include: [
+                { as: "assignee", model: db.users, attributes: ["displayName", "username"] }
+            ]
+        },
         post: { before: beforePost },
         put: { before: generateDocHTML }
     });
