@@ -1,4 +1,4 @@
-import ExpressInstance, {Express, Request, Response, NextFunction } from "express";
+import ExpressInstance, { Express, Request, Response, NextFunction } from "express";
 import bodyParser from "body-parser";
 import authRouter from "./routers/auth";
 import db from "./models/index";
@@ -32,7 +32,7 @@ app.disable('view cache');
 
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 app.get("/status", (req: Request, res: Response, next: NextFunction) => {
@@ -44,24 +44,24 @@ app.get("/api/me", (req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use("/api/organizations/:login", async (req: Request, res: Response, next: NextFunction) => {
-  const org = await db.organizations.findOne({ where: { login: req.params.login }});
-  if(org) {
+  const org = await db.organizations.findOne({ where: { login: req.params.login } });
+  if (org) {
     req.org = org;
   }
   next();
 });
 
 app.get("/api/organizations/:login", async (req: Request, res: Response) => {
-  if(req.org) {
-    if(req.org.orgType == OrganizationType.Public) {
+  if (req.org) {
+    if (req.org.orgType == OrganizationType.Public) {
       res.send(req.org);
     } else {
-      if(req.user) {
-        const userPermission: IOrganizationUserInstance | null = await  db.organizationUsers.findOne({ 
-          where: { userId: req.user!.id, organizationId: req.org!.id}
+      if (req.user) {
+        const userPermission: IOrganizationUserInstance | null = await db.organizationUsers.findOne({
+          where: { userId: req.user!.id, organizationId: req.org!.id }
         });
 
-        if(userPermission) {
+        if (userPermission) {
           res.send(req.org);
         } else {
           res.status(401).send();
@@ -74,12 +74,13 @@ app.get("/api/organizations/:login", async (req: Request, res: Response) => {
   } else {
     res.status(404).send();
   }
-  
+
 });
 
 app.use(organizationChildCreate("/api/organizations/:login/labels", db.labels));
 app.use(organizationUsersCreate("/api/organizations/:login/users"));
 app.use(organizationChildCreate("/api/organizations/:login/statuses", db.docStatuses));
+app.use(organizationChildCreate("/api/organizations/:login/doctypes", db.docTypes));
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments"));
 app.use(routeCreate("/api/organizations/:login/docs/:docId/labels", db.docLabels));

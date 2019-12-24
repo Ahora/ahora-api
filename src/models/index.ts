@@ -9,6 +9,7 @@ import { ILabelInstance, LabelsFactory, ILabelAttributes } from "./labels";
 import { IDocLabelInstance, DocsLabelFactory, IDocLabelAttributes } from "./docLabel";
 import { IDocStatusAttributes, IDocStatusInstance, StatusesFactory } from "./docStatuses";
 import { IOrganizationUserAttribute, IOrganizationUserInstance, OrganizationPermissionFactory } from "./organizationUsers";
+import { IDocTypeAttributes, IDocTypeInstance, DocTypesFactory } from "./docType";
 
 export interface IDBInterface {
   docs: Sequelize.Model<IDocInstance, IDocAttributes>;
@@ -19,6 +20,7 @@ export interface IDBInterface {
   docLabels: Sequelize.Model<IDocLabelInstance, IDocLabelAttributes>;
   docStatuses: Sequelize.Model<IDocStatusInstance, IDocStatusAttributes>;
   organizationUsers: Sequelize.Model<IOrganizationUserInstance, IOrganizationUserAttribute>;
+  docTypes: Sequelize.Model<IDocTypeInstance, IDocTypeAttributes>;
   sequelize: Sequelize.Sequelize;
 }
 
@@ -35,14 +37,16 @@ const db: IDBInterface = {
   labels: LabelsFactory(sequelize, Sequelize),
   docLabels: DocsLabelFactory(sequelize, Sequelize),
   docStatuses: StatusesFactory(sequelize, Sequelize),
-  organizationUsers: OrganizationPermissionFactory(sequelize, Sequelize)
+  organizationUsers: OrganizationPermissionFactory(sequelize, Sequelize),
+  docTypes: DocTypesFactory(sequelize, Sequelize)
 };
 
 db.organizations.hasMany(db.labels);
 db.docs.hasMany(db.docLabels);
 db.docs.hasOne(db.docStatuses);
-db.organizations.hasOne(db.docStatuses);
 db.organizations.hasMany(db.docStatuses);
+db.docs.hasOne(db.docTypes);
+db.organizations.hasMany(db.docTypes);
 db.docs.hasMany(db.docStatuses);
 db.labels.hasMany(db.docLabels);
 
@@ -60,7 +64,7 @@ db.docs.belongsTo(db.users, { as: "assignee", foreignKey: 'assigneeUserId' });
 db.users.hasMany(db.docs, { foreignKey: 'assigneeUserId' });
 
 /*
-db.sequelize.sync({ force: true }).then(()=> {
+db.sequelize.sync({ force: false }).then(()=> {
   console.log("Database synced successfully")
 }).error((error) => {
   console.error("database sync failed", error);
