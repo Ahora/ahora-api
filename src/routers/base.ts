@@ -10,7 +10,7 @@ export interface RouterHooks<TAttributes> {
     delete?: MethodHook<TAttributes>;
 }
 
-export interface GetMethodHook<TAttributes> extends MethodHook<TAttributes>{
+export interface GetMethodHook<TAttributes> extends MethodHook<TAttributes> {
     include?: Array<Model<any, any> | IncludeOptions>;
 }
 
@@ -23,13 +23,13 @@ export interface MethodHook<TAttributes> {
 
 export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>, hooks: RouterHooks<TAttributes> | null = null) => {
     const router: Router = express.Router();
-        
+
     router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            if(hooks && hooks.get && hooks.get.getAdditionalParams) {
+            if (hooks && hooks.get && hooks.get.getAdditionalParams) {
                 const additionalParams: any = await hooks.get.getAdditionalParams(req);
-                if(additionalParams !== null) {
-                    req.query = {...req.query, ...additionalParams }
+                if (additionalParams !== null) {
+                    req.query = { ...req.query, ...additionalParams }
                 }
                 else {
                     res.send([]);
@@ -38,11 +38,11 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
             }
 
             let include;
-            if(hooks && hooks.get && hooks.get) {
+            if (hooks && hooks.get && hooks.get) {
                 include = hooks.get.include
             }
-            
-            const entity: TInstance[] = await model.findAll({where: req.query, include });
+
+            const entity: TInstance[] = await model.findAll({ where: req.query, include });
             res.send(entity);
         } catch (error) {
             next(error);
@@ -51,30 +51,30 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
     router.post(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            if(hooks && hooks.post && hooks.post.getAdditionalParams) {
-                req.body = { ...req.body, ...await hooks.post.getAdditionalParams(req)}
+            if (hooks && hooks.post && hooks.post.getAdditionalParams) {
+                req.body = { ...req.body, ...await hooks.post.getAdditionalParams(req) }
             }
-            if(req.user)
+            if (req.user)
                 req.body.userAlias = (req.user! as any).username;
 
-            if(hooks && hooks.post && hooks.post.before) {
+            if (hooks && hooks.post && hooks.post.before) {
                 req.body = await hooks.post.before(req.body, req);
             }
 
             let include;
-            if(hooks && hooks.get && hooks.get) {
+            if (hooks && hooks.get && hooks.get) {
                 include = hooks.get.include
             }
 
-            let entity: TAttributes = await model.create(req.body, {include});
-            
-            if(hooks && hooks.post && hooks.post.after) {
+            let entity: TAttributes = await model.create(req.body, { include });
+
+            if (hooks && hooks.post && hooks.post.after) {
                 entity = await hooks.post.after(entity, req);
             }
 
             res.send(entity);
         } catch (error) {
-            if(hooks && hooks.post && hooks.post.handleError) {
+            if (hooks && hooks.post && hooks.post.handleError) {
                 hooks.post.handleError(error, req, res, next);
             } else {
                 next(error);
@@ -86,7 +86,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
     router.delete(path + "/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             await model.destroy({
-                where: { id: req.params.id  }
+                where: { id: req.params.id }
             });
             res.send();
         } catch (error) {
@@ -95,13 +95,15 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
     });
     router.put(path + "/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
-            if(hooks && hooks.put && hooks.put.before) {
+            if (hooks && hooks.put && hooks.put.before) {
                 req.body = await hooks.put.before(req.body, req);
             }
             await model.update(req.body, {
-                where: { id: req.params.id  }
+                where: { id: req.params.id }
             });
-            res.send(req.body);
+
+            const result = await model.findOne({ where: { id: req.params.id } });
+            res.send(result);
         } catch (error) {
             next(error);
         }
@@ -111,28 +113,28 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
     router.get(path + "/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             let include;
-            if(hooks && hooks.get && hooks.get) {
+            if (hooks && hooks.get && hooks.get) {
                 include = hooks.get.include
             }
 
-            if(hooks && hooks.get && hooks.get.getAdditionalParams) {
-                req.query = {...req.query, ...await hooks.get.getAdditionalParams(req)}
+            if (hooks && hooks.get && hooks.get.getAdditionalParams) {
+                req.query = { ...req.query, ...await hooks.get.getAdditionalParams(req) }
             }
 
 
             const entity: TInstance | null = await model.findOne({
-                where:  {
+                where: {
                     ...req.query,
                     id: req.params.id,
                 },
                 include
             });
 
-            if((entity as any).description) {
+            if ((entity as any).description) {
                 marked((entity as any).description, (error: any, parsedResult: string) => {
                     (entity as any).dataValues.htmlDescription = parsedResult;
                     res.send(entity);
-           
+
                 });
             }
             else {
