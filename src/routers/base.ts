@@ -49,11 +49,9 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 include = hooks.get.include
             }
 
-            console.log(req.query);
             const entity: TInstance[] = await model.findAll({ where: req.query, include });
             res.send(entity);
         } catch (error) {
-            console.log(error);
             next(error);
         }
     });
