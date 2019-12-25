@@ -7,7 +7,7 @@ export interface IDocAttributes {
     description?: string;
     htmlDescription?: string;
     assigneeUserId?: number;
-    docType: string;
+    docTypeId: number;
     metadata: any;
     organizationId: number;
     status?: number;
@@ -18,49 +18,49 @@ export interface IDocInstance extends Sequelize.Instance<IDocAttributes>, IDocAt
 
 // tslint:disable-next-line:typedef
 export const EventsFactory =
-(sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-Sequelize.Model<IDocInstance, IDocAttributes> => {
-    let attributes:SequelizeAttributes<IDocAttributes> = {
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true
-        },
-        subject: {
-            type: DataTypes.STRING,
-            allowNull: false
-        },
-        docType: {
-            type: DataTypes.STRING,
-            allowNull: false
-        },
-        metadata: {
-            type: DataTypes.JSON,
-            allowNull: true
-        },
-        status: {
-            type: DataTypes.INTEGER,
-            allowNull: true
-        },
-        description: {
-            type: DataTypes.TEXT,
-            allowNull: true
-        },
-        htmlDescription: {
-            type: DataTypes.TEXT,
-            allowNull: true
-        },
-        organizationId: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
-        assigneeUserId: {
-            type: DataTypes.INTEGER,
-            allowNull: true
-        }
-    };
+    (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
+        Sequelize.Model<IDocInstance, IDocAttributes> => {
+        let attributes: SequelizeAttributes<IDocAttributes> = {
+            id: {
+                type: DataTypes.INTEGER,
+                autoIncrement: true,
+                primaryKey: true
+            },
+            subject: {
+                type: DataTypes.STRING,
+                allowNull: false
+            },
+            docTypeId: {
+                type: DataTypes.INTEGER,
+                allowNull: false
+            },
+            metadata: {
+                type: DataTypes.JSON,
+                allowNull: true
+            },
+            status: {
+                type: DataTypes.INTEGER,
+                allowNull: true
+            },
+            description: {
+                type: DataTypes.TEXT,
+                allowNull: true
+            },
+            htmlDescription: {
+                type: DataTypes.TEXT,
+                allowNull: true
+            },
+            organizationId: {
+                type: DataTypes.INTEGER,
+                allowNull: false
+            },
+            assigneeUserId: {
+                type: DataTypes.INTEGER,
+                allowNull: true
+            }
+        };
 
-    return sequelize.define<IDocInstance, IDocAttributes>("docs", attributes, {
-        timestamps: true
-    });
-  };
+        return sequelize.define<IDocInstance, IDocAttributes>("docs", attributes, {
+            timestamps: true
+        });
+    };

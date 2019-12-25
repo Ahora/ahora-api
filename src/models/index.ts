@@ -43,11 +43,11 @@ const db: IDBInterface = {
 
 db.organizations.hasMany(db.labels);
 db.docs.hasMany(db.docLabels);
-db.docs.hasOne(db.docStatuses);
+db.docs.hasOne(db.docStatuses, { foreignKey: 'status' });
+db.docs.hasOne(db.docTypes, { foreignKey: 'docTypeId' });
 db.organizations.hasMany(db.docStatuses);
 db.docs.hasOne(db.docTypes);
 db.organizations.hasMany(db.docTypes);
-db.docs.hasMany(db.docStatuses);
 db.labels.hasMany(db.docLabels);
 
 db.organizations.hasMany(db.organizationUsers);

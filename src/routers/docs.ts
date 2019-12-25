@@ -87,6 +87,22 @@ const generateQuery = async (req: Request): Promise<any> => {
         query.assigneeUserId = userIds;
     }
 
+
+    if (req.query.docType) {
+        if (typeof (req.query.docType) === "string") {
+            req.query.docType = [req.query.docType];
+        }
+    }
+
+    if (req.query.docType) {
+        const docTypes: (number | null)[] = await db.docTypes.findAll({
+            where: { code: req.query.docType, organizationId: currentOrg.id },
+            attributes: ["id"]
+        }).map((docType) => docType.id);
+
+        query.docTypeId = docTypes;
+    }
+
     return query;
 }
 
