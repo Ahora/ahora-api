@@ -17,6 +17,7 @@ export interface GetMethodHook<TAttributes> extends MethodHook<TAttributes> {
 export interface MethodHook<TAttributes> {
     before?(entity: TAttributes, req: Request): Promise<TAttributes>;
     getAdditionalParams?(req: Request): any;
+    useOnlyAdditionalParams?: boolean;
     after?(entity: TAttributes, req?: Request): Promise<TAttributes>;
     handleError?(error: any, req: Request, res: Response, next: NextFunction): void;
 }
@@ -29,9 +30,15 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
             if (hooks && hooks.get && hooks.get.getAdditionalParams) {
                 const additionalParams: any = await hooks.get.getAdditionalParams(req);
                 if (additionalParams !== null) {
-                    req.query = { ...req.query, ...additionalParams }
+                    if (hooks.get.useOnlyAdditionalParams) {
+                        req.query = additionalParams;
+                    }
+                    else {
+                        req.query = { ...req.query, ...additionalParams }
+                    }
                 }
                 else {
+                    //Incase the additional parameters are null consider the result as not valid and return empty array
                     res.send([]);
                     return;
                 }
@@ -42,9 +49,11 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 include = hooks.get.include
             }
 
+            console.log(req.query);
             const entity: TInstance[] = await model.findAll({ where: req.query, include });
             res.send(entity);
         } catch (error) {
+            console.log(error);
             next(error);
         }
     });

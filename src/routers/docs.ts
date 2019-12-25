@@ -5,8 +5,8 @@ import db from "./../models/index";
 import marked from "marked";
 import { IOrganizationInstance } from "../models/organization";
 import { IDocStatusInstance } from "../models/docStatuses";
-import { stringify } from "querystring";
 import { isArray } from "util";
+import { IUserInstance } from "../models/users";
 
 const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttributes> => {
     const updatedDoc = await generateDocHTML(doc);
@@ -50,6 +50,43 @@ const generateQuery = async (req: Request): Promise<any> => {
         query.status = statusIds;
     }
 
+    if (req.query.assignee) {
+        if (typeof (req.query.assignee) === "string") {
+            req.query.assignee = [req.query.assignee];
+        }
+    }
+
+    if (req.query.assignee) {
+        req.query.assignee = req.query.assignee.map((assignee: string) => {
+            switch (assignee) {
+                case "me":
+                    if (req.user) {
+                        return req.user.username;
+                    } else {
+                        return undefined
+                    }
+                case "null":
+                    return null;
+                default:
+                    return assignee;
+            }
+        });
+
+        const usersWithoutNull: string[] = req.query.assignee.filter((assignee: string) => assignee !== null);
+
+        const userIds: (number | null)[] = await db.users.findAll({
+            where: { username: usersWithoutNull },
+            attributes: ["id"]
+        }).map((user) => user.id);
+
+
+        if (usersWithoutNull.length !== req.query.assignee.length) {
+            userIds.push(null);
+        }
+
+        query.assigneeUserId = userIds;
+    }
+
     return query;
 }
 
@@ -78,6 +115,7 @@ export default (path: string) => {
     const router = routeCreate<IDocInstance, IDocAttributes>(path, db.docs, {
         get: {
             getAdditionalParams: generateQuery,
+            useOnlyAdditionalParams: true,
             include: [
                 { as: "assignee", model: db.users, attributes: ["displayName", "username"] }
             ]
