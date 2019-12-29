@@ -16,24 +16,24 @@ const generateDocHTML = async (comment: ICommentAttributes, req: Request): Promi
     comment.authorUserId = req.user!.id;
     comment.docId = parseInt(req.params.docId);
     return new Promise<ICommentAttributes>((resolve, reject) => {
-        if(comment.comment) {
+        if (comment.comment) {
             marked(comment.comment, (error: any, parsedResult: string) => {
-                if(error) {
+                if (error) {
                     reject(error);
                 }
                 else {
                     comment.htmlComment = parsedResult;
                     resolve(comment);
                 }
-                });
+            });
         } else {
             resolve(comment);
         }
     });
 }
 
-const afterPost = async (comment: ICommentInstance, req: Request): Promise<ICommentAttributes> => {
-    return new Promise<ICommentAttributes>((resolve) => {
+const afterPost = async (comment: ICommentInstance, req: Request): Promise<ICommentInstance> => {
+    return new Promise<ICommentInstance>((resolve) => {
         const returnValue: any = {
             authorUserId: comment.authorUserId,
             id: comment.id,
@@ -52,12 +52,12 @@ const afterPost = async (comment: ICommentInstance, req: Request): Promise<IComm
 
 export default (path: string) => {
 
-    const router  = routeCreate<ICommentInstance, ICommentAttributes>(path, db.comment, {
-        get: { 
+    const router = routeCreate<ICommentInstance, ICommentAttributes>(path, db.comment, {
+        get: {
             getAdditionalParams: generateQuery,
-            include: [{ model:db.users, attributes: ["displayName", "username"]}]
+            include: [{ model: db.users, attributes: ["displayName", "username"] }]
         },
-        post: { before: generateDocHTML, after: afterPost},
+        post: { before: generateDocHTML, after: afterPost },
         put: { before: generateDocHTML }
     });
     return router;
