@@ -11,10 +11,14 @@ export interface IDocAttributes {
     metadata: any;
     organizationId: number;
     status?: number;
-    labels?: number[]
+    labels?: number[];
 }
 
 export interface IDocInstance extends Sequelize.Instance<IDocAttributes>, IDocAttributes {
+    assignee: {
+        username: string;
+        displayName?: string;
+    }
 }
 
 // tslint:disable-next-line:typedef

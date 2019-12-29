@@ -34,6 +34,7 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
         description: doc.description,
         htmlDescription: doc.htmlDescription,
         assigneeUserId: doc.assigneeUserId,
+        assignee: doc.assignee,
         docTypeId: doc.docTypeId,
         metadata: doc.metadata,
         organizationId: doc.organizationId,
@@ -161,20 +162,6 @@ const generateDocHTML = async (doc: IDocAttributes): Promise<IDocAttributes> => 
 }
 
 export default (path: string) => {
-
-    /*
-    get: {
-            getAdditionalParams: generateQuery,
-            useOnlyAdditionalParams: true,
-            after: afterGet,
-            include: [
-                { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
-                { as: "labels", model: db.docLabels, attributes: ["labelId"] }
-            ]
-        },
-        post: { before: beforePost, after: updateLabels },
-        put: { before: generateDocHTML, after: updateLabels }
-        */
     const router = routeCreate<IDocInstance, IDocAttributes>(path, db.docs, {
         get: {
             getAdditionalParams: generateQuery,
