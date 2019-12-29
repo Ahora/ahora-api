@@ -11,6 +11,7 @@ export interface IDocAttributes {
     metadata: any;
     organizationId: number;
     status?: number;
+    labels?: number[]
 }
 
 export interface IDocInstance extends Sequelize.Instance<IDocAttributes>, IDocAttributes {

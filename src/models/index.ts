@@ -42,7 +42,6 @@ const db: IDBInterface = {
 };
 
 db.organizations.hasMany(db.labels);
-db.docs.hasMany(db.docLabels);
 db.docs.hasOne(db.docStatuses, { foreignKey: 'status' });
 db.docs.hasOne(db.docTypes, { foreignKey: 'docTypeId' });
 db.organizations.hasMany(db.docStatuses);
@@ -62,6 +61,9 @@ db.comment.belongsTo(db.users, { foreignKey: 'authorUserId' });
 
 db.docs.belongsTo(db.users, { as: "assignee", foreignKey: 'assigneeUserId' });
 db.users.hasMany(db.docs, { foreignKey: 'assigneeUserId' });
+
+db.docs.hasMany(db.docLabels, { as: "labels", foreignKey: 'docId' });
+db.docLabels.belongsTo(db.docs, { foreignKey: 'docId' });
 
 /*
 db.sequelize.sync({ force: false }).then(()=> {

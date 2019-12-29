@@ -3,26 +3,26 @@ import { IDocInstance } from "../models/docs";
 import Sequelize, { Model, IncludeOptions } from "sequelize";
 import marked from "marked";
 
-export interface RouterHooks<TAttributes> {
-    put?: MethodHook<TAttributes>;
-    get?: GetMethodHook<TAttributes>;
-    post?: MethodHook<TAttributes>;
-    delete?: MethodHook<TAttributes>;
+export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
+    put?: MethodHook<TAttributes, TInstance>;
+    get?: GetMethodHook<TAttributes, TInstance>;
+    post?: MethodHook<TAttributes, TInstance>;
+    delete?: MethodHook<TAttributes, TInstance>;
 }
 
-export interface GetMethodHook<TAttributes> extends MethodHook<TAttributes> {
+export interface GetMethodHook<TAttributes, TInstance extends TAttributes> extends MethodHook<TAttributes, TInstance> {
     include?: Array<Model<any, any> | IncludeOptions>;
 }
 
-export interface MethodHook<TAttributes> {
+export interface MethodHook<TAttributes, TInstance extends TAttributes> {
     before?(entity: TAttributes, req: Request): Promise<TAttributes>;
     getAdditionalParams?(req: Request): any;
     useOnlyAdditionalParams?: boolean;
-    after?(entity: TAttributes, req?: Request): Promise<TAttributes>;
+    after?(entity: TInstance, req?: Request): Promise<TInstance>;
     handleError?(error: any, req: Request, res: Response, next: NextFunction): void;
 }
 
-export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>, hooks: RouterHooks<TAttributes> | null = null) => {
+export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>, hooks: RouterHooks<TAttributes, TInstance> | null = null) => {
     const router: Router = express.Router();
 
     router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -49,8 +49,20 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 include = hooks.get.include
             }
 
-            const entity: TInstance[] = await model.findAll({ where: req.query, include });
-            res.send(entity);
+            const entities: TInstance[] = await model.findAll({ where: req.query, include });
+            const newentities: TInstance[] = [];
+            for (let index = 0; index < entities.length; index++) {
+                const entity = entities[index];
+                if (hooks && hooks.get && hooks.get.after) {
+                    const newEnt = await hooks.get.after(entity, req);
+                    newentities.push(newEnt);
+                }
+                else {
+                    newentities.push(entity);
+                }
+            }
+
+            res.send(newentities);
         } catch (error) {
             next(error);
         }
@@ -58,22 +70,16 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
     router.post(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
+            let body = { ...req.body };
             if (hooks && hooks.post && hooks.post.getAdditionalParams) {
-                req.body = { ...req.body, ...await hooks.post.getAdditionalParams(req) }
+                body = { ...body, ...await hooks.post.getAdditionalParams(req) }
             }
-            if (req.user)
-                req.body.userAlias = (req.user! as any).username;
 
             if (hooks && hooks.post && hooks.post.before) {
-                req.body = await hooks.post.before(req.body, req);
+                body = await hooks.post.before(body, req);
             }
 
-            let include;
-            if (hooks && hooks.get && hooks.get) {
-                include = hooks.get.include
-            }
-
-            let entity: TAttributes = await model.create(req.body, { include });
+            let entity: TInstance = await model.create(body);
 
             if (hooks && hooks.post && hooks.post.after) {
                 entity = await hooks.post.after(entity, req);
@@ -109,7 +115,12 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 where: { id: req.params.id }
             });
 
-            const result = await model.findOne({ where: { id: req.params.id } });
+            let result: TInstance | null = await model.findOne({ where: { id: req.params.id } });
+
+            if (result && hooks && hooks.post && hooks.post.after) {
+                result = await hooks.post.after(result, req);
+            }
+
             res.send(result);
         } catch (error) {
             next(error);
@@ -129,7 +140,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
             }
 
 
-            const entity: TInstance | null = await model.findOne({
+            let entity: TInstance | null = await model.findOne({
                 where: {
                     ...req.query,
                     id: req.params.id,
@@ -137,15 +148,14 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 include
             });
 
-            if ((entity as any).description) {
-                marked((entity as any).description, (error: any, parsedResult: string) => {
-                    (entity as any).dataValues.htmlDescription = parsedResult;
-                    res.send(entity);
-
-                });
+            if (entity) {
+                if (hooks && hooks.get && hooks.get.after) {
+                    entity = await hooks.get.after(entity, req);
+                }
+                res.send(entity);
             }
             else {
-                res.send(entity);
+                res.status(404);
             }
         } catch (error) {
             next(error);

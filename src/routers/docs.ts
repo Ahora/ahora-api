@@ -7,6 +7,40 @@ import { IOrganizationInstance } from "../models/organization";
 import { IDocStatusInstance } from "../models/docStatuses";
 import { isArray } from "util";
 import { IUserInstance } from "../models/users";
+import { IDocLabelAttributes } from "../models/docLabel";
+
+const updateLabels = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
+    const labelIds: number[] = req.body.labels;
+    const itemsToAdd: IDocLabelAttributes[] = labelIds.map((id: number) => {
+        return {
+            docId: doc.id,
+            labelId: id
+        }
+    });
+
+    await db.docLabels.destroy({
+        where: { docId: doc.id }
+    });
+    await db.docLabels.bulkCreate(itemsToAdd);
+
+    return doc;
+}
+
+const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
+    const labels: IDocLabelAttributes[] | undefined = doc.labels as any;
+    return {
+        id: doc.id,
+        subject: doc.subject,
+        description: doc.description,
+        htmlDescription: doc.htmlDescription,
+        assigneeUserId: doc.assigneeUserId,
+        docTypeId: doc.docTypeId,
+        metadata: doc.metadata,
+        organizationId: doc.organizationId,
+        status: doc.status,
+        labels: labels && labels.map(label => label.labelId)
+    };
+}
 
 const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttributes> => {
     const updatedDoc = await generateDocHTML(doc);
@@ -19,7 +53,7 @@ const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttrib
         doc.assigneeUserId = req.user.id;
     }
 
-    return updatedDoc;
+    return doc;
 };
 
 const generateQuery = async (req: Request): Promise<any> => {
@@ -128,16 +162,31 @@ const generateDocHTML = async (doc: IDocAttributes): Promise<IDocAttributes> => 
 
 export default (path: string) => {
 
+    /*
+    get: {
+            getAdditionalParams: generateQuery,
+            useOnlyAdditionalParams: true,
+            after: afterGet,
+            include: [
+                { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
+                { as: "labels", model: db.docLabels, attributes: ["labelId"] }
+            ]
+        },
+        post: { before: beforePost, after: updateLabels },
+        put: { before: generateDocHTML, after: updateLabels }
+        */
     const router = routeCreate<IDocInstance, IDocAttributes>(path, db.docs, {
         get: {
             getAdditionalParams: generateQuery,
             useOnlyAdditionalParams: true,
+            after: afterGet,
             include: [
-                { as: "assignee", model: db.users, attributes: ["displayName", "username"] }
+                { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
+                { as: "labels", model: db.docLabels, attributes: ["labelId"] }
             ]
         },
-        post: { before: beforePost },
-        put: { before: generateDocHTML }
+        post: { before: beforePost, after: updateLabels },
+        put: { before: generateDocHTML, after: updateLabels }
     });
     return router;
 };
