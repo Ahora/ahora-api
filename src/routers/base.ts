@@ -117,8 +117,8 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
             let result: TInstance | null = await model.findOne({ where: { id: req.params.id } });
 
-            if (result && hooks && hooks.post && hooks.post.after) {
-                result = await hooks.post.after(result, req);
+            if (result && hooks && hooks.put && hooks.put.after) {
+                result = await hooks.put.after(result, req);
             }
 
             res.send(result);
