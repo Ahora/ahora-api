@@ -10,18 +10,20 @@ import { IUserInstance } from "../models/users";
 import { IDocLabelAttributes } from "../models/docLabel";
 
 const updateLabels = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
-    const labelIds: number[] = req.body.labels;
-    const itemsToAdd: IDocLabelAttributes[] = labelIds.map((id: number) => {
-        return {
-            docId: doc.id,
-            labelId: id
-        }
-    });
+    const labelIds: number[] | undefined = req.body.labels;
+    if (labelIds) {
+        const itemsToAdd: IDocLabelAttributes[] = labelIds.map((id: number) => {
+            return {
+                docId: doc.id,
+                labelId: id
+            }
+        });
 
-    await db.docLabels.destroy({
-        where: { docId: doc.id }
-    });
-    await db.docLabels.bulkCreate(itemsToAdd);
+        await db.docLabels.destroy({
+            where: { docId: doc.id }
+        });
+        await db.docLabels.bulkCreate(itemsToAdd);
+    }
 
     return doc;
 }
