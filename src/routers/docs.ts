@@ -8,6 +8,7 @@ import { IDocStatusInstance } from "../models/docStatuses";
 import { isArray } from "util";
 import { IUserInstance } from "../models/users";
 import { IDocLabelAttributes } from "../models/docLabel";
+import { ILabelAttributes, ILabelInstance } from "../models/labels";
 
 const updateLabels = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
     const labelIds: number[] | undefined = req.body.labels;
@@ -64,11 +65,13 @@ const generateQuery = async (req: Request): Promise<any> => {
     const currentOrg: IOrganizationInstance = req.org!;
     const query: any = { organizationId: currentOrg.id };
 
+    //--------------Status-------------------------------------------------
     const statuses: IDocStatusInstance[] = await db.docStatuses.findAll({ where: { organizationId: currentOrg.id } });
     const Statusmap: Map<string, IDocStatusInstance> = new Map();
     statuses.forEach(status => {
         Statusmap.set(status.name.toLowerCase(), status);
     });
+
 
     if (req.query.status) {
         if (typeof (req.query.status) === "string") {
@@ -86,6 +89,34 @@ const generateQuery = async (req: Request): Promise<any> => {
         });
         query.status = statusIds;
     }
+
+    //--------------Label-------------------------------------------------
+    const labels: ILabelInstance[] = await db.labels.findAll({ where: { organizationId: currentOrg.id } });
+    const labelMap: Map<string, ILabelInstance> = new Map();
+    labels.forEach(label => {
+        labelMap.set(label.name.toLowerCase(), label);
+    });
+
+    if (req.query.label) {
+        if (typeof (req.query.label) === "string") {
+            req.query.label = [req.query.label];
+        }
+    }
+
+    if (isArray(req.query.label)) {
+        const labelIds: number[] = [];
+        req.query.label.forEach((statusName: string) => {
+            const value: ILabelInstance | undefined = labelMap.get(statusName.toLowerCase());
+            if (value) {
+                labelIds.push(value.id);
+            }
+        });
+
+        console.log(labelIds, req.query.label);
+        query["$labelsquery.labelId$"] = labelIds;
+    }
+
+    //--------------Assignee-------------------------------------------------
 
     if (req.query.assignee) {
         if (typeof (req.query.assignee) === "string") {
@@ -171,7 +202,8 @@ export default (path: string) => {
             after: afterGet,
             include: [
                 { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
-                { as: "labels", model: db.docLabels, attributes: ["labelId"] }
+                { as: "labels", model: db.docLabels, attributes: ["labelId"] },
+                { as: "labelsquery", model: db.docLabels, attributes: [] }
             ]
         },
         post: { before: beforePost, after: updateLabels },

@@ -65,6 +65,8 @@ db.users.hasMany(db.docs, { foreignKey: 'assigneeUserId' });
 db.docs.hasMany(db.docLabels, { as: "labels", foreignKey: 'docId' });
 db.docLabels.belongsTo(db.docs, { foreignKey: 'docId' });
 
+db.docs.hasMany(db.docLabels, { as: "labelsquery", foreignKey: 'docId' });
+
 /*
 db.sequelize.sync({ force: false }).then(()=> {
   console.log("Database synced successfully")
