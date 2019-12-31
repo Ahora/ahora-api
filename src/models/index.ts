@@ -74,11 +74,4 @@ db.sequelize.sync({ force: false }).then(()=> {
   console.error("database sync failed", error);
 });
 */
-
-
-db.users.findAll().then((users: IUserInstance[]) => {
-  users.forEach(user => {
-    console.log(user.id, user.username, user.gitHubId)
-  })
-});
 export default db;
