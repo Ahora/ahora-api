@@ -51,21 +51,21 @@ db.labels.hasMany(db.docLabels);
 
 db.organizations.hasMany(db.organizationUsers);
 
-db.organizationUsers.belongsTo(db.users, { foreignKey: 'userId' });
-db.users.hasMany(db.organizationUsers, { foreignKey: 'userId' });
+db.organizationUsers.belongsTo(db.users, { foreignKey: 'userId', onDelete: "CASCADE" });
+db.users.hasMany(db.organizationUsers, { foreignKey: 'userId', onDelete: "CASCADE" });
 
-db.comment.belongsTo(db.docs, { foreignKey: 'docId' });
-db.docs.hasMany(db.comment, { foreignKey: 'docId' });
+db.comment.belongsTo(db.docs, { foreignKey: 'docId', onDelete: "CASCADE" });
+db.docs.hasMany(db.comment, { foreignKey: 'docId', onDelete: "CASCADE" });
 
-db.comment.belongsTo(db.users, { foreignKey: 'authorUserId' });
+db.comment.belongsTo(db.users, { foreignKey: 'authorUserId', onDelete: "CASCADE" });
 
-db.docs.belongsTo(db.users, { as: "assignee", foreignKey: 'assigneeUserId' });
-db.users.hasMany(db.docs, { foreignKey: 'assigneeUserId' });
+db.docs.belongsTo(db.users, { as: "assignee", foreignKey: 'assigneeUserId', onDelete: "CASCADE" });
+db.users.hasMany(db.docs, { foreignKey: 'assigneeUserId', onDelete: "CASCADE" });
 
-db.docs.hasMany(db.docLabels, { as: "labels", foreignKey: 'docId' });
-db.docLabels.belongsTo(db.docs, { foreignKey: 'docId' });
+db.docs.hasMany(db.docLabels, { as: "labels", foreignKey: 'docId', onDelete: "CASCADE" });
+db.docLabels.belongsTo(db.docs, { foreignKey: 'docId', onDelete: "CASCADE" });
 
-db.docs.hasMany(db.docLabels, { as: "labelsquery", foreignKey: 'docId' });
+db.docs.hasMany(db.docLabels, { as: "labelsquery", foreignKey: 'docId', onDelete: "CASCADE" });
 
 /*
 db.sequelize.sync({ force: false }).then(()=> {
@@ -74,4 +74,11 @@ db.sequelize.sync({ force: false }).then(()=> {
   console.error("database sync failed", error);
 });
 */
+
+
+db.users.findAll().then((users: IUserInstance[]) => {
+  users.forEach(user => {
+    console.log(user.id, user.username, user.gitHubId)
+  })
+});
 export default db;

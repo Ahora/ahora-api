@@ -48,13 +48,9 @@ app.use("/api/organizations/:login", async (req: Request, res: Response, next: N
   if (org) {
     req.org = org;
   }
-  next();
-});
-
-app.get("/api/organizations/:login", async (req: Request, res: Response) => {
   if (req.org) {
     if (req.org.orgType == OrganizationType.Public) {
-      res.send(req.org);
+      next();
     } else {
       if (req.user) {
         const userPermission: IOrganizationUserInstance | null = await db.organizationUsers.findOne({
@@ -62,7 +58,7 @@ app.get("/api/organizations/:login", async (req: Request, res: Response) => {
         });
 
         if (userPermission) {
-          res.send(req.org);
+          next();
         } else {
           res.status(401).send();
         }
@@ -74,7 +70,10 @@ app.get("/api/organizations/:login", async (req: Request, res: Response) => {
   } else {
     res.status(404).send();
   }
+});
 
+app.get("/api/organizations/:login", async (req: Request, res: Response) => {
+  res.send(req.org);
 });
 
 app.use(organizationChildCreate("/api/organizations/:login/labels", db.labels));

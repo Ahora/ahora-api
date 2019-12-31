@@ -4,10 +4,10 @@ import { IOrganizationUserInstance, IOrganizationUserAttribute } from "../models
 import { Request } from "express";
 import { IUserInstance } from "../models/users";
 
-interface PostValues {
-    login: string,
-    permission: number
-}
+
+import { RestCollectorClient } from "rest-collector";
+
+const githubUserClient: RestCollectorClient = new RestCollectorClient("https://api.github.com/users/{username}");
 
 const getAdditionalParams = async (req: Request): Promise<any> => {
     if (req && req.org) {
@@ -21,13 +21,25 @@ const beforePost = async (userToAdd: IOrganizationUserAttribute, req: Request): 
         userToAdd.organizationId = req.org.id;
     }
 
-    const username: string = req.body!.login
+    const username: string = req.body!.login;
+
+    const result = await githubUserClient.get({
+        params: { username }
+    });
+    console.log(result);
+
+    const gitHubUser = result.data;
+
     let user: IUserInstance | null = await db.users.findOne({
-        where: { username }
+        where: { gitHubId: gitHubUser.id.toString() }
     });
 
     if (!user) {
-        user = await db.users.create({ username });
+        user = await db.users.create({
+            displayName: gitHubUser.name,
+            gitHubId: gitHubUser.id,
+            username
+        });
     }
 
     userToAdd.userId = user.id;
