@@ -39,6 +39,8 @@ passport.use(new GitHubStrategy({
                 where: { gitHubId: profile.id }
             });
 
+            console.log(existingUser!.id, existingUser!.username);
+
             let email: string | undefined;
             if (profile.emails && profile.emails.length > 0) {
                 email = profile.emails[0].value
@@ -56,7 +58,8 @@ passport.use(new GitHubStrategy({
 
             if (existingUser != null) {
                 const updatedInstances = await db.users.update(userToUpdateOrCreate, { where: { id: existingUser.id } });
-                const user: IUserInstance | null = await db.users.findOne({ where: { id: updatedInstances[0] } });
+                console.log("updatedInstances", updatedInstances)
+                const user: IUserInstance | null = await db.users.findOne({ where: { id: existingUser.id } });
                 if (user) {
                     cb(null, user);
                 }
