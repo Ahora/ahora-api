@@ -26,7 +26,6 @@ const beforePost = async (userToAdd: IOrganizationUserAttribute, req: Request): 
     const result = await githubUserClient.get({
         params: { username }
     });
-    console.log(result);
 
     const gitHubUser = result.data;
 

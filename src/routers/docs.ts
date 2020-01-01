@@ -112,7 +112,6 @@ const generateQuery = async (req: Request): Promise<any> => {
             }
         });
 
-        console.log(labelIds, req.query.label);
         query["$labelsquery.labelId$"] = labelIds;
     }
 
