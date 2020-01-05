@@ -68,7 +68,15 @@ db.docLabels.belongsTo(db.docs, { foreignKey: 'docId', onDelete: "CASCADE" });
 db.docs.hasMany(db.docLabels, { as: "labelsquery", foreignKey: 'docId', onDelete: "CASCADE" });
 
 /*
-db.sequelize.sync({ force: false }).then(()=> {
+import fs from 'fs';
+const sql: string = fs.readFileSync('./sql/sessions.sql', 'utf8');
+db.sequelize.query(sql).then(() => {
+  console.log("SQL synced successfully")
+}).catch((error) => {
+  console.error("SQL sync failed", error);
+});
+
+db.sequelize.sync({ force: false }).then(() => {
   console.log("Database synced successfully")
 }).error((error) => {
   console.error("database sync failed", error);

@@ -8,6 +8,7 @@ export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
     get?: GetMethodHook<TAttributes, TInstance>;
     post?: MethodHook<TAttributes, TInstance>;
     delete?: MethodHook<TAttributes, TInstance>;
+    primaryField?: string;
 }
 
 export interface GetMethodHook<TAttributes, TInstance extends TAttributes> extends MethodHook<TAttributes, TInstance> {
@@ -24,6 +25,8 @@ export interface MethodHook<TAttributes, TInstance extends TAttributes> {
 
 export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>, hooks: RouterHooks<TAttributes, TInstance> | null = null) => {
     const router: Router = express.Router();
+
+    const primaryField: string = (hooks && hooks.primaryField) || "id";
 
     router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
@@ -96,26 +99,26 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
     });
 
-    router.delete(path + "/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    router.delete(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             await model.destroy({
-                where: { id: req.params.id }
+                where: { [primaryField]: req.params[primaryField] }
             });
             res.send();
         } catch (error) {
             next(error);
         }
     });
-    router.put(path + "/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    router.put(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             if (hooks && hooks.put && hooks.put.before) {
                 req.body = await hooks.put.before(req.body, req);
             }
             await model.update(req.body, {
-                where: { id: req.params.id }
+                where: { [primaryField]: req.params[primaryField] }
             });
 
-            let result: TInstance | null = await model.findOne({ where: { id: req.params.id } });
+            let result: TInstance | null = await model.findOne({ where: ({ [primaryField]: req.params[primaryField] }) as any });
 
             if (result && hooks && hooks.put && hooks.put.after) {
                 result = await hooks.put.after(result, req);
@@ -128,7 +131,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
     });
 
 
-    router.get(path + "/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    router.get(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
         try {
             let include;
             if (hooks && hooks.get && hooks.get) {
@@ -143,7 +146,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
             let entity: TInstance | null = await model.findOne({
                 where: {
                     ...req.query,
-                    id: req.params.id,
+                    id: req.params[primaryField],
                 },
                 include
             });

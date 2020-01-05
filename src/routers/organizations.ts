@@ -50,6 +50,7 @@ const getAdditionalParams = async (req: Request): Promise<any> => {
 
 export default (path: string) => {
     const router = routeCreate<IOrganizationInstance, IOrganizationAttributes>(path, db.organizations, {
+        primaryField: "login",
         post: { after: afterPost, handleError: handlePostError },
         get: {
             getAdditionalParams: getAdditionalParams

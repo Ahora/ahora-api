@@ -9,6 +9,8 @@ import { isArray } from "util";
 import { IUserInstance } from "../models/users";
 import { IDocLabelAttributes } from "../models/docLabel";
 import { ILabelAttributes, ILabelInstance } from "../models/labels";
+import { getUserFromGithubAlias } from "../helpers/users";
+import connectPgSimple from "connect-pg-simple";
 
 const updateLabels = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
     const labelIds: number[] | undefined = req.body.labels;
@@ -42,6 +44,8 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
         metadata: doc.metadata,
         organizationId: doc.organizationId,
         status: doc.status,
+        updatedAt: doc.updatedAt,
+        createdAt: doc.createdAt,
         labels: labels && labels.map(label => label.labelId)
     };
 }
@@ -207,6 +211,24 @@ export default (path: string) => {
         },
         post: { before: beforePost, after: updateLabels },
         put: { before: generateDocHTML, after: updateLabels }
+    });
+
+    router.post(`${path}/:id/assignee`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const username: string = req.body.username;
+            const user: IUserInstance | null = await getUserFromGithubAlias(username);
+            if (user) {
+                await db.docs.update({
+                    assigneeUserId: user.id
+                }, { where: { id: req.params.id } });
+                res.send(user);
+            } else {
+                res.status(400).send();
+            }
+        } catch (error) {
+            next(error);
+        }
+
     });
     return router;
 };

@@ -12,6 +12,8 @@ export interface IDocAttributes {
     organizationId: number;
     status?: number;
     labels?: number[];
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface IDocInstance extends Sequelize.Instance<IDocAttributes>, IDocAttributes {
@@ -61,6 +63,14 @@ export const EventsFactory =
             },
             assigneeUserId: {
                 type: DataTypes.INTEGER,
+                allowNull: true
+            },
+            createdAt: {
+                type: DataTypes.DATE,
+                allowNull: true
+            },
+            updatedAt: {
+                type: DataTypes.DATE,
                 allowNull: true
             }
         };
