@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import routeCreate from "./base";
 import db from "../models/index";
-import { IOrganizationInstance, IOrganizationAttributes } from "../models/organization";
+import { IOrganizationInstance, IOrganizationAttributes, OrganizationType } from "../models/organization";
 import { IDocStatusInstance } from "../models/docStatuses";
+import { Op } from "sequelize";
+
 
 //Create default statuses, update default status.
 const afterPost = async (org: IOrganizationInstance, req: Request): Promise<IOrganizationInstance> => {
@@ -41,10 +43,15 @@ const getAdditionalParams = async (req: Request): Promise<any> => {
             attributes: ["organizationId"],
             where: { userId: req.user!.id }
         });
-        return { id: currentUserPermissions.map(per => per.organizationId) }
+        return {
+            [Op.or]: [
+                { id: currentUserPermissions.map(per => per.organizationId) },
+                { orgType: OrganizationType.Public }
+            ]
+        }
     }
     else {
-        return null;
+        return { orgType: OrganizationType.Public };
     }
 }
 
