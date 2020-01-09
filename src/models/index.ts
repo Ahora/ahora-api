@@ -10,6 +10,7 @@ import { IDocLabelInstance, DocsLabelFactory, IDocLabelAttributes } from "./docL
 import { IDocStatusAttributes, IDocStatusInstance, StatusesFactory } from "./docStatuses";
 import { IOrganizationUserAttribute, IOrganizationUserInstance, OrganizationPermissionFactory } from "./organizationUsers";
 import { IDocTypeAttributes, IDocTypeInstance, DocTypesFactory } from "./docType";
+import { IDocWatcherInstance, IDocWatcherAttributes, DocWatchersFactory } from "./docWatcher";
 
 export interface IDBInterface {
   docs: Sequelize.Model<IDocInstance, IDocAttributes>;
@@ -21,11 +22,12 @@ export interface IDBInterface {
   docStatuses: Sequelize.Model<IDocStatusInstance, IDocStatusAttributes>;
   organizationUsers: Sequelize.Model<IOrganizationUserInstance, IOrganizationUserAttribute>;
   docTypes: Sequelize.Model<IDocTypeInstance, IDocTypeAttributes>;
+  docWatchers: Sequelize.Model<IDocWatcherInstance, IDocWatcherAttributes>;
   sequelize: Sequelize.Sequelize;
 }
 
 const sequelize: Sequelize.Sequelize = new Sequelize(DB_CONNECTION_STRING, {
-  logging: true
+  logging: false
 });
 
 const db: IDBInterface = {
@@ -38,7 +40,9 @@ const db: IDBInterface = {
   docLabels: DocsLabelFactory(sequelize, Sequelize),
   docStatuses: StatusesFactory(sequelize, Sequelize),
   organizationUsers: OrganizationPermissionFactory(sequelize, Sequelize),
-  docTypes: DocTypesFactory(sequelize, Sequelize)
+  docTypes: DocTypesFactory(sequelize, Sequelize),
+  docWatchers: DocWatchersFactory(sequelize, Sequelize)
+
 };
 
 db.organizations.hasMany(db.labels);
@@ -56,8 +60,11 @@ db.users.hasMany(db.organizationUsers, { foreignKey: 'userId', onDelete: "CASCAD
 
 db.comment.belongsTo(db.docs, { foreignKey: 'docId', onDelete: "CASCADE" });
 db.docs.hasMany(db.comment, { foreignKey: 'docId', onDelete: "CASCADE" });
-
 db.comment.belongsTo(db.users, { foreignKey: 'authorUserId', onDelete: "CASCADE" });
+
+db.docWatchers.belongsTo(db.docs, { foreignKey: 'docId', onDelete: "CASCADE" });
+db.docs.hasMany(db.docWatchers, { foreignKey: 'docId', onDelete: "CASCADE" });
+db.docWatchers.belongsTo(db.users, { foreignKey: 'userId', onDelete: "CASCADE" });
 
 db.docs.belongsTo(db.users, { as: "assignee", foreignKey: 'assigneeUserId', onDelete: "CASCADE" });
 db.users.hasMany(db.docs, { foreignKey: 'assigneeUserId', onDelete: "CASCADE" });
@@ -75,11 +82,11 @@ db.sequelize.query(sql).then(() => {
 }).catch((error) => {
   console.error("SQL sync failed", error);
 });
-
 db.sequelize.sync({ force: false }).then(() => {
   console.log("Database synced successfully")
 }).error((error) => {
   console.error("database sync failed", error);
 });
 */
+
 export default db;

@@ -5,6 +5,7 @@ import routeCreate, { RouterHooks } from "./base";
 import db from "../models/index";
 import marked from "marked";
 import { ICommentAttributes, ICommentInstance } from "../models/comments";
+import { addUserToWatchersList } from "../helpers/docWatchers";
 
 const generateQuery = async (req: Request): Promise<any> => {
     return {
@@ -33,21 +34,23 @@ const generateDocHTML = async (comment: ICommentAttributes, req: Request): Promi
 }
 
 const afterPost = async (comment: ICommentInstance, req: Request): Promise<ICommentInstance> => {
-    return new Promise<ICommentInstance>((resolve) => {
-        const returnValue: any = {
-            authorUserId: comment.authorUserId,
-            id: comment.id,
-            comment: comment.comment,
-            htmlComment: comment.htmlComment,
-            pinned: comment.pinned,
-            docId: comment.docId
-        };
-        returnValue.user = {
-            displayName: req.user!.displayName,
-            username: req.user!.username
-        };
-        resolve(returnValue);
-    });
+    const returnValue: any = {
+        authorUserId: comment.authorUserId,
+        id: comment.id,
+        comment: comment.comment,
+        htmlComment: comment.htmlComment,
+        pinned: comment.pinned,
+        docId: comment.docId
+    };
+
+    returnValue.user = {
+        displayName: req.user!.displayName,
+        username: req.user!.username
+    };
+
+    await addUserToWatchersList(comment.docId, comment.authorUserId);
+
+    return returnValue;
 }
 
 export default (path: string) => {

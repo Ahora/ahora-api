@@ -21,6 +21,7 @@ export interface MethodHook<TAttributes, TInstance extends TAttributes> {
     useOnlyAdditionalParams?: boolean;
     after?(entity: TInstance, req?: Request): Promise<TInstance>;
     handleError?(error: any, req: Request, res: Response, next: NextFunction): void;
+    disable?: boolean
 }
 
 export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>, hooks: RouterHooks<TAttributes, TInstance> | null = null) => {
@@ -28,142 +29,154 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
     const primaryField: string = (hooks && hooks.primaryField) || "id";
 
-    router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        try {
-            if (hooks && hooks.get && hooks.get.getAdditionalParams) {
-                const additionalParams: any = await hooks.get.getAdditionalParams(req);
-                if (additionalParams !== null) {
-                    if (hooks.get.useOnlyAdditionalParams) {
-                        req.query = additionalParams;
+    if (!(hooks && hooks.get && hooks.get.disable)) {
+        router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+            try {
+                if (hooks && hooks.get && hooks.get.getAdditionalParams) {
+                    const additionalParams: any = await hooks.get.getAdditionalParams(req);
+                    if (additionalParams !== null) {
+                        if (hooks.get.useOnlyAdditionalParams) {
+                            req.query = additionalParams;
+                        }
+                        else {
+                            req.query = { ...req.query, ...additionalParams }
+                        }
                     }
                     else {
-                        req.query = { ...req.query, ...additionalParams }
+                        //Incase the additional parameters are null consider the result as not valid and return empty array
+                        res.send([]);
+                        return;
                     }
                 }
-                else {
-                    //Incase the additional parameters are null consider the result as not valid and return empty array
-                    res.send([]);
-                    return;
+
+                let include;
+                if (hooks && hooks.get && hooks.get) {
+                    include = hooks.get.include
                 }
-            }
 
-            let include;
-            if (hooks && hooks.get && hooks.get) {
-                include = hooks.get.include
-            }
-
-            const entities: TInstance[] = await model.findAll({ where: req.query, include });
-            const newentities: TInstance[] = [];
-            for (let index = 0; index < entities.length; index++) {
-                const entity = entities[index];
-                if (hooks && hooks.get && hooks.get.after) {
-                    const newEnt = await hooks.get.after(entity, req);
-                    newentities.push(newEnt);
+                const entities: TInstance[] = await model.findAll({ where: req.query, include });
+                const newentities: TInstance[] = [];
+                for (let index = 0; index < entities.length; index++) {
+                    const entity = entities[index];
+                    if (hooks && hooks.get && hooks.get.after) {
+                        const newEnt = await hooks.get.after(entity, req);
+                        newentities.push(newEnt);
+                    }
+                    else {
+                        newentities.push(entity);
+                    }
                 }
-                else {
-                    newentities.push(entity);
-                }
-            }
 
-            res.send(newentities);
-        } catch (error) {
-            next(error);
-        }
-    });
-
-    router.post(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        try {
-            let body = { ...req.body };
-            if (hooks && hooks.post && hooks.post.getAdditionalParams) {
-                body = { ...body, ...await hooks.post.getAdditionalParams(req) }
-            }
-
-            if (hooks && hooks.post && hooks.post.before) {
-                body = await hooks.post.before(body, req);
-            }
-
-            let entity: TInstance = await model.create(body);
-
-            if (hooks && hooks.post && hooks.post.after) {
-                entity = await hooks.post.after(entity, req);
-            }
-
-            res.send(entity);
-        } catch (error) {
-            if (hooks && hooks.post && hooks.post.handleError) {
-                hooks.post.handleError(error, req, res, next);
-            } else {
+                res.send(newentities);
+            } catch (error) {
                 next(error);
             }
-        }
+        });
+    }
 
-    });
+    if (!(hooks && hooks.post && hooks.post.disable)) {
 
-    router.delete(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        try {
-            await model.destroy({
-                where: { [primaryField]: req.params[primaryField] }
-            });
-            res.send();
-        } catch (error) {
-            next(error);
-        }
-    });
-    router.put(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        try {
-            if (hooks && hooks.put && hooks.put.before) {
-                req.body = await hooks.put.before(req.body, req);
-            }
-            await model.update(req.body, {
-                where: { [primaryField]: req.params[primaryField] }
-            });
-
-            let result: TInstance | null = await model.findOne({ where: ({ [primaryField]: req.params[primaryField] }) as any });
-
-            if (result && hooks && hooks.put && hooks.put.after) {
-                result = await hooks.put.after(result, req);
-            }
-
-            res.send(result);
-        } catch (error) {
-            next(error);
-        }
-    });
-
-
-    router.get(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-        try {
-            let include;
-            if (hooks && hooks.get && hooks.get) {
-                include = hooks.get.include
-            }
-
-            if (hooks && hooks.get && hooks.get.getAdditionalParams) {
-                req.query = { ...req.query, ...await hooks.get.getAdditionalParams(req) }
-            }
-
-
-            let entity: TInstance | null = await model.findOne({
-                where: {
-                    ...req.query,
-                    id: req.params[primaryField],
-                },
-                include
-            });
-
-            if (entity) {
-                if (hooks && hooks.get && hooks.get.after) {
-                    entity = await hooks.get.after(entity, req);
+        router.post(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+            try {
+                let body = { ...req.body };
+                if (hooks && hooks.post && hooks.post.getAdditionalParams) {
+                    body = { ...body, ...await hooks.post.getAdditionalParams(req) }
                 }
+
+                if (hooks && hooks.post && hooks.post.before) {
+                    body = await hooks.post.before(body, req);
+                }
+
+                let entity: TInstance = await model.create(body);
+
+                if (hooks && hooks.post && hooks.post.after) {
+                    entity = await hooks.post.after(entity, req);
+                }
+
                 res.send(entity);
+            } catch (error) {
+                if (hooks && hooks.post && hooks.post.handleError) {
+                    hooks.post.handleError(error, req, res, next);
+                } else {
+                    next(error);
+                }
             }
-            else {
-                res.status(404);
+
+        });
+    }
+
+    if (!(hooks && hooks.delete && hooks.delete.disable)) {
+        router.delete(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+            try {
+                await model.destroy({
+                    where: { [primaryField]: req.params[primaryField] }
+                });
+                res.send();
+            } catch (error) {
+                next(error);
             }
-        } catch (error) {
-            next(error);
-        }
-    });
+        });
+    }
+
+    if (!(hooks && hooks.put && hooks.put.disable)) {
+
+        router.put(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+            try {
+                if (hooks && hooks.put && hooks.put.before) {
+                    req.body = await hooks.put.before(req.body, req);
+                }
+                await model.update(req.body, {
+                    where: { [primaryField]: req.params[primaryField] }
+                });
+
+                let result: TInstance | null = await model.findOne({ where: ({ [primaryField]: req.params[primaryField] }) as any });
+
+                if (result && hooks && hooks.put && hooks.put.after) {
+                    result = await hooks.put.after(result, req);
+                }
+
+                res.send(result);
+            } catch (error) {
+                next(error);
+            }
+        });
+    }
+
+    if (!(hooks && hooks.get && hooks.get.disable)) {
+        router.get(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+            try {
+                let include;
+                if (hooks && hooks.get && hooks.get) {
+                    include = hooks.get.include
+                }
+
+                if (hooks && hooks.get && hooks.get.getAdditionalParams) {
+                    req.query = { ...req.query, ...await hooks.get.getAdditionalParams(req) }
+                }
+
+
+                let entity: TInstance | null = await model.findOne({
+                    where: {
+                        ...req.query,
+                        id: req.params[primaryField],
+                    },
+                    include
+                });
+
+                if (entity) {
+                    if (hooks && hooks.get && hooks.get.after) {
+                        entity = await hooks.get.after(entity, req);
+                    }
+                    res.send(entity);
+                }
+                else {
+                    res.status(404);
+                }
+            } catch (error) {
+                next(error);
+            }
+        });
+    }
 
     return router;
 }

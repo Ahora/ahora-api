@@ -11,8 +11,10 @@ import { IDocLabelAttributes } from "../models/docLabel";
 import { ILabelAttributes, ILabelInstance } from "../models/labels";
 import { getUserFromGithubAlias } from "../helpers/users";
 import connectPgSimple from "connect-pg-simple";
+import { addUserToWatchersList } from "../helpers/docWatchers";
 
-const updateLabels = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
+const afterPostOrPut = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
+    //Update labels!
     const labelIds: number[] | undefined = req.body.labels;
     if (labelIds) {
         const itemsToAdd: IDocLabelAttributes[] = labelIds.map((id: number) => {
@@ -27,6 +29,9 @@ const updateLabels = async (doc: IDocInstance, req: Request): Promise<IDocInstan
         });
         await db.docLabels.bulkCreate(itemsToAdd);
     }
+
+    await addUserToWatchersList(doc.id, req.user!.id);
+
 
     return doc;
 }
@@ -209,8 +214,8 @@ export default (path: string) => {
                 { as: "labelsquery", model: db.docLabels, attributes: [] }
             ]
         },
-        post: { before: beforePost, after: updateLabels },
-        put: { before: generateDocHTML, after: updateLabels }
+        post: { before: beforePost, after: afterPostOrPut },
+        put: { before: generateDocHTML, after: afterPostOrPut }
     });
 
     router.post(`${path}/:id/assignee`, async (req: Request, res: Response, next: NextFunction) => {
@@ -228,7 +233,33 @@ export default (path: string) => {
         } catch (error) {
             next(error);
         }
+    });
 
+    router.post(`${path}/:id/watch`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            if (req.user) {
+                const watcher = await addUserToWatchersList(parseInt(req.params.id), req.user.id);
+                console.log(watcher);
+                res.send(watcher);
+            } else {
+                res.status(400).send();
+            }
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    router.post(`${path}/:id/unwatch`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            if (req.user) {
+                const watcher = await addUserToWatchersList(parseInt(req.params.id), req.user.id)
+                res.send(watcher);
+            } else {
+                res.status(400).send();
+            }
+        } catch (error) {
+            next(error);
+        }
     });
     return router;
 };

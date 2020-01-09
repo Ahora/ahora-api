@@ -10,6 +10,7 @@ import routeOrgCreate from "./routers/organizations";
 import organizationUsersCreate from "./routers/organizationUsers";
 import organizationChildCreate from "./routers/organizationChildBase";
 import routeCommentCreate from "./routers/comments";
+import routeDocWatchersCreate from "./routers/docWatchers";
 import { COOKIE_SECRET, DB_CONNECTION_STRING } from "./config";
 import pgSession from "connect-pg-simple";
 import { OrganizationType } from "./models/organization";
@@ -82,6 +83,7 @@ app.use(organizationChildCreate("/api/organizations/:login/statuses", db.docStat
 app.use(organizationChildCreate("/api/organizations/:login/doctypes", db.docTypes));
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments"));
+app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watchers"));
 app.use(routeCreate("/api/organizations/:login/docs/:docId/labels", db.docLabels));
 app.use(routeOrgCreate("/api/organizations"));
 app.use("/auth", authRouter)
