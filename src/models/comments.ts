@@ -2,7 +2,7 @@ import * as Sequelize from "sequelize";
 import { SequelizeAttributes } from "./base";
 
 export interface ICommentAttributes {
-    id: number;
+    id?: number;
     comment: string;
     htmlComment: string;
     pinned: boolean
@@ -11,6 +11,7 @@ export interface ICommentAttributes {
 }
 
 export interface ICommentInstance extends Sequelize.Instance<ICommentAttributes>, ICommentAttributes {
+    id: number;
     user: {
         username: string;
         displayName?: string;

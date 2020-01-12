@@ -35,9 +35,11 @@ app.disable('view cache');
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use("/api/public/email", publicemailRouter)
+
+
 app.use(bodyParser.json());
-
-
 
 app.get("/status", (req: Request, res: Response, next: NextFunction) => {
   res.send();
@@ -90,6 +92,5 @@ app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watche
 app.use(routeCreate("/api/organizations/:login/docs/:docId/labels", db.docLabels));
 app.use(routeOrgCreate("/api/organizations"));
 app.use("/auth", authRouter)
-app.use("/api/public/email", publicemailRouter)
 
 export default app;
