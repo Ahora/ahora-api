@@ -70,6 +70,7 @@
     "passport-github": "^1.1.0",
     "pg": "^7.7.1",
     "rest-collector": "^1.0.6",
+    "sendgrid": "^5.2.3",
     "sequelize": "^4.41.2",
     "uuid": "^3.3.2"
   }

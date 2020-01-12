@@ -6,6 +6,7 @@ import db from "../models/index";
 import marked from "marked";
 import { ICommentAttributes, ICommentInstance } from "../models/comments";
 import { addUserToWatchersList } from "../helpers/docWatchers";
+import { notifyComment } from "../helpers/notifier";
 
 const generateQuery = async (req: Request): Promise<any> => {
     return {
@@ -49,6 +50,12 @@ const afterPost = async (comment: ICommentInstance, req: Request): Promise<IComm
     };
 
     await addUserToWatchersList(comment.docId, comment.authorUserId);
+
+
+    const currentDoc: IDocInstance | null = await db.docs.findOne({ where: { id: comment.docId } });
+    if (currentDoc) {
+        await notifyComment(req.user!, currentDoc, comment);
+    }
 
     return returnValue;
 }

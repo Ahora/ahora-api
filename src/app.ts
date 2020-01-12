@@ -4,6 +4,7 @@ import authRouter from "./routers/auth";
 import db from "./models/index";
 import passport from "passport";
 import session from "express-session";
+import publicemailRouter from "./routers/public/email";
 import routeCreate from "./routers/base";
 import routeDocCreate from "./routers/docs";
 import routeOrgCreate from "./routers/organizations";
@@ -35,6 +36,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+
 
 app.get("/status", (req: Request, res: Response, next: NextFunction) => {
   res.send();
@@ -87,5 +90,6 @@ app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watche
 app.use(routeCreate("/api/organizations/:login/docs/:docId/labels", db.docLabels));
 app.use(routeOrgCreate("/api/organizations"));
 app.use("/auth", authRouter)
+app.use("/api/public/email", publicemailRouter)
 
 export default app;
