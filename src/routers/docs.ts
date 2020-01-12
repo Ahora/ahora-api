@@ -11,7 +11,7 @@ import { IDocLabelAttributes } from "../models/docLabel";
 import { ILabelAttributes, ILabelInstance } from "../models/labels";
 import { getUserFromGithubAlias } from "../helpers/users";
 import connectPgSimple from "connect-pg-simple";
-import { addUserToWatchersList } from "../helpers/docWatchers";
+import { addUserToWatchersList, unWatch } from "../helpers/docWatchers";
 
 const afterPostOrPut = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
     //Update labels!
@@ -252,7 +252,7 @@ export default (path: string) => {
     router.post(`${path}/:id/unwatch`, async (req: Request, res: Response, next: NextFunction) => {
         try {
             if (req.user) {
-                const watcher = await addUserToWatchersList(parseInt(req.params.id), req.user.id)
+                const watcher = await unWatch(parseInt(req.params.id), req.user.id)
                 res.send(watcher);
             } else {
                 res.status(400).send();
