@@ -29,7 +29,7 @@ export const notifyComment = async (user: IUserInstance, doc: IDocInstance, comm
     }) as any;
 
     //Remove current user email address
-    //watchers = watchers.filter((watcher) => watcher.userId !== user.id && user.email);
+    watchers = watchers.filter((watcher) => watcher.userId !== user.id && user.email);
     const emails = watchers.map((watcher) => watcher.user.email);
     const msg = {
         from: `${user.displayName || user.username} (Ahora) <${comment.id}-comment@ahora.dev>`,
