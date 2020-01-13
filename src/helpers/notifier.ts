@@ -19,26 +19,28 @@ interface NotificationUser {
 }
 
 export const notifyComment = async (user: IUserInstance, doc: IDocInstance, comment: ICommentInstance): Promise<void> => {
-    let watchers: NotificationUser[] = await db.docWatchers.findAll({
-        where: {
-            docId: doc.id,
-            watcherType: DocWatcherType.Watcher //return only watchers!
-        },
-        attributes: ["id", "userId"],
-        include: [{ model: db.users, attributes: ["displayName", "username", "email"] }]
-    }) as any;
+    if (SEND_GRID_SECRET) {
+        let watchers: NotificationUser[] = await db.docWatchers.findAll({
+            where: {
+                docId: doc.id,
+                watcherType: DocWatcherType.Watcher //return only watchers!
+            },
+            attributes: ["id", "userId"],
+            include: [{ model: db.users, attributes: ["displayName", "username", "email"] }]
+        }) as any;
 
-    // Remove current user email address
-    watchers = watchers.filter((watcher) => watcher.userId !== user.id && user.email);
+        // Remove current user email address
+        watchers = watchers.filter((watcher) => watcher.userId !== user.id && user.email);
 
-    const emails = watchers.map((watcher) => watcher.user.email);
-    const msg = {
-        from: `${user.displayName || user.username} (Ahora) <${doc.id}-${comment.id}-comment@${EMAIL_DOMAIN}>`,
-        to: emails,
-        templateId: 'd-8b18787f0f5c47339cd670bfb1c6a6b5',
-        dynamic_template_data: { user, doc, comment },
-    };
-    await sgMail.send(msg).catch((error: any) => {
-        console.error(error.response.body);
-    });
+        const emails = watchers.map((watcher) => watcher.user.email);
+        const msg = {
+            from: `${user.displayName || user.username} (Ahora) <${doc.id}-${comment.id}-comment@${EMAIL_DOMAIN}>`,
+            to: emails,
+            templateId: 'd-8b18787f0f5c47339cd670bfb1c6a6b5',
+            dynamic_template_data: { user, doc, comment },
+        };
+        await sgMail.send(msg).catch((error: any) => {
+            console.error(error.response.body);
+        });
+    }
 }
