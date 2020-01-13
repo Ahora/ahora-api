@@ -10,7 +10,6 @@ const router: Router = express.Router();
 
 router.post("/", multer().any(), async (req: Request, res: Response, next: NextFunction) => {
     try {
-        console.log(req.body.email);
         const mail: ParsedMail = await simpleParser(req.body.email);
         const from: string = mail.from.value[0].address;
         const relevantToEmails: string[] = mail.to.value.filter(email => email.address.endsWith(`@${EMAIL_DOMAIN}`)).map(email => email.address);
@@ -23,11 +22,13 @@ router.post("/", multer().any(), async (req: Request, res: Response, next: NextF
         const toArray: string[] = toRaw.split("@");
         const beforeAt = toArray[0];
         const beforeAtArray = beforeAt.split("-");
-        let commentId: number = -1;
+        let commentId: number | undefined;
+        let docId: number | undefined;
 
-        if (beforeAtArray.length === 2 && beforeAtArray[1].toLowerCase() === "comment") {
-            commentId = parseInt(beforeAtArray[0]);
-            if (isNaN(commentId)) {
+        if (beforeAtArray.length === 3 && beforeAtArray[2].toLowerCase() === "comment") {
+            docId = parseInt(beforeAtArray[0]);
+            commentId = parseInt(beforeAtArray[1]);
+            if (isNaN(commentId) || isNaN(docId)) {
                 res.status(400).send();
                 return null;
             }
@@ -47,14 +48,12 @@ router.post("/", multer().any(), async (req: Request, res: Response, next: NextF
             where: { id: commentId }
         });
 
-        if (comment === null) {
-            res.status(400).send();
-            return;
-        }
+        docId = comment ? comment.docId : docId;
 
         await db.comment.create({
-            docId: comment.docId,
+            docId: docId!,
             comment: mail.text,
+            parentId: commentId,
             htmlComment: mail.html as any,
             pinned: false,
             authorUserId: user.id

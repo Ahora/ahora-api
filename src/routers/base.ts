@@ -54,7 +54,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     include = hooks.get.include
                 }
 
-                const entities: TInstance[] = await model.findAll({ where: req.query, include });
+                const entities: TInstance[] = await model.findAll({ where: req.query, include, order: [["updatedAt", "DESC"]] });
                 const newentities: TInstance[] = [];
                 for (let index = 0; index < entities.length; index++) {
                     const entity = entities[index];

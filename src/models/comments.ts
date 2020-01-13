@@ -5,7 +5,8 @@ export interface ICommentAttributes {
     id?: number;
     comment: string;
     htmlComment: string;
-    pinned: boolean
+    pinned: boolean;
+    parentId?: number;
     docId: number;
     authorUserId: number;
 }
@@ -42,6 +43,10 @@ export const CommentsFactory = (sequelize: Sequelize.Sequelize, DataTypes: Seque
         authorUserId: {
             type: DataTypes.INTEGER,
             allowNull: false
+        },
+        parentId: {
+            type: DataTypes.INTEGER,
+            allowNull: true
         },
         pinned: {
             type: DataTypes.BOOLEAN,

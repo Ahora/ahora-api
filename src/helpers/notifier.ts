@@ -28,12 +28,12 @@ export const notifyComment = async (user: IUserInstance, doc: IDocInstance, comm
         include: [{ model: db.users, attributes: ["displayName", "username", "email"] }]
     }) as any;
 
-    //Remove current user email address
+    // Remove current user email address
     //watchers = watchers.filter((watcher) => watcher.userId !== user.id && user.email);
 
     const emails = watchers.map((watcher) => watcher.user.email);
     const msg = {
-        from: `${user.displayName || user.username} (Ahora) <${comment.id}-comment@${EMAIL_DOMAIN}>`,
+        from: `${user.displayName || user.username} (Ahora) <${doc.id}-${comment.id}-comment@${EMAIL_DOMAIN}>`,
         to: emails,
         templateId: 'd-8b18787f0f5c47339cd670bfb1c6a6b5',
         dynamic_template_data: { user, doc, comment },
