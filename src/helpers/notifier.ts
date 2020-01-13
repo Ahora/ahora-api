@@ -2,7 +2,7 @@ import { IUserInstance } from "../models/users";
 import { IDocInstance } from "../models/docs";
 import db from "../models";
 import { DocWatcherType } from "../models/docWatcher";
-import { SEND_GRID_SECRET } from "../config";
+import { SEND_GRID_SECRET, EMAIL_DOMAIN } from "../config";
 import { ICommentInstance } from "../models/comments";
 
 const sgMail = require('@sendgrid/mail');
@@ -29,15 +29,16 @@ export const notifyComment = async (user: IUserInstance, doc: IDocInstance, comm
     }) as any;
 
     //Remove current user email address
-    watchers = watchers.filter((watcher) => watcher.userId !== user.id && user.email);
+    //watchers = watchers.filter((watcher) => watcher.userId !== user.id && user.email);
+
     const emails = watchers.map((watcher) => watcher.user.email);
     const msg = {
-        from: `${user.displayName || user.username} (Ahora) <${comment.id}-comment@ahora.dev>`,
+        from: `${user.displayName || user.username} (Ahora) <${comment.id}-comment@${EMAIL_DOMAIN}>`,
         to: emails,
         templateId: 'd-8b18787f0f5c47339cd670bfb1c6a6b5',
         dynamic_template_data: { user, doc, comment },
     };
     await sgMail.send(msg).catch((error: any) => {
-        console.log(error.response.body);
+        console.error(error.response.body);
     });
 }

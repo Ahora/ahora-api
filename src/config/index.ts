@@ -5,3 +5,4 @@ export const GIT_HUB_CLIENT_ID: string = process.env.GIT_HUB_CLIENT_ID as string
 export const GIT_HUB_CLIENT_SECRET: string = process.env.GIT_HUB_CLIENT_SECRET as string;
 export const SEND_GRID_SECRET: string | undefined = process.env.SEND_GRID_SECRET;
 export const COOKIE_SECRET: string = process.env.COOKIE_SECRET as string || "defaultsecret";
+export const EMAIL_DOMAIN: string = process.env.EMAIL_DOMAIN as string;

@@ -239,7 +239,6 @@ export default (path: string) => {
         try {
             if (req.user) {
                 const watcher = await addUserToWatchersList(parseInt(req.params.id), req.user.id);
-                console.log(watcher);
                 res.send(watcher);
             } else {
                 res.status(400).send();

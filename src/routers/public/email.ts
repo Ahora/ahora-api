@@ -1,36 +1,45 @@
 import express, { Router, Request, Response, NextFunction } from "express";
-import multer from "multer";
 import db from "../../models";
 import { IUserInstance } from "../../models/users";
 import { ICommentInstance } from "../../models/comments";
-const upload = multer();
-
-
+import { simpleParser, ParsedMail } from "mailparser";
+import bodyParser from "body-parser";
+import { EMAIL_DOMAIN } from "../../config";
 
 const router: Router = express.Router();
 
-router.post("/", upload.single(), async (req: Request, res: Response, next: NextFunction) => {
+router.post("/", bodyParser.text(), async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const toRaw: string = req.body.to;
-        const toArray: string[] = toRaw.split("@");
+        console.log(req.body);
+        const mail: ParsedMail = await simpleParser(req.body);
+        const from: string = mail.from.value[0].address;
+        const relevantToEmails: string[] = mail.to.value.filter(email => email.address.endsWith(`@${EMAIL_DOMAIN}`)).map(email => email.address);
 
+        if (relevantToEmails.length === 0) {
+            res.status(400).send();
+            return;
+        }
+        const toRaw: string = relevantToEmails[0];
+        const toArray: string[] = toRaw.split("@");
         const beforeAt = toArray[0];
-        const from: string = req.body.envelope.from;
         const beforeAtArray = beforeAt.split("-");
-        const commentId: number = -1;
+        let commentId: number = -1;
 
         if (beforeAtArray.length === 2 && beforeAtArray[1].toLowerCase() === "comment") {
-            const commentId: number = parseInt(beforeAtArray[0]);
+            commentId = parseInt(beforeAtArray[0]);
             if (isNaN(commentId)) {
+                res.status(400).send();
                 return null;
             }
         }
+
 
         const user: IUserInstance | null = await db.users.findOne({
             where: { email: from }
         });
 
         if (user === null) {
+            res.status(400).send();
             return;
         }
 
@@ -39,21 +48,20 @@ router.post("/", upload.single(), async (req: Request, res: Response, next: Next
         });
 
         if (comment === null) {
+            res.status(400).send();
             return;
         }
 
         await db.comment.create({
             docId: comment.docId,
-            comment: req.body.text,
-            htmlComment: req.body.html,
+            comment: mail.text,
+            htmlComment: mail.html as any,
             pinned: false,
             authorUserId: user.id
-
         });
 
         res.send();
     } catch (error) {
-        console.log(error);
         next(error);
     }
 })
