@@ -3,15 +3,15 @@ import db from "../../models";
 import { IUserInstance } from "../../models/users";
 import { ICommentInstance } from "../../models/comments";
 import { simpleParser, ParsedMail } from "mailparser";
-import bodyParser from "body-parser";
 import { EMAIL_DOMAIN } from "../../config";
+import multer from "multer";
 
 const router: Router = express.Router();
 
-router.post("/", bodyParser.text(), async (req: Request, res: Response, next: NextFunction) => {
+router.post("/", multer().any(), async (req: Request, res: Response, next: NextFunction) => {
     try {
-        console.log(req.body);
-        const mail: ParsedMail = await simpleParser(req.body);
+        console.log(req.body.email);
+        const mail: ParsedMail = await simpleParser(req.body.email);
         const from: string = mail.from.value[0].address;
         const relevantToEmails: string[] = mail.to.value.filter(email => email.address.endsWith(`@${EMAIL_DOMAIN}`)).map(email => email.address);
 
