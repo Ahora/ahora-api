@@ -5,6 +5,8 @@ import { ICommentInstance } from "../../models/comments";
 import { simpleParser, ParsedMail } from "mailparser";
 import { EMAIL_DOMAIN } from "../../config";
 import multer from "multer";
+import { notifyComment } from "../../helpers/notifier";
+import { IDocInstance } from "../../models/docs";
 
 const router: Router = express.Router();
 
@@ -34,7 +36,6 @@ router.post("/", multer().any(), async (req: Request, res: Response, next: NextF
             }
         }
 
-
         const user: IUserInstance | null = await db.users.findOne({
             where: { email: from }
         });
@@ -50,7 +51,7 @@ router.post("/", multer().any(), async (req: Request, res: Response, next: NextF
 
         docId = comment ? comment.docId : docId;
 
-        await db.comment.create({
+        const addedComment = await db.comment.create({
             docId: docId!,
             comment: mail.text,
             parentId: commentId,
@@ -58,6 +59,11 @@ router.post("/", multer().any(), async (req: Request, res: Response, next: NextF
             pinned: false,
             authorUserId: user.id
         });
+
+        const currentDoc: IDocInstance | null = await db.docs.findOne({ where: { id: addedComment.docId } });
+        if (currentDoc) {
+            await notifyComment(req.user!, currentDoc, addedComment);
+        }
 
         res.send();
     } catch (error) {
