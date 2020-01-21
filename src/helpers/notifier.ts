@@ -2,7 +2,7 @@ import { IUserInstance } from "../models/users";
 import { IDocInstance } from "../models/docs";
 import db from "../models";
 import { DocWatcherType } from "../models/docWatcher";
-import { SEND_GRID_SECRET, EMAIL_DOMAIN } from "../config";
+import { SEND_GRID_SECRET, EMAIL_DOMAIN, URL } from "../config";
 import { ICommentInstance } from "../models/comments";
 import { IOrganizationInstance } from "../models/organization";
 
@@ -38,7 +38,7 @@ export const notifyComment = async (user: IUserInstance, doc: IDocInstance, comm
             from: `${user.displayName || user.username} (Ahora) <${doc.id}-${comment.id}-comment@${EMAIL_DOMAIN}>`,
             to: emails,
             templateId: 'd-8b18787f0f5c47339cd670bfb1c6a6b5',
-            dynamic_template_data: { user, doc, comment, organization },
+            dynamic_template_data: { user, doc, comment, organization, url: URL },
         };
         await sgMail.send(msg).catch((error: any) => {
             console.error(error.response.body);
