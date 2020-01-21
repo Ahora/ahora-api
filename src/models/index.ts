@@ -11,6 +11,7 @@ import { IDocStatusAttributes, IDocStatusInstance, StatusesFactory } from "./doc
 import { IOrganizationUserAttribute, IOrganizationUserInstance, OrganizationPermissionFactory } from "./organizationUsers";
 import { IDocTypeAttributes, IDocTypeInstance, DocTypesFactory } from "./docType";
 import { IDocWatcherInstance, IDocWatcherAttributes, DocWatchersFactory } from "./docWatcher";
+import { IOrganizationTeamAttribute, IOrganizationTeamInstance, OrganizationTeamsFactory } from "./organizationTeams";
 
 export interface IDBInterface {
   docs: Sequelize.Model<IDocInstance, IDocAttributes>;
@@ -23,6 +24,7 @@ export interface IDBInterface {
   organizationUsers: Sequelize.Model<IOrganizationUserInstance, IOrganizationUserAttribute>;
   docTypes: Sequelize.Model<IDocTypeInstance, IDocTypeAttributes>;
   docWatchers: Sequelize.Model<IDocWatcherInstance, IDocWatcherAttributes>;
+  organizationTeams: Sequelize.Model<IOrganizationTeamInstance, IOrganizationTeamAttribute>;
   sequelize: Sequelize.Sequelize;
 }
 
@@ -41,7 +43,8 @@ const db: IDBInterface = {
   docStatuses: StatusesFactory(sequelize, Sequelize),
   organizationUsers: OrganizationPermissionFactory(sequelize, Sequelize),
   docTypes: DocTypesFactory(sequelize, Sequelize),
-  docWatchers: DocWatchersFactory(sequelize, Sequelize)
+  docWatchers: DocWatchersFactory(sequelize, Sequelize),
+  organizationTeams: OrganizationTeamsFactory(sequelize, Sequelize)
 
 };
 
@@ -51,6 +54,7 @@ db.docs.hasOne(db.docTypes, { foreignKey: 'docTypeId' });
 db.organizations.hasMany(db.docStatuses);
 db.docs.hasOne(db.docTypes);
 db.organizations.hasMany(db.docTypes);
+db.organizations.hasMany(db.organizationTeams);
 db.labels.hasMany(db.docLabels);
 
 db.organizations.hasMany(db.organizationUsers);

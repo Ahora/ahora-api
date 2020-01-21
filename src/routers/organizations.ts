@@ -63,5 +63,7 @@ export default (path: string) => {
             getAdditionalParams: getAdditionalParams
         }
     });
+
+    router.use(routeCreate(`${path}/teams`, db.organizationTeams));
     return router;
 };

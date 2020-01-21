@@ -82,10 +82,12 @@ app.get("/api/organizations/:login", async (req: Request, res: Response) => {
   res.send(req.org);
 });
 
+
 app.use(organizationChildCreate("/api/organizations/:login/labels", db.labels));
 app.use(organizationUsersCreate("/api/organizations/:login/users"));
 app.use(organizationChildCreate("/api/organizations/:login/statuses", db.docStatuses));
 app.use(organizationChildCreate("/api/organizations/:login/doctypes", db.docTypes));
+app.use(organizationChildCreate("/api/organizations/:login/teams", db.organizationTeams));
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments"));
 app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watchers"));
