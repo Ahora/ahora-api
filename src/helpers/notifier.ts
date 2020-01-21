@@ -4,6 +4,7 @@ import db from "../models";
 import { DocWatcherType } from "../models/docWatcher";
 import { SEND_GRID_SECRET, EMAIL_DOMAIN } from "../config";
 import { ICommentInstance } from "../models/comments";
+import { IOrganizationInstance } from "../models/organization";
 
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(SEND_GRID_SECRET);
@@ -18,7 +19,7 @@ interface NotificationUser {
     }
 }
 
-export const notifyComment = async (user: IUserInstance, doc: IDocInstance, comment: ICommentInstance): Promise<void> => {
+export const notifyComment = async (user: IUserInstance, doc: IDocInstance, comment: ICommentInstance, organization: IOrganizationInstance): Promise<void> => {
     if (SEND_GRID_SECRET) {
         let watchers: NotificationUser[] = await db.docWatchers.findAll({
             where: {
@@ -37,7 +38,7 @@ export const notifyComment = async (user: IUserInstance, doc: IDocInstance, comm
             from: `${user.displayName || user.username} (Ahora) <${doc.id}-${comment.id}-comment@${EMAIL_DOMAIN}>`,
             to: emails,
             templateId: 'd-8b18787f0f5c47339cd670bfb1c6a6b5',
-            dynamic_template_data: { user, doc, comment },
+            dynamic_template_data: { user, doc, comment, organization },
         };
         await sgMail.send(msg).catch((error: any) => {
             console.error(error.response.body);

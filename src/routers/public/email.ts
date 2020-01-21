@@ -7,6 +7,7 @@ import { EMAIL_DOMAIN } from "../../config";
 import multer from "multer";
 import { notifyComment } from "../../helpers/notifier";
 import { IDocInstance } from "../../models/docs";
+import { IOrganizationInstance } from "../../models/organization";
 
 const router: Router = express.Router();
 
@@ -62,7 +63,10 @@ router.post("/", multer().any(), async (req: Request, res: Response, next: NextF
 
         const currentDoc: IDocInstance | null = await db.docs.findOne({ where: { id: addedComment.docId } });
         if (currentDoc) {
-            await notifyComment(req.user!, currentDoc, addedComment);
+            const currentOrg: IOrganizationInstance | null = await db.organizations.findOne({ where: { id: currentDoc.organizationId } });
+            if (currentOrg) {
+                await notifyComment(req.user!, currentDoc, addedComment, currentOrg);
+            }
         }
 
         res.send();

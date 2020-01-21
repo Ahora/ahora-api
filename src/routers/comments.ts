@@ -54,7 +54,7 @@ const afterPost = async (comment: ICommentInstance, req: Request): Promise<IComm
 
     const currentDoc: IDocInstance | null = await db.docs.findOne({ where: { id: comment.docId } });
     if (currentDoc) {
-        await notifyComment(req.user!, currentDoc, comment);
+        await notifyComment(req.user!, currentDoc, comment, req.org!);
     }
 
     return returnValue;
