@@ -31,7 +31,7 @@ export const notifyComment = async (user: IUserInstance, doc: IDocInstance, comm
         }) as any;
 
         // Remove current user email address
-        // watchers = watchers.filter((watcher) => watcher.userId !== user.id && user.email);
+        watchers = watchers.filter((watcher) => watcher.userId !== user.id && user.email);
 
         if (watchers.length > 0) {
             const emails = watchers.map((watcher) => watcher.user.email);
