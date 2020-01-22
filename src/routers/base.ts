@@ -49,6 +49,12 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     }
                 }
 
+                for (const key in req.query) {
+                    if (req.query[key] === "null") {
+                        req.query[key] = null
+                    }
+                }
+
                 let include;
                 if (hooks && hooks.get && hooks.get) {
                     include = hooks.get.include
