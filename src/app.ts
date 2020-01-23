@@ -9,6 +9,8 @@ import routeCreate from "./routers/base";
 import routeDocCreate from "./routers/docs";
 import routeOrgCreate from "./routers/organizations";
 import organizationUsersCreate from "./routers/organizationUsers";
+import usersCreate from "./routers/users";
+import RouteTeamUsersCreate from "./routers/teamsusers";
 import organizationChildCreate from "./routers/organizationChildBase";
 import routeCommentCreate from "./routers/comments";
 import routeDocWatchersCreate from "./routers/docWatchers";
@@ -88,11 +90,13 @@ app.use(organizationUsersCreate("/api/organizations/:login/users"));
 app.use(organizationChildCreate("/api/organizations/:login/statuses", db.docStatuses));
 app.use(organizationChildCreate("/api/organizations/:login/doctypes", db.docTypes));
 app.use(organizationChildCreate("/api/organizations/:login/teams", db.organizationTeams));
+app.use("/api/organizations/:login", RouteTeamUsersCreate("/teams/:teamId/users"));
+
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments"));
 app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watchers"));
-app.use(routeCreate("/api/organizations/:login/docs/:docId/labels", db.docLabels));
 app.use(routeOrgCreate("/api/organizations"));
+app.use(usersCreate("/api/users"));
 app.use("/auth", authRouter)
 
 export default app;

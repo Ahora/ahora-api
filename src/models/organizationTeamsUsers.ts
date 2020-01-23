@@ -5,7 +5,7 @@ export interface IOrganizationTeamUserAttribute {
     id?: number;
     userId: number;
     organizationId: number;
-    teamId: number;
+    teamId: number | null;
 }
 
 export interface IOrganizationTeamUserInstance extends Sequelize.Instance<IOrganizationTeamUserAttribute>, IOrganizationTeamUserAttribute {
@@ -36,7 +36,7 @@ export const OrganizationTeamUserFactory =
             },
             teamId: {
                 type: DataTypes.INTEGER,
-                allowNull: false
+                allowNull: true
             }
         };
 
