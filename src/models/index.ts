@@ -63,6 +63,10 @@ db.organizationTeamsUsers.belongsTo(db.users, { foreignKey: 'userId', onDelete: 
 db.users.hasMany(db.organizationTeamsUsers, { foreignKey: 'userId', onDelete: "CASCADE" });
 
 
+db.organizationTeams.belongsTo(db.organizationTeams, { foreignKey: 'parentId', onDelete: "CASCADE" });
+db.organizationTeams.hasOne(db.organizationTeams, { foreignKey: 'parentId', onDelete: "CASCADE" });
+
+
 db.comment.belongsTo(db.docs, { foreignKey: 'docId', onDelete: "CASCADE" });
 db.docs.hasMany(db.comment, { foreignKey: 'docId', onDelete: "CASCADE" });
 db.comment.belongsTo(db.users, { foreignKey: 'authorUserId', onDelete: "CASCADE" });
