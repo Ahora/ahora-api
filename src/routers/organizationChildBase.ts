@@ -6,7 +6,7 @@ import Sequelize from "sequelize";
 import { IOrganizationInstance } from "../models/organization";
 
 const beforePost = async (entity: any, req: Request): Promise<any> => {
-    if(req && req.org) {
+    if (req && req.org) {
         entity.organizationId = req.org.id;
     }
 
@@ -21,7 +21,7 @@ const generateQuery = async (req: Request): Promise<any> => {
 }
 
 export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>) => {
-    const router  = routeCreate<TInstance, TAttributes, TCreationAttributes>(path, model, { 
+    const router = routeCreate<TInstance, TAttributes, TCreationAttributes>(path, model, {
         get: { getAdditionalParams: generateQuery },
         post: { before: beforePost }
     });

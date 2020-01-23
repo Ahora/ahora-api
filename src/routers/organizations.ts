@@ -19,10 +19,10 @@ const afterPost = async (org: IOrganizationInstance, req: Request): Promise<IOrg
     }, { where: { id: orgId } });
 
 
-    await db.organizationUsers.create({
+    await db.organizationTeamsUsers.create({
         organizationId: orgId,
         userId: req.user!.id,
-        permission: 2
+        teamId: null
     });
 
     return org;
@@ -39,7 +39,7 @@ const handlePostError = (error: any, req: Request, res: Response, next: NextFunc
 
 const getAdditionalParams = async (req: Request): Promise<any> => {
     if (req.user) {
-        const currentUserPermissions = await db.organizationUsers.findAll({
+        const currentUserPermissions = await db.organizationTeamsUsers.findAll({
             attributes: ["organizationId"],
             where: { userId: req.user!.id }
         });
@@ -63,5 +63,7 @@ export default (path: string) => {
             getAdditionalParams: getAdditionalParams
         }
     });
+
+    router.use(routeCreate(`${path}/teams`, db.organizationTeams));
     return router;
 };

@@ -8,14 +8,15 @@ import publicemailRouter from "./routers/public/email";
 import routeCreate from "./routers/base";
 import routeDocCreate from "./routers/docs";
 import routeOrgCreate from "./routers/organizations";
-import organizationUsersCreate from "./routers/organizationUsers";
+import usersCreate from "./routers/users";
+import RouteTeamUsersCreate from "./routers/teamsusers";
 import organizationChildCreate from "./routers/organizationChildBase";
 import routeCommentCreate from "./routers/comments";
 import routeDocWatchersCreate from "./routers/docWatchers";
 import { COOKIE_SECRET, DB_CONNECTION_STRING } from "./config";
 import pgSession from "connect-pg-simple";
 import { OrganizationType } from "./models/organization";
-import { IOrganizationUserInstance } from "./models/organizationUsers";
+import { IOrganizationTeamUserInstance } from "./models/organizationTeamsUsers";
 
 const app: Express = ExpressInstance();
 
@@ -59,7 +60,7 @@ app.use("/api/organizations/:login", async (req: Request, res: Response, next: N
       next();
     } else {
       if (req.user) {
-        const userPermission: IOrganizationUserInstance | null = await db.organizationUsers.findOne({
+        const userPermission: IOrganizationTeamUserInstance | null = await db.organizationTeamsUsers.findOne({
           where: { userId: req.user!.id, organizationId: req.org!.id }
         });
 
@@ -82,15 +83,18 @@ app.get("/api/organizations/:login", async (req: Request, res: Response) => {
   res.send(req.org);
 });
 
+
 app.use(organizationChildCreate("/api/organizations/:login/labels", db.labels));
-app.use(organizationUsersCreate("/api/organizations/:login/users"));
 app.use(organizationChildCreate("/api/organizations/:login/statuses", db.docStatuses));
 app.use(organizationChildCreate("/api/organizations/:login/doctypes", db.docTypes));
+app.use(organizationChildCreate("/api/organizations/:login/teams", db.organizationTeams));
+app.use("/api/organizations/:login", RouteTeamUsersCreate("/teams/:teamId/users"));
+
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments"));
 app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watchers"));
-app.use(routeCreate("/api/organizations/:login/docs/:docId/labels", db.docLabels));
 app.use(routeOrgCreate("/api/organizations"));
+app.use(usersCreate("/api/users"));
 app.use("/auth", authRouter)
 
 export default app;

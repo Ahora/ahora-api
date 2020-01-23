@@ -8,9 +8,10 @@ import { IOrganizationInstance, IOrganizationAttributes, OrganizationsFactory } 
 import { ILabelInstance, LabelsFactory, ILabelAttributes } from "./labels";
 import { IDocLabelInstance, DocsLabelFactory, IDocLabelAttributes } from "./docLabel";
 import { IDocStatusAttributes, IDocStatusInstance, StatusesFactory } from "./docStatuses";
-import { IOrganizationUserAttribute, IOrganizationUserInstance, OrganizationPermissionFactory } from "./organizationUsers";
 import { IDocTypeAttributes, IDocTypeInstance, DocTypesFactory } from "./docType";
 import { IDocWatcherInstance, IDocWatcherAttributes, DocWatchersFactory } from "./docWatcher";
+import { IOrganizationTeamAttribute, IOrganizationTeamInstance, OrganizationTeamsFactory } from "./organizationTeams";
+import { IOrganizationTeamUserAttribute, IOrganizationTeamUserInstance, OrganizationTeamUserFactory } from "./organizationTeamsUsers";
 
 export interface IDBInterface {
   docs: Sequelize.Model<IDocInstance, IDocAttributes>;
@@ -20,9 +21,10 @@ export interface IDBInterface {
   labels: Sequelize.Model<ILabelInstance, ILabelAttributes>;
   docLabels: Sequelize.Model<IDocLabelInstance, IDocLabelAttributes>;
   docStatuses: Sequelize.Model<IDocStatusInstance, IDocStatusAttributes>;
-  organizationUsers: Sequelize.Model<IOrganizationUserInstance, IOrganizationUserAttribute>;
   docTypes: Sequelize.Model<IDocTypeInstance, IDocTypeAttributes>;
   docWatchers: Sequelize.Model<IDocWatcherInstance, IDocWatcherAttributes>;
+  organizationTeams: Sequelize.Model<IOrganizationTeamInstance, IOrganizationTeamAttribute>;
+  organizationTeamsUsers: Sequelize.Model<IOrganizationTeamUserInstance, IOrganizationTeamUserAttribute>;
   sequelize: Sequelize.Sequelize;
 }
 
@@ -39,10 +41,10 @@ const db: IDBInterface = {
   labels: LabelsFactory(sequelize, Sequelize),
   docLabels: DocsLabelFactory(sequelize, Sequelize),
   docStatuses: StatusesFactory(sequelize, Sequelize),
-  organizationUsers: OrganizationPermissionFactory(sequelize, Sequelize),
   docTypes: DocTypesFactory(sequelize, Sequelize),
-  docWatchers: DocWatchersFactory(sequelize, Sequelize)
-
+  docWatchers: DocWatchersFactory(sequelize, Sequelize),
+  organizationTeams: OrganizationTeamsFactory(sequelize, Sequelize),
+  organizationTeamsUsers: OrganizationTeamUserFactory(sequelize, Sequelize)
 };
 
 db.organizations.hasMany(db.labels);
@@ -51,12 +53,19 @@ db.docs.hasOne(db.docTypes, { foreignKey: 'docTypeId' });
 db.organizations.hasMany(db.docStatuses);
 db.docs.hasOne(db.docTypes);
 db.organizations.hasMany(db.docTypes);
+db.organizations.hasMany(db.organizationTeams);
 db.labels.hasMany(db.docLabels);
 
-db.organizations.hasMany(db.organizationUsers);
+db.organizations.hasMany(db.organizationTeams);
 
-db.organizationUsers.belongsTo(db.users, { foreignKey: 'userId', onDelete: "CASCADE" });
-db.users.hasMany(db.organizationUsers, { foreignKey: 'userId', onDelete: "CASCADE" });
+db.organizationTeams.hasMany(db.organizationTeamsUsers);
+db.organizationTeamsUsers.belongsTo(db.users, { foreignKey: 'userId', onDelete: "CASCADE" });
+db.users.hasMany(db.organizationTeamsUsers, { foreignKey: 'userId', onDelete: "CASCADE" });
+
+
+db.organizationTeams.belongsTo(db.organizationTeams, { foreignKey: 'parentId', onDelete: "CASCADE" });
+db.organizationTeams.hasOne(db.organizationTeams, { foreignKey: 'parentId', onDelete: "CASCADE" });
+
 
 db.comment.belongsTo(db.docs, { foreignKey: 'docId', onDelete: "CASCADE" });
 db.docs.hasMany(db.comment, { foreignKey: 'docId', onDelete: "CASCADE" });
@@ -82,6 +91,7 @@ db.sequelize.query(sql).then(() => {
 }).catch((error) => {
   console.error("SQL sync failed", error);
 });
+
 db.sequelize.sync({ force: false }).then(() => {
   console.log("Database synced successfully")
 }).error((error) => {
