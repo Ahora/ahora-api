@@ -6,6 +6,6 @@ export enum FileAction {
 }
 
 export interface IStorageHandler {
-    getSignedUrl(key: string, expires: number, mode: FileAction, contentType?: string,
+    getSignedUrl(key: string, expires: number | Date, mode: FileAction, contentType?: string,
         extensionHeaders?: http.OutgoingHttpHeaders): Promise<string>;
 }

@@ -10,7 +10,7 @@ export default class GoogleBucketHandler implements IStorageHandler {
         this.googleBucket = storage.bucket(bucketName);
     }
 
-    public async getSignedUrl(key: string, expires: number, mode: FileAction, contentType?: string,
+    public async getSignedUrl(key: string, expires: number | Date, mode: FileAction, contentType?: string,
         extensionHeaders?: http.OutgoingHttpHeaders): Promise<string> {
         const t: GetSignedUrlResponse = await this.googleBucket.file(key).getSignedUrl(
             {
