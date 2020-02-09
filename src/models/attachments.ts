@@ -1,29 +1,30 @@
 import * as Sequelize from "sequelize";
 import { SequelizeAttributes } from "./base";
 
-export interface IDocAttachmentsAttributes {
+export interface IAttachmentsAttributes {
     id?: number;
-    docId: number;
+    organizationId: number;
     contentType: string;
-    bucket: string;
+    filename: string;
     identifier: string;
+    isUploaded: boolean;
 }
 
-export interface IDocAttachmentsInstance extends Sequelize.Instance<IDocAttachmentsAttributes>, IDocAttachmentsAttributes {
+export interface IAttachmentsInstance extends Sequelize.Instance<IAttachmentsAttributes>, IAttachmentsAttributes {
     id: number;
 }
 
 // tslint:disable-next-line:typedef
-export const DocAttachmentsFactory =
+export const AttachmentsFactory =
     (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-        Sequelize.Model<IDocAttachmentsInstance, IDocAttachmentsAttributes> => {
-        let attributes: SequelizeAttributes<IDocAttachmentsAttributes> = {
+        Sequelize.Model<IAttachmentsInstance, IAttachmentsAttributes> => {
+        let attributes: SequelizeAttributes<IAttachmentsAttributes> = {
             id: {
                 type: DataTypes.INTEGER,
                 autoIncrement: true,
                 primaryKey: true
             },
-            docId: {
+            organizationId: {
                 type: DataTypes.INTEGER,
                 allowNull: false
             },
@@ -31,17 +32,22 @@ export const DocAttachmentsFactory =
                 type: DataTypes.STRING,
                 allowNull: false
             },
-            bucket: {
+            filename: {
                 type: DataTypes.STRING,
                 allowNull: false
             },
             identifier: {
                 type: DataTypes.STRING,
                 allowNull: false
+            },
+            isUploaded: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false,
+                defaultValue: false
             }
         };
 
-        return sequelize.define<IDocAttachmentsInstance, IDocAttachmentsAttributes>("docattachments", attributes, {
+        return sequelize.define<IAttachmentsInstance, IAttachmentsAttributes>("attachments", attributes, {
             timestamps: true
         });
     };

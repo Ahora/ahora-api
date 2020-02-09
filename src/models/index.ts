@@ -12,6 +12,7 @@ import { IDocTypeAttributes, IDocTypeInstance, DocTypesFactory } from "./docType
 import { IDocWatcherInstance, IDocWatcherAttributes, DocWatchersFactory } from "./docWatcher";
 import { IOrganizationTeamAttribute, IOrganizationTeamInstance, OrganizationTeamsFactory } from "./organizationTeams";
 import { IOrganizationTeamUserAttribute, IOrganizationTeamUserInstance, OrganizationTeamUserFactory } from "./organizationTeamsUsers";
+import { IAttachmentsInstance, IAttachmentsAttributes, AttachmentsFactory } from "./attachments";
 
 export interface IDBInterface {
   docs: Sequelize.Model<IDocInstance, IDocAttributes>;
@@ -19,6 +20,7 @@ export interface IDBInterface {
   comment: Sequelize.Model<ICommentInstance, ICommentAttributes>;
   organizations: Sequelize.Model<IOrganizationInstance, IOrganizationAttributes>;
   labels: Sequelize.Model<ILabelInstance, ILabelAttributes>;
+  attachments: Sequelize.Model<IAttachmentsInstance, IAttachmentsAttributes>;
   docLabels: Sequelize.Model<IDocLabelInstance, IDocLabelAttributes>;
   docStatuses: Sequelize.Model<IDocStatusInstance, IDocStatusAttributes>;
   docTypes: Sequelize.Model<IDocTypeInstance, IDocTypeAttributes>;
@@ -39,6 +41,7 @@ const db: IDBInterface = {
   comment: CommentsFactory(sequelize, Sequelize),
   organizations: OrganizationsFactory(sequelize, Sequelize),
   labels: LabelsFactory(sequelize, Sequelize),
+  attachments: AttachmentsFactory(sequelize, Sequelize),
   docLabels: DocsLabelFactory(sequelize, Sequelize),
   docStatuses: StatusesFactory(sequelize, Sequelize),
   docTypes: DocTypesFactory(sequelize, Sequelize),
@@ -51,12 +54,14 @@ db.organizations.hasMany(db.labels);
 db.docs.hasOne(db.docStatuses, { foreignKey: 'status' });
 db.docs.hasOne(db.docTypes, { foreignKey: 'docTypeId' });
 db.organizations.hasMany(db.docStatuses);
+db.organizations.hasMany(db.attachments);
 db.docs.hasOne(db.docTypes);
 db.organizations.hasMany(db.docTypes);
 db.organizations.hasMany(db.organizationTeams);
+
+
 db.labels.hasMany(db.docLabels);
 
-db.organizations.hasMany(db.organizationTeams);
 
 db.organizationTeams.hasMany(db.organizationTeamsUsers);
 db.organizationTeamsUsers.belongsTo(db.users, { foreignKey: 'userId', onDelete: "CASCADE" });
