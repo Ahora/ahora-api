@@ -1,6 +1,6 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import passport from "passport";
-import GitHubStrategy from "passport-github";
+import { Strategy as GitHubStrategy } from "passport-github2";
 import db from "../models";
 import { IUserInstance, IUserAttributes } from "../models/users";
 import { GIT_HUB_CLIENT_ID, GIT_HUB_CLIENT_SECRET, GIT_HUB_CALLBACK_URL } from "../config";
@@ -33,7 +33,7 @@ passport.use(new GitHubStrategy({
     callbackURL: GIT_HUB_CALLBACK_URL,
     scope: ['user:email']
 },
-    async (accessToken, refreshToken, profile, cb) => {
+    async (accessToken: string, refreshToken: string, profile: any, cb: any) => {
         try {
             let existingUser: IUserInstance | null = await db.users.findOne({
                 where: { gitHubId: profile.id }
