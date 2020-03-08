@@ -3,6 +3,7 @@ import { SequelizeAttributes } from "./base";
 
 export interface IDocAttributes {
     id: number;
+    docId?: number;
     subject: string;
     description?: string;
     htmlDescription?: string;
@@ -32,6 +33,10 @@ export const EventsFactory =
                 type: DataTypes.INTEGER,
                 autoIncrement: true,
                 primaryKey: true
+            },
+            docId: {
+                type: DataTypes.INTEGER,
+                allowNull: true
             },
             subject: {
                 type: DataTypes.STRING,
