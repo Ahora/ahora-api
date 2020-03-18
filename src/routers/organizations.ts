@@ -19,11 +19,13 @@ const afterPost = async (org: IOrganizationInstance, req: Request): Promise<IOrg
     }, { where: { id: orgId } });
 
 
-    await db.organizationTeamsUsers.create({
-        organizationId: orgId,
-        userId: req.user!.id,
-        teamId: null
-    });
+    if (req.user) {
+        await db.organizationTeamsUsers.create({
+            organizationId: orgId,
+            userId: req.user.id,
+            teamId: null
+        });
+    }
 
     return org;
 };
