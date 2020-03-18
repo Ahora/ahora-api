@@ -13,6 +13,7 @@ export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
 
 export interface GetMethodHook<TAttributes, TInstance extends TAttributes> extends MethodHook<TAttributes, TInstance> {
     include?: Array<Model<any, any> | IncludeOptions>;
+    limit?: number;
 }
 
 export interface MethodHook<TAttributes, TInstance extends TAttributes> {
@@ -56,11 +57,19 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 }
 
                 let include;
+                let limit: number | undefined;
                 if (hooks && hooks.get && hooks.get) {
-                    include = hooks.get.include
+                    include = hooks.get.include;
+                    limit = hooks.get.limit;
+
                 }
 
-                const entities: TInstance[] = await model.findAll({ where: req.query, include, order: [["updatedAt", "DESC"]] });
+                const entities: TInstance[] = await model.findAll({
+                    where: req.query,
+                    include,
+                    order: [["updatedAt", "DESC"]],
+                    limit
+                });
                 const newentities: TInstance[] = [];
                 for (let index = 0; index < entities.length; index++) {
                     const entity = entities[index];

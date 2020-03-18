@@ -9,11 +9,17 @@ export const addUserToWatchersList = async (docId: number, userId: number): Prom
     });
 
     if (!watcher) {
-        watcher = await db.docWatchers.create({
-            userId,
-            docId,
-            watcherType: DocWatcherType.Watcher
-        });
+        try {
+            watcher = await db.docWatchers.create({
+                userId,
+                docId,
+                watcherType: DocWatcherType.Watcher
+            });
+        }
+        catch (err) {
+
+        }
+
     }
     else {
         await db.docWatchers.update({ watcherType: DocWatcherType.Watcher }, { where: { id: watcher.id } });

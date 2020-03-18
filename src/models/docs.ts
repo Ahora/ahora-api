@@ -8,6 +8,7 @@ export interface IDocAttributes {
     description?: string;
     htmlDescription?: string;
     assigneeUserId?: number;
+    reporterUserId?: number;
     docTypeId: number;
     metadata: any;
     organizationId: number;
@@ -19,6 +20,10 @@ export interface IDocAttributes {
 
 export interface IDocInstance extends Sequelize.Instance<IDocAttributes>, IDocAttributes {
     assignee: {
+        username: string;
+        displayName?: string;
+    },
+    reporter: {
         username: string;
         displayName?: string;
     }
@@ -69,6 +74,10 @@ export const EventsFactory =
             assigneeUserId: {
                 type: DataTypes.INTEGER,
                 allowNull: true
+            },
+            reporterUserId: {
+                type: DataTypes.INTEGER,
+                allowNull: false
             },
             createdAt: {
                 type: DataTypes.DATE,

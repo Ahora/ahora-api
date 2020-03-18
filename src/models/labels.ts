@@ -5,6 +5,7 @@ export interface ILabelAttributes {
     id?: number;
     name: string;
     color: string;
+    labelId?: number;
     description: string;
 }
 
@@ -14,29 +15,33 @@ export interface ILabelInstance extends Sequelize.Instance<ILabelAttributes>, IL
 
 // tslint:disable-next-line:typedef
 export const LabelsFactory =
-(sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-Sequelize.Model<ILabelInstance, ILabelAttributes> => {
-    let attributes:SequelizeAttributes<ILabelAttributes> = {
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true
-        },
-        name: {
-            type: DataTypes.STRING,
-            allowNull: false
-        }, 
-        color: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-        description: {
-            type: DataTypes.STRING,
-            allowNull: true
-        }
-    };
+    (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
+        Sequelize.Model<ILabelInstance, ILabelAttributes> => {
+        let attributes: SequelizeAttributes<ILabelAttributes> = {
+            id: {
+                type: DataTypes.INTEGER,
+                autoIncrement: true,
+                primaryKey: true
+            },
+            name: {
+                type: DataTypes.STRING,
+                allowNull: false
+            },
+            color: {
+                type: DataTypes.STRING,
+                allowNull: true
+            },
+            description: {
+                type: DataTypes.STRING,
+                allowNull: true
+            },
+            labelId: {
+                type: DataTypes.INTEGER,
+                allowNull: true
+            }
+        };
 
-    return sequelize.define<ILabelInstance, ILabelAttributes>("tags", attributes, {
-        timestamps: true
-    });
-  };
+        return sequelize.define<ILabelInstance, ILabelAttributes>("tags", attributes, {
+            timestamps: true
+        });
+    };

@@ -30,8 +30,9 @@ const afterPostOrPut = async (doc: IDocInstance, req: Request): Promise<IDocInst
         await db.docLabels.bulkCreate(itemsToAdd);
     }
 
-    await addUserToWatchersList(doc.id, req.user!.id);
-
+    if (req.user) {
+        await addUserToWatchersList(doc.id, req.user!.id);
+    }
 
     return doc;
 }
@@ -40,17 +41,20 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
     const labels: IDocLabelAttributes[] | undefined = doc.labels as any;
     return {
         id: doc.id,
+        docId: doc.docId,
         subject: doc.subject,
         description: doc.description,
         htmlDescription: doc.htmlDescription,
         assigneeUserId: doc.assigneeUserId,
         assignee: doc.assignee,
+        reporter: doc.reporter,
         docTypeId: doc.docTypeId,
         metadata: doc.metadata,
         organizationId: doc.organizationId,
         status: doc.status,
         updatedAt: doc.updatedAt,
         createdAt: doc.createdAt,
+        reporterUserId: doc.reporterUserId,
         labels: labels && labels.map(label => label.labelId)
     };
 }
@@ -179,6 +183,10 @@ const generateQuery = async (req: Request): Promise<any> => {
         query.docTypeId = docTypes;
     }
 
+    if (req.query.docId) {
+        query.docId = req.query.docId;
+    }
+
     return query;
 }
 
@@ -207,9 +215,11 @@ export default (path: string) => {
         get: {
             getAdditionalParams: generateQuery,
             useOnlyAdditionalParams: true,
+            limit: 10,
             after: afterGet,
             include: [
                 { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
+                { as: "reporter", model: db.users, attributes: ["displayName", "username"] },
                 { as: "labels", model: db.docLabels, attributes: ["labelId"] },
                 { as: "labelsquery", model: db.docLabels, attributes: [] }
             ]

@@ -83,6 +83,9 @@ db.docWatchers.belongsTo(db.users, { foreignKey: 'userId', onDelete: "CASCADE" }
 db.docs.belongsTo(db.users, { as: "assignee", foreignKey: 'assigneeUserId', onDelete: "CASCADE" });
 db.users.hasMany(db.docs, { foreignKey: 'assigneeUserId', onDelete: "CASCADE" });
 
+db.docs.belongsTo(db.users, { as: "reporter", foreignKey: 'reporterUserId', onDelete: "CASCADE" });
+db.users.hasMany(db.docs, { foreignKey: 'reporterUserId', onDelete: "CASCADE" });
+
 db.docs.hasMany(db.docLabels, { as: "labels", foreignKey: 'docId', onDelete: "CASCADE" });
 db.docLabels.belongsTo(db.docs, { foreignKey: 'docId', onDelete: "CASCADE" });
 

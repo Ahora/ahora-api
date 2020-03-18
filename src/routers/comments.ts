@@ -15,7 +15,9 @@ const generateQuery = async (req: Request): Promise<any> => {
 }
 
 const generateDocHTML = async (comment: ICommentAttributes, req: Request): Promise<ICommentAttributes> => {
-    comment.authorUserId = req.user!.id;
+    if (req.user) {
+        comment.authorUserId = req.user.id;
+    }
     comment.docId = parseInt(req.params.docId);
     return new Promise<ICommentAttributes>((resolve, reject) => {
         if (comment.comment) {
@@ -44,17 +46,20 @@ const afterPost = async (comment: ICommentInstance, req: Request): Promise<IComm
         docId: comment.docId
     };
 
-    returnValue.user = {
-        displayName: req.user!.displayName,
-        username: req.user!.username
-    };
+    if (req.user) {
+        returnValue.user = {
+            displayName: req.user.displayName,
+            username: req.user.username
+        };
+    }
+
 
     await addUserToWatchersList(comment.docId, comment.authorUserId);
 
 
     const currentDoc: IDocInstance | null = await db.docs.findOne({ where: { id: comment.docId } });
-    if (currentDoc) {
-        await notifyComment(req.user!, currentDoc, comment, req.org!);
+    if (currentDoc && req.user) {
+        await notifyComment(req.user, currentDoc, comment, req.org!);
     }
 
     return returnValue;

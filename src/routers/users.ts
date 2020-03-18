@@ -14,19 +14,24 @@ const handlePostError = (error: any, req: Request, res: Response, next: NextFunc
 }
 
 const getAdditionalParams = async (req: Request): Promise<any> => {
-    return {
-        [Op.or]: [
-            {
-                username: {
-                    [Op.iLike]: `%${req.query.q}%`
+    if (req.query.q) {
+        return {
+            [Op.or]: [
+                {
+                    username: {
+                        [Op.iLike]: `%${req.query.q}%`
+                    }
+                },
+                {
+                    displayName: {
+                        [Op.iLike]: `%${req.query.q}%`
+                    }
                 }
-            },
-            {
-                displayName: {
-                    [Op.iLike]: `%${req.query.q}%`
-                }
-            }
-        ]
+            ]
+        }
+    }
+    else {
+        return req.query;
     }
 }
 
