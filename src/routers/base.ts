@@ -69,17 +69,21 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     offset = originalQuery.offset
                 }
 
-                const queryResult = await model.findAndCountAll({
+                const count = await model.count({
+                    where: req.query
+                });
+                res.setHeader("X-Total-Count", count);
+
+
+                const entities = await model.findAll({
                     where: req.query,
                     include,
-                    distinct: !!limit, //use distinct if limit is specified
+                    //distinct: !!limit, //use distinct if limit is specified
                     order: [["updatedAt", "DESC"]],
                     limit,
                     offset
                 });
 
-                res.setHeader("X-Total-Count", queryResult.count);
-                const entities: TInstance[] = queryResult.rows;
                 const newentities: TInstance[] = [];
                 for (let index = 0; index < entities.length; index++) {
                     const entity = entities[index];

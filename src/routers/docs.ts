@@ -12,6 +12,7 @@ import { ILabelAttributes, ILabelInstance } from "../models/labels";
 import { getUserFromGithubAlias } from "../helpers/users";
 import connectPgSimple from "connect-pg-simple";
 import { addUserToWatchersList, unWatch } from "../helpers/docWatchers";
+import sequelize from "sequelize";
 
 const afterPostOrPut = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
     //Update labels!
@@ -125,7 +126,10 @@ const generateQuery = async (req: Request): Promise<any> => {
             }
         });
 
-        query["$labelsquery.labelId$"] = labelIds;
+        if (labelIds.length > 0) {
+            const labelsQuery = `SELECT "docId" FROM doclabels as "docquery" WHERE "labelId" in (${labelIds.join(",")}) GROUP BY "docId" HAVING COUNT(*)=${labelIds.length}`;
+            query.id = { $in: [db.sequelize.literal(labelsQuery)] }
+        }
     }
 
     //--------------Assignee-------------------------------------------------
@@ -215,13 +219,12 @@ export default (path: string) => {
         get: {
             getAdditionalParams: generateQuery,
             useOnlyAdditionalParams: true,
-            limit: 50,
+            limit: 30,
             after: afterGet,
             include: [
                 { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
                 { as: "reporter", model: db.users, attributes: ["displayName", "username"] },
                 { as: "labels", model: db.docLabels, attributes: ["labelId"] },
-                { as: "labelsquery", model: db.docLabels, attributes: [] }
             ]
         },
         post: { before: beforePost, after: afterPostOrPut },
