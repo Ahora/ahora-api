@@ -33,6 +33,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
     if (!(hooks && hooks.get && hooks.get.disable)) {
         router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
+                const originalQuery = req.query;
                 if (hooks && hooks.get && hooks.get.getAdditionalParams) {
                     const additionalParams: any = await hooks.get.getAdditionalParams(req);
                     if (additionalParams !== null) {
@@ -61,15 +62,24 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 if (hooks && hooks.get && hooks.get) {
                     include = hooks.get.include;
                     limit = hooks.get.limit;
-
                 }
 
-                const entities: TInstance[] = await model.findAll({
+                let offset: number | undefined;
+                if (originalQuery.offset) {
+                    offset = originalQuery.offset
+                }
+
+                const queryResult = await model.findAndCountAll({
                     where: req.query,
                     include,
+                    distinct: !!limit, //use distinct if limit is specified
                     order: [["updatedAt", "DESC"]],
-                    limit
+                    limit,
+                    offset
                 });
+
+                res.setHeader("X-Total-Count", queryResult.count);
+                const entities: TInstance[] = queryResult.rows;
                 const newentities: TInstance[] = [];
                 for (let index = 0; index < entities.length; index++) {
                     const entity = entities[index];

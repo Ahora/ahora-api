@@ -215,7 +215,7 @@ export default (path: string) => {
         get: {
             getAdditionalParams: generateQuery,
             useOnlyAdditionalParams: true,
-            limit: 10,
+            limit: 50,
             after: afterGet,
             include: [
                 { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
