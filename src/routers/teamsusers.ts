@@ -6,7 +6,8 @@ import { IUserInstance } from "../models/users";
 
 const generateQuery = async (req: Request): Promise<any> => {
     return {
-        teamId: (req.params.teamId === "null") ? "null" : parseInt(req.params.teamId)
+        teamId: (req.params.teamId === "null") ? "null" : parseInt(req.params.teamId),
+        organizationId: req.org!.id
     }
 }
 

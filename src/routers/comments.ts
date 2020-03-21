@@ -14,6 +14,17 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 }
 
+const beforePost = async (comment: ICommentAttributes, req: Request): Promise<ICommentAttributes> => {
+    comment.createdAt = comment.createdAt || new Date();
+    comment.updatedAt = comment.updatedAt || new Date();
+    return await generateDocHTML(comment, req);
+}
+
+const beforePut = async (comment: ICommentAttributes, req: Request): Promise<ICommentAttributes> => {
+    comment.updatedAt = comment.updatedAt || new Date();
+    return await generateDocHTML(comment, req);
+}
+
 const generateDocHTML = async (comment: ICommentAttributes, req: Request): Promise<ICommentAttributes> => {
     if (req.user) {
         comment.authorUserId = req.user.id;
@@ -36,11 +47,31 @@ const generateDocHTML = async (comment: ICommentAttributes, req: Request): Promi
     });
 }
 
+const updateCommentsNumberAndTime = async (docId: number, updateTime: Date): Promise<void> => {
+    const count = await db.comment.count({
+        where: { docId }
+    });
+
+    db.docs.update({
+        commentsNumber: count,
+        updatedAt: updateTime
+    }, {
+        where: { id: docId }
+    });
+}
+
+const afterPut = async (comment: ICommentInstance, req: Request): Promise<ICommentInstance> => {
+    await updateCommentsNumberAndTime(comment.docId, comment.updatedAt);
+    return comment;
+}
+
 const afterPost = async (comment: ICommentInstance, req: Request): Promise<ICommentInstance> => {
     const returnValue: any = {
         authorUserId: comment.authorUserId,
         id: comment.id,
         comment: comment.comment,
+        updatedAt: comment.updatedAt,
+        createdAt: comment.createdAt,
         htmlComment: comment.htmlComment,
         pinned: comment.pinned,
         docId: comment.docId
@@ -53,7 +84,7 @@ const afterPost = async (comment: ICommentInstance, req: Request): Promise<IComm
         };
     }
 
-
+    await updateCommentsNumberAndTime(comment.docId, comment.createdAt);
     await addUserToWatchersList(comment.docId, comment.authorUserId);
 
 
@@ -72,8 +103,8 @@ export default (path: string) => {
             getAdditionalParams: generateQuery,
             include: [{ model: db.users, attributes: ["displayName", "username"] }]
         },
-        post: { before: generateDocHTML, after: afterPost },
-        put: { before: generateDocHTML }
+        post: { before: beforePost, after: afterPost },
+        put: { before: beforePut, after: afterPut }
     });
     return router;
 };

@@ -11,10 +11,12 @@ export interface IDocAttributes {
     reporterUserId?: number;
     docTypeId: number;
     metadata: any;
+    commentsNumber: number;
     organizationId: number;
     status?: number;
     labels?: number[];
     createdAt: Date;
+    closedAt?: Date;
     updatedAt: Date;
 }
 
@@ -86,10 +88,19 @@ export const EventsFactory =
             updatedAt: {
                 type: DataTypes.DATE,
                 allowNull: true
+            },
+            closedAt: {
+                type: DataTypes.DATE,
+                allowNull: true
+            },
+            commentsNumber: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: 0
             }
         };
 
         return sequelize.define<IDocInstance, IDocAttributes>("docs", attributes, {
-            timestamps: true
+            timestamps: false
         });
     };

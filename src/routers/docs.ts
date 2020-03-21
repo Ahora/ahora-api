@@ -54,6 +54,8 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
         organizationId: doc.organizationId,
         status: doc.status,
         updatedAt: doc.updatedAt,
+        closedAt: doc.closedAt,
+        commentsNumber: doc.commentsNumber,
         createdAt: doc.createdAt,
         reporterUserId: doc.reporterUserId,
         labels: labels && labels.map(label => label.labelId)
@@ -63,9 +65,12 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
 const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttributes> => {
     const updatedDoc = await generateDocHTML(doc);
     if (req && req.org) {
-        updatedDoc.status = req.org.defaultStatus;
+        updatedDoc.status = doc.status || req.org.defaultStatus;
         updatedDoc.organizationId = req.org.id;
     }
+
+    doc.createdAt = doc.createdAt || new Date();
+    doc.updatedAt = doc.updatedAt || new Date();
 
     if (req.user) {
         doc.assigneeUserId = req.user.id;
@@ -196,6 +201,10 @@ const generateQuery = async (req: Request): Promise<any> => {
 
 
 const generateDocHTML = async (doc: IDocAttributes): Promise<IDocAttributes> => {
+
+    doc.createdAt = doc.createdAt || new Date();
+    doc.updatedAt = doc.updatedAt || new Date();
+
     return new Promise<IDocAttributes>((resolve, reject) => {
         if (doc.description) {
             marked(doc.description, (error: any, parsedResult: string) => {

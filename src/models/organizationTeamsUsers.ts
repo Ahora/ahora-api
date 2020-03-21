@@ -41,7 +41,13 @@ export const OrganizationTeamUserFactory =
         };
 
         return sequelize.define<IOrganizationTeamUserInstance, IOrganizationTeamUserAttribute>("organizationteamsusers", attributes, {
-
-            timestamps: true
+            timestamps: true,
+            indexes: [
+                {
+                    unique: true,
+                    name: 'organizationId_teamId_userId',
+                    fields: ["organizationId", "teamId", "userId"]
+                }
+            ]
         });
     };

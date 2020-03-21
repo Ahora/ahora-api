@@ -10,6 +10,8 @@ export interface ICommentAttributes {
     parentId?: number;
     docId: number;
     authorUserId: number;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface ICommentInstance extends Sequelize.Instance<ICommentAttributes>, ICommentAttributes {
@@ -57,11 +59,19 @@ export const CommentsFactory = (sequelize: Sequelize.Sequelize, DataTypes: Seque
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: false
+        },
+        createdAt: {
+            type: DataTypes.DATE,
+            allowNull: true
+        },
+        updatedAt: {
+            type: DataTypes.DATE,
+            allowNull: true
         }
 
     };
 
     return sequelize.define<ICommentInstance, ICommentAttributes>("comments", attributes, {
-        timestamps: true
+        timestamps: false
     });
 };
