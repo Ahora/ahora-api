@@ -55,6 +55,8 @@ router.post("/", multer().any(), async (req: Request, res: Response, next: NextF
         const addedComment = await db.comment.create({
             docId: docId!,
             comment: mail.text,
+            updatedAt: new Date(),
+            createdAt: new Date(),
             parentId: commentId,
             htmlComment: mail.html as any,
             pinned: false,
