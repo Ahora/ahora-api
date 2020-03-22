@@ -13,6 +13,7 @@ import { IDocWatcherInstance, IDocWatcherAttributes, DocWatchersFactory } from "
 import { IOrganizationTeamAttribute, IOrganizationTeamInstance, OrganizationTeamsFactory } from "./organizationTeams";
 import { IOrganizationTeamUserAttribute, IOrganizationTeamUserInstance, OrganizationTeamUserFactory } from "./organizationTeamsUsers";
 import { IAttachmentsInstance, IAttachmentsAttributes, AttachmentsFactory } from "./attachments";
+import { IDocUserViewInstance, IDocUserViewAttributes, DocUserViewFactory } from "./docUserView";
 
 export interface IDBInterface {
   docs: Sequelize.Model<IDocInstance, IDocAttributes>;
@@ -22,6 +23,7 @@ export interface IDBInterface {
   labels: Sequelize.Model<ILabelInstance, ILabelAttributes>;
   attachments: Sequelize.Model<IAttachmentsInstance, IAttachmentsAttributes>;
   docLabels: Sequelize.Model<IDocLabelInstance, IDocLabelAttributes>;
+  docUserView: Sequelize.Model<IDocUserViewInstance, IDocUserViewAttributes>;
   docStatuses: Sequelize.Model<IDocStatusInstance, IDocStatusAttributes>;
   docTypes: Sequelize.Model<IDocTypeInstance, IDocTypeAttributes>;
   docWatchers: Sequelize.Model<IDocWatcherInstance, IDocWatcherAttributes>;
@@ -47,7 +49,8 @@ const db: IDBInterface = {
   docTypes: DocTypesFactory(sequelize, Sequelize),
   docWatchers: DocWatchersFactory(sequelize, Sequelize),
   organizationTeams: OrganizationTeamsFactory(sequelize, Sequelize),
-  organizationTeamsUsers: OrganizationTeamUserFactory(sequelize, Sequelize)
+  organizationTeamsUsers: OrganizationTeamUserFactory(sequelize, Sequelize),
+  docUserView: DocUserViewFactory(sequelize, Sequelize)
 };
 
 db.organizations.hasMany(db.labels);
@@ -58,7 +61,6 @@ db.organizations.hasMany(db.attachments);
 db.docs.hasOne(db.docTypes);
 db.organizations.hasMany(db.docTypes);
 db.organizations.hasMany(db.organizationTeams);
-
 
 db.labels.hasMany(db.docLabels);
 
@@ -79,6 +81,10 @@ db.comment.belongsTo(db.users, { foreignKey: 'authorUserId', onDelete: "CASCADE"
 db.docWatchers.belongsTo(db.docs, { foreignKey: 'docId', onDelete: "CASCADE" });
 db.docs.hasMany(db.docWatchers, { foreignKey: 'docId', onDelete: "CASCADE" });
 db.docWatchers.belongsTo(db.users, { foreignKey: 'userId', onDelete: "CASCADE" });
+
+db.docUserView.belongsTo(db.docs, { foreignKey: 'docId', onDelete: "CASCADE" });
+db.docs.hasMany(db.docUserView, { as: "lastView", foreignKey: 'docId', onDelete: "CASCADE" });
+db.docUserView.belongsTo(db.users, { foreignKey: 'userId', onDelete: "CASCADE" });
 
 db.docs.belongsTo(db.users, { as: "assignee", foreignKey: 'assigneeUserId', onDelete: "CASCADE" });
 db.users.hasMany(db.docs, { foreignKey: 'assigneeUserId', onDelete: "CASCADE" });

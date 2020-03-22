@@ -56,11 +56,33 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
         updatedAt: doc.updatedAt,
         closedAt: doc.closedAt,
         commentsNumber: doc.commentsNumber,
+        views: doc.views,
         createdAt: doc.createdAt,
+        lastView: doc.lastView,
         reporterUserId: doc.reporterUserId,
         labels: labels && labels.map(label => label.labelId)
     };
 }
+
+const afterGetSingle = async (doc: IDocInstance, req: Request): Promise<any> => {
+    const returnedDoc: IDocInstance = await afterGet(doc, req);
+
+    if (req.user) {
+        var promiseUpSert = db.docUserView.upsert({
+            userId: req.user.id,
+            docId: doc.id
+        });
+
+        var PromiseIncrement = doc.increment({
+            'views': 1
+        });
+
+        await Promise.all([promiseUpSert, PromiseIncrement]);
+    }
+
+    return returnedDoc;
+}
+
 
 const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttributes> => {
     const updatedDoc = await generateDocHTML(doc);
@@ -224,20 +246,35 @@ const generateDocHTML = async (doc: IDocAttributes): Promise<IDocAttributes> => 
 }
 
 export default (path: string) => {
-    const router = routeCreate<IDocInstance, IDocAttributes>(path, db.docs, {
-        get: {
-            getAdditionalParams: generateQuery,
-            useOnlyAdditionalParams: true,
-            limit: 30,
-            after: afterGet,
-            include: [
-                { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
-                { as: "reporter", model: db.users, attributes: ["displayName", "username"] },
-                { as: "labels", model: db.docLabels, attributes: ["labelId"] },
-            ]
-        },
-        post: { before: beforePost, after: afterPostOrPut },
-        put: { before: generateDocHTML, after: afterPostOrPut }
+    const router = routeCreate<IDocInstance, IDocAttributes>(path, db.docs, (req) => {
+
+        const includes: any[] = [
+            { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
+            { as: "reporter", model: db.users, attributes: ["displayName", "username"] },
+            { as: "labels", model: db.docLabels, attributes: ["labelId"] }
+        ];
+
+        if (req && req.user) {
+            includes.push({ required: false, as: "lastView", model: db.docUserView, attributes: ["updatedAt"], where: { userId: req.user.id } })
+        }
+        return {
+            get: {
+                getAdditionalParams: generateQuery,
+                useOnlyAdditionalParams: true,
+                limit: 30,
+                after: afterGet,
+                include: includes
+            },
+            getSingle: {
+                getAdditionalParams: generateQuery,
+                useOnlyAdditionalParams: true,
+                limit: 30,
+                after: afterGetSingle,
+                include: includes
+            },
+            post: { before: beforePost, after: afterPostOrPut },
+            put: { before: generateDocHTML, after: afterPostOrPut }
+        }
     });
 
     router.post(`${path}/:id/assignee`, async (req: Request, res: Response, next: NextFunction) => {

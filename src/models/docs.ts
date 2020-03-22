@@ -12,6 +12,7 @@ export interface IDocAttributes {
     docTypeId: number;
     metadata: any;
     commentsNumber: number;
+    views: number;
     organizationId: number;
     status?: number;
     labels?: number[];
@@ -28,7 +29,10 @@ export interface IDocInstance extends Sequelize.Instance<IDocAttributes>, IDocAt
     reporter: {
         username: string;
         displayName?: string;
-    }
+    },
+    lastView: {
+        updatedAt: Date;
+    } | null
 }
 
 // tslint:disable-next-line:typedef
@@ -94,6 +98,11 @@ export const EventsFactory =
                 allowNull: true
             },
             commentsNumber: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: 0
+            },
+            views: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
                 defaultValue: 0

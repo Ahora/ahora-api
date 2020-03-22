@@ -52,14 +52,16 @@ const beforePost = async (attachment: IAttachmentsAttributes, req?: Request): Pr
 };
 
 export default (path: string) => {
-    const router = routeCreate<IAttachmentsInstance, IAttachmentsAttributes>(path, db.attachments, {
-        get: {
-            after: afterGet,
-            getAdditionalParams: generateQuery,
-        },
-        post: {
-            after: afterPost,
-            before: beforePost
+    const router = routeCreate<IAttachmentsInstance, IAttachmentsAttributes>(path, db.attachments, (req) => {
+        return {
+            get: {
+                after: afterGet,
+                getAdditionalParams: generateQuery,
+            },
+            post: {
+                after: afterPost,
+                before: beforePost
+            }
         }
     });
 

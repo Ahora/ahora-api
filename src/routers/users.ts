@@ -36,11 +36,13 @@ const getAdditionalParams = async (req: Request): Promise<any> => {
 }
 
 export default (path: string) => {
-    const router = routeCreate<IUserInstance, IUserAttributes>(path, db.users, {
-        post: { handleError: handlePostError },
-        get: { getAdditionalParams: getAdditionalParams, useOnlyAdditionalParams: true },
-        put: { disable: true },
-        delete: { disable: true }
+    const router = routeCreate<IUserInstance, IUserAttributes>(path, db.users, (req) => {
+        return {
+            post: { handleError: handlePostError },
+            get: { getAdditionalParams: getAdditionalParams, useOnlyAdditionalParams: true },
+            put: { disable: true },
+            delete: { disable: true }
+        }
     });
 
     return router;

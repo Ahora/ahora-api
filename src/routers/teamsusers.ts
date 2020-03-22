@@ -39,13 +39,15 @@ const afterPost = async (team: IOrganizationTeamUserAttribute, req: Request): Pr
 
 export default (path: string) => {
 
-    const router = routeCreate<IOrganizationTeamUserAttribute, IOrganizationTeamUserAttribute>(path, db.organizationTeamsUsers, {
-        get: {
-            getAdditionalParams: generateQuery,
-            include: [{ model: db.users, attributes: ["displayName", "username"] }]
-        },
-        post: { before: beforePost, after: afterPost },
-        put: { before: beforePost }
+    const router = routeCreate<IOrganizationTeamUserAttribute, IOrganizationTeamUserAttribute>(path, db.organizationTeamsUsers, (req) => {
+        return {
+            get: {
+                getAdditionalParams: generateQuery,
+                include: [{ model: db.users, attributes: ["displayName", "username"] }]
+            },
+            post: { before: beforePost, after: afterPost },
+            put: { before: beforePost }
+        }
     });
     return router;
 };

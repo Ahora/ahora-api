@@ -103,14 +103,16 @@ const afterPost = async (comment: ICommentInstance, req: Request): Promise<IComm
 
 export default (path: string) => {
 
-    const router = routeCreate<ICommentInstance, ICommentAttributes>(path, db.comment, {
-        get: {
-            getAdditionalParams: generateQuery,
-            include: [{ model: db.users, attributes: ["displayName", "username"] }]
-        },
-        post: { before: beforePost, after: afterPost },
-        put: { before: beforePut, after: afterPut },
-        delete: { after: afterDelete }
+    const router = routeCreate<ICommentInstance, ICommentAttributes>(path, db.comment, (req) => {
+        return {
+            get: {
+                getAdditionalParams: generateQuery,
+                include: [{ model: db.users, attributes: ["displayName", "username"] }]
+            },
+            post: { before: beforePost, after: afterPost },
+            put: { before: beforePut, after: afterPut },
+            delete: { after: afterDelete }
+        }
     });
     return router;
 };

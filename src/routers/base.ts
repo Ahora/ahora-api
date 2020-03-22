@@ -6,6 +6,7 @@ import marked from "marked";
 export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
     put?: MethodHook<TAttributes, TInstance>;
     get?: GetMethodHook<TAttributes, TInstance>;
+    getSingle?: GetMethodHook<TAttributes, TInstance>;
     post?: MethodHook<TAttributes, TInstance>;
     delete?: MethodHook<TAttributes, TInstance>;
     primaryField?: string;
@@ -25,14 +26,16 @@ export interface MethodHook<TAttributes, TInstance extends TAttributes> {
     disable?: boolean
 }
 
-export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>, hooks: RouterHooks<TAttributes, TInstance> | null = null) => {
+export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>, hooksDelegate: ((req: Request | null) => RouterHooks<TAttributes, TInstance>) | null = null) => {
     const router: Router = express.Router();
 
-    const primaryField: string = (hooks && hooks.primaryField) || "id";
+    const primaryField: string = (hooksDelegate && hooksDelegate(null).primaryField) || "id";
+    const hooksDef = hooksDelegate && hooksDelegate(null);
 
-    if (!(hooks && hooks.get && hooks.get.disable)) {
+    if (!(hooksDef && hooksDef.get && hooksDef.get.disable)) {
         router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
+                const hooks = hooksDelegate && hooksDelegate(req);
                 const originalQuery = req.query;
                 if (hooks && hooks.get && hooks.get.getAdditionalParams) {
                     const additionalParams: any = await hooks.get.getAdditionalParams(req);
@@ -102,9 +105,10 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
         });
     }
 
-    if (!(hooks && hooks.post && hooks.post.disable)) {
-
+    if (!(hooksDef && hooksDef.post && hooksDef.post.disable)) {
         router.post(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+            const hooks = hooksDelegate && hooksDelegate(req);
+
             try {
                 let body = { ...req.body };
                 if (hooks && hooks.post && hooks.post.getAdditionalParams) {
@@ -133,9 +137,10 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
         });
     }
 
-    if (!(hooks && hooks.delete && hooks.delete.disable)) {
+    if (!(hooksDef && hooksDef.delete && hooksDef.delete.disable)) {
         router.delete(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
+                const hooks = hooksDelegate && hooksDelegate(req);
                 let result: TInstance | null = await model.findOne({ where: ({ [primaryField]: req.params[primaryField] }) as any });
                 if (result) {
                     if (hooks && hooks.delete && hooks.delete.before) {
@@ -160,10 +165,11 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
         });
     }
 
-    if (!(hooks && hooks.put && hooks.put.disable)) {
+    if (!(hooksDef && hooksDef.put && hooksDef.put.disable)) {
 
         router.put(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
+                const hooks = hooksDelegate && hooksDelegate(req); ``
                 if (hooks && hooks.put && hooks.put.before) {
                     req.body = await hooks.put.before(req.body, req);
                 }
@@ -184,16 +190,17 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
         });
     }
 
-    if (!(hooks && hooks.get && hooks.get.disable)) {
+    if (!(hooksDef && hooksDef.get && hooksDef.get.disable)) {
         router.get(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
+                const hooks = hooksDelegate && hooksDelegate(req);
                 let include;
-                if (hooks && hooks.get && hooks.get) {
-                    include = hooks.get.include
+                if (hooks && hooks.getSingle && hooks.getSingle) {
+                    include = hooks.getSingle.include
                 }
 
-                if (hooks && hooks.get && hooks.get.getAdditionalParams) {
-                    req.query = { ...req.query, ...await hooks.get.getAdditionalParams(req) }
+                if (hooks && hooks.getSingle && hooks.getSingle.getAdditionalParams) {
+                    req.query = { ...req.query, ...await hooks.getSingle.getAdditionalParams(req) }
                 }
 
                 let entity: TInstance | null = await model.findOne({
@@ -205,8 +212,8 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 });
 
                 if (entity) {
-                    if (hooks && hooks.get && hooks.get.after) {
-                        entity = await hooks.get.after(entity, req);
+                    if (hooks && hooks.getSingle && hooks.getSingle.after) {
+                        entity = await hooks.getSingle.after(entity, req);
                     }
                     res.send(entity);
                 }
