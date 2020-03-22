@@ -13,7 +13,6 @@ export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
 
 export interface GetMethodHook<TAttributes, TInstance extends TAttributes> extends MethodHook<TAttributes, TInstance> {
     include?: Array<Model<any, any> | IncludeOptions>;
-    orderBy
     limit?: number;
 }
 
