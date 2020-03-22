@@ -58,7 +58,7 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
         commentsNumber: doc.commentsNumber,
         views: doc.views,
         createdAt: doc.createdAt,
-        lastView: doc.lastView,
+        lastView: doc.lastView.length > 0 ? doc.lastView[0] : null,
         reporterUserId: doc.reporterUserId,
         labels: labels && labels.map(label => label.labelId)
     };

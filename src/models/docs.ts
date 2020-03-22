@@ -30,9 +30,9 @@ export interface IDocInstance extends Sequelize.Instance<IDocAttributes>, IDocAt
         username: string;
         displayName?: string;
     },
-    lastView: {
+    lastView: [{
         updatedAt: Date;
-    } | null
+    }]
 }
 
 // tslint:disable-next-line:typedef
