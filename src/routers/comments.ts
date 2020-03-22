@@ -65,6 +65,11 @@ const afterPut = async (comment: ICommentInstance, req: Request): Promise<IComme
     return comment;
 }
 
+const afterDelete = async (comment: ICommentInstance, req: Request): Promise<ICommentInstance> => {
+    await updateCommentsNumberAndTime(comment.docId, comment.updatedAt);
+    return comment;
+}
+
 const afterPost = async (comment: ICommentInstance, req: Request): Promise<ICommentInstance> => {
     const returnValue: any = {
         authorUserId: comment.authorUserId,
@@ -104,7 +109,8 @@ export default (path: string) => {
             include: [{ model: db.users, attributes: ["displayName", "username"] }]
         },
         post: { before: beforePost, after: afterPost },
-        put: { before: beforePut, after: afterPut }
+        put: { before: beforePut, after: afterPut },
+        delete: { after: afterDelete }
     });
     return router;
 };

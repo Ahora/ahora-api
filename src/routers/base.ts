@@ -13,6 +13,7 @@ export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
 
 export interface GetMethodHook<TAttributes, TInstance extends TAttributes> extends MethodHook<TAttributes, TInstance> {
     include?: Array<Model<any, any> | IncludeOptions>;
+    orderBy
     limit?: number;
 }
 
@@ -78,7 +79,6 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 const entities = await model.findAll({
                     where: req.query,
                     include,
-                    //distinct: !!limit, //use distinct if limit is specified
                     order: [["updatedAt", "DESC"]],
                     limit,
                     offset
@@ -137,10 +137,24 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
     if (!(hooks && hooks.delete && hooks.delete.disable)) {
         router.delete(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
-                await model.destroy({
-                    where: { [primaryField]: req.params[primaryField] }
-                });
-                res.send();
+                let result: TInstance | null = await model.findOne({ where: ({ [primaryField]: req.params[primaryField] }) as any });
+                if (result) {
+                    if (hooks && hooks.delete && hooks.delete.before) {
+                        await hooks.delete.before(result, req);
+                    }
+                    await model.destroy({
+                        where: { [primaryField]: req.params[primaryField] }
+                    });
+
+                    if (hooks && hooks.delete && hooks.delete.after) {
+                        await hooks.delete.after(result, req);
+                    }
+                    res.send();
+                }
+                else {
+                    res.status(404).send();
+                }
+
             } catch (error) {
                 next(error);
             }
@@ -182,7 +196,6 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 if (hooks && hooks.get && hooks.get.getAdditionalParams) {
                     req.query = { ...req.query, ...await hooks.get.getAdditionalParams(req) }
                 }
-
 
                 let entity: TInstance | null = await model.findOne({
                     where: {
