@@ -96,6 +96,7 @@ const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttrib
 
     if (req.user) {
         doc.assigneeUserId = req.user.id;
+        doc.reporterUserId = req.user.id;
     }
 
     return doc;
