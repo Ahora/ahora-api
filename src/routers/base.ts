@@ -1,6 +1,6 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import { IDocInstance } from "../models/docs";
-import Sequelize, { Model, IncludeOptions } from "sequelize";
+import Sequelize, { Model, IncludeOptions, FindOptionsAttributesArray } from "sequelize";
 import marked from "marked";
 
 export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
@@ -15,6 +15,9 @@ export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
 export interface GetMethodHook<TAttributes, TInstance extends TAttributes> extends MethodHook<TAttributes, TInstance> {
     include?: Array<Model<any, any> | IncludeOptions>;
     limit?: number;
+    attributes?: FindOptionsAttributesArray;
+    group?: string | string[];
+    order?: any;
 }
 
 export interface MethodHook<TAttributes, TInstance extends TAttributes> {
@@ -61,9 +64,15 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 }
 
                 let include;
+                let attributes;
+                let group;
+                let order;
                 let limit: number | undefined;
                 if (hooks && hooks.get && hooks.get) {
                     include = hooks.get.include;
+                    attributes = hooks.get.attributes;
+                    group = hooks.get.group;
+                    order = hooks.get.order;
                     limit = hooks.get.limit;
                 }
 
@@ -80,11 +89,15 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
                 const entities = await model.findAll({
                     where: req.query,
+                    attributes,
+                    group,
                     include,
-                    order: [["updatedAt", "DESC"]],
+                    order,
                     limit,
                     offset
                 });
+
+                console.log(entities);
 
                 const newentities: TInstance[] = [];
                 for (let index = 0; index < entities.length; index++) {

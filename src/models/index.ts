@@ -33,7 +33,7 @@ export interface IDBInterface {
 }
 
 const sequelize: Sequelize.Sequelize = new Sequelize(DB_CONNECTION_STRING, {
-  logging: false
+  logging: true
 });
 
 const db: IDBInterface = {

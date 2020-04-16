@@ -1,6 +1,6 @@
-import express, { Router, Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import { IDocInstance, IDocAttributes } from "../models/docs";
-import routeCreate, { RouterHooks } from "./base";
+import routeCreate from "./base";
 import db from "./../models/index";
 import marked from "marked";
 import { IOrganizationInstance } from "../models/organization";
@@ -8,11 +8,9 @@ import { IDocStatusInstance } from "../models/docStatuses";
 import { isArray } from "util";
 import { IUserInstance } from "../models/users";
 import { IDocLabelAttributes } from "../models/docLabel";
-import { ILabelAttributes, ILabelInstance } from "../models/labels";
+import { ILabelInstance } from "../models/labels";
 import { getUserFromGithubAlias } from "../helpers/users";
-import connectPgSimple from "connect-pg-simple";
 import { addUserToWatchersList, unWatch } from "../helpers/docWatchers";
-import sequelize from "sequelize";
 
 const afterPostOrPut = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
     //Update labels!
@@ -249,27 +247,44 @@ const generateDocHTML = async (doc: IDocAttributes): Promise<IDocAttributes> => 
 export default (path: string) => {
     const router = routeCreate<IDocInstance, IDocAttributes>(path, db.docs, (req) => {
 
-        const includes: any[] = [
-            { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
-            { as: "reporter", model: db.users, attributes: ["displayName", "username"] },
-            { as: "labels", model: db.docLabels, attributes: ["labelId"] }
-        ];
-
-        if (req && req.user) {
-            includes.push({ required: false, as: "lastView", model: db.docUserView, attributes: ["updatedAt"], where: { userId: req.user.id } })
+        let after: ((doc: IDocInstance, req: Request) => Promise<any>) | undefined;
+        let group: any, attributes: any, limit: number | undefined, order: any | undefined;
+        let includes: any[] = [];
+        if (req && req.query.group === "repoter") {
+            group = ["reporter.username", "reporter.displayName", "reporter.id"]
+            attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
+            includes = [{ as: "reporter", model: db.users, attributes: ["displayName", "username"] }]
         }
+        else {
+            includes = [
+                { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
+                { as: "reporter", model: db.users, attributes: ["displayName", "username"] },
+                { as: "labels", model: db.docLabels, attributes: ["labelId"] }
+            ];
+
+            if (req && req.user) {
+                includes.push({ required: false, as: "lastView", model: db.docUserView, attributes: ["updatedAt"], where: { userId: req.user.id } })
+            }
+            after = afterGet
+            limit = 30;
+            order = [["updatedAt", "DESC"]]
+        }
+
+
         return {
             get: {
                 getAdditionalParams: generateQuery,
                 useOnlyAdditionalParams: true,
-                limit: 30,
-                after: afterGet,
+                after: after,
+                group,
+                limit,
+                order,
+                attributes,
                 include: includes
             },
             getSingle: {
                 getAdditionalParams: generateQuery,
                 useOnlyAdditionalParams: true,
-                limit: 30,
                 after: afterGetSingle,
                 include: includes
             },
