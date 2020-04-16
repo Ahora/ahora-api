@@ -250,10 +250,24 @@ export default (path: string) => {
         let after: ((doc: IDocInstance, req: Request) => Promise<any>) | undefined;
         let group: any, attributes: any, limit: number | undefined, order: any | undefined;
         let includes: any[] = [];
-        if (req && req.query.group === "repoter") {
-            group = ["reporter.username", "reporter.displayName", "reporter.id"]
-            attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
-            includes = [{ as: "reporter", model: db.users, attributes: ["displayName", "username"] }]
+
+        if (req && req.query.group) {
+            switch (req.query.group) {
+                case "repoter":
+                    group = ["reporter.username", "reporter.displayName", "reporter.id"]
+                    attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
+                    includes = [{ as: "reporter", model: db.users, attributes: ["displayName", "username"] }]
+                    break;
+                case "assignee":
+                    group = ["assignee.username", "assignee.displayName", "assignee.id"]
+                    attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
+                    includes = [{ as: "assignee", model: db.users, attributes: ["displayName", "username"] }]
+                    break;
+                default:
+                    group = [req.query.group]
+                    attributes = [req.query.group, [db.sequelize.fn('COUNT', '*'), 'count']];
+                    break;
+            }
         }
         else {
             includes = [

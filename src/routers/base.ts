@@ -97,8 +97,6 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     offset
                 });
 
-                console.log(entities);
-
                 const newentities: TInstance[] = [];
                 for (let index = 0; index < entities.length; index++) {
                     const entity = entities[index];
