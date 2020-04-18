@@ -14,7 +14,7 @@ export interface IDocAttributes {
     commentsNumber: number;
     views: number;
     organizationId: number;
-    status?: number;
+    statusId?: number;
     labels?: number[];
     createdAt: Date;
     closedAt?: Date;
@@ -61,7 +61,7 @@ export const EventsFactory =
                 type: DataTypes.JSON,
                 allowNull: true
             },
-            status: {
+            statusId: {
                 type: DataTypes.INTEGER,
                 allowNull: true
             },

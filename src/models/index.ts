@@ -54,12 +54,15 @@ const db: IDBInterface = {
 };
 
 db.organizations.hasMany(db.labels);
-db.docs.hasOne(db.docStatuses, { foreignKey: 'status' });
-db.docs.hasOne(db.docTypes, { foreignKey: 'docTypeId' });
-db.organizations.hasMany(db.docStatuses);
+
+db.docs.belongsTo(db.docTypes, { as: "docType", foreignKey: 'docTypeId', onDelete: "CASCADE" });
+db.docTypes.hasMany(db.docs, { foreignKey: 'docTypeId', onDelete: "CASCADE" });
+
+db.docs.belongsTo(db.docStatuses, { as: "status", foreignKey: 'statusId', onDelete: "CASCADE" });
+db.docStatuses.hasMany(db.docs, { foreignKey: 'statusId', onDelete: "CASCADE" });
+
+
 db.organizations.hasMany(db.attachments);
-db.docs.hasOne(db.docTypes);
-db.organizations.hasMany(db.docTypes);
 db.organizations.hasMany(db.organizationTeams);
 
 db.labels.hasMany(db.docLabels);

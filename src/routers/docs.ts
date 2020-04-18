@@ -50,7 +50,7 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
         docTypeId: doc.docTypeId,
         metadata: doc.metadata,
         organizationId: doc.organizationId,
-        status: doc.status,
+        statusId: doc.statusId,
         updatedAt: doc.updatedAt,
         closedAt: doc.closedAt,
         commentsNumber: doc.commentsNumber,
@@ -85,7 +85,7 @@ const afterGetSingle = async (doc: IDocInstance, req: Request): Promise<any> => 
 const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttributes> => {
     const updatedDoc = await generateDocHTML(doc);
     if (req && req.org) {
-        updatedDoc.status = doc.status || req.org.defaultStatus;
+        updatedDoc.statusId = doc.statusId || req.org.defaultStatus;
         updatedDoc.organizationId = req.org.id;
     }
 
@@ -127,7 +127,7 @@ const generateQuery = async (req: Request): Promise<any> => {
                 statusIds.push(value.id);
             }
         });
-        query.status = statusIds;
+        query.statusId = statusIds;
     }
 
     //--------------Label-------------------------------------------------
@@ -262,6 +262,16 @@ export default (path: string) => {
                     group = ["assignee.username", "assignee.displayName", "assignee.id"]
                     attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
                     includes = [{ as: "assignee", model: db.users, attributes: ["displayName", "username"] }]
+                    break;
+                case "status":
+                    group = ["status.name", "status.id"]
+                    attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
+                    includes = [{ as: "status", model: db.docStatuses, attributes: ["name"] }]
+                    break;
+                case "docTypeId":
+                    group = ["docType.name", "docType.id"]
+                    attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
+                    includes = [{ as: "docType", model: db.docTypes, attributes: ["name"] }]
                     break;
                 default:
                     group = [req.query.group]
