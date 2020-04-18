@@ -15,6 +15,7 @@ export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
 export interface GetMethodHook<TAttributes, TInstance extends TAttributes> extends MethodHook<TAttributes, TInstance> {
     include?: Array<Model<any, any> | IncludeOptions>;
     limit?: number;
+    raw?: boolean;
     attributes?: FindOptionsAttributesArray;
     group?: string | string[];
     order?: any;
@@ -68,12 +69,14 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 let group;
                 let order;
                 let limit: number | undefined;
+                let raw: boolean = false;
                 if (hooks && hooks.get && hooks.get) {
                     include = hooks.get.include;
                     attributes = hooks.get.attributes;
                     group = hooks.get.group;
                     order = hooks.get.order;
                     limit = hooks.get.limit;
+                    raw = !!hooks.get.raw;
                 }
 
                 let offset: number | undefined;
@@ -92,6 +95,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     attributes,
                     group,
                     include,
+                    raw,
                     order,
                     limit,
                     offset

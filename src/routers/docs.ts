@@ -56,7 +56,7 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
         commentsNumber: doc.commentsNumber,
         views: doc.views,
         createdAt: doc.createdAt,
-        lastView: doc.lastView.length > 0 ? doc.lastView[0] : null,
+        lastView: (doc.lastView && doc.lastView.length) > 0 ? doc.lastView[0] : null,
         reporterUserId: doc.reporterUserId,
         labels: labels && labels.map(label => label.labelId)
     };
@@ -249,6 +249,7 @@ export default (path: string) => {
 
         let after: ((doc: IDocInstance, req: Request) => Promise<any>) | undefined;
         let group: any, attributes: any, limit: number | undefined, order: any | undefined;
+        let raw: boolean = false;
         let includes: any[] = [];
 
         if (req && req.query.group) {
@@ -272,6 +273,12 @@ export default (path: string) => {
                     group = ["docType.name", "docType.id"]
                     attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
                     includes = [{ as: "docType", model: db.docTypes, attributes: ["name"] }]
+                    break;
+                case "label":
+                    group = ["labelId"]
+                    attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
+                    includes = [{ as: "labels", model: db.docLabels, attributes: ["labelId"] }];
+                    raw = true;
                     break;
                 default:
                     group = [req.query.group]
@@ -302,6 +309,7 @@ export default (path: string) => {
                 after: after,
                 group,
                 limit,
+                raw,
                 order,
                 attributes,
                 include: includes
