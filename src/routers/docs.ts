@@ -285,6 +285,8 @@ export default (path: string) => {
                     attributes = [req.query.group, [db.sequelize.fn('COUNT', '*'), 'count']];
                     break;
             }
+            order = [["count", "DESC"]]
+
         }
         else {
             includes = [
