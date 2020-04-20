@@ -15,6 +15,10 @@ const generateQuery = async (req: Request): Promise<any> => {
 }
 
 const beforePost = async (comment: ICommentAttributes, req: Request): Promise<ICommentAttributes> => {
+    if (req.user) {
+        comment.authorUserId = comment.authorUserId || req.user.id;
+    }
+    comment.docId = parseInt(req.params.docId);
     comment.createdAt = comment.createdAt || new Date();
     comment.updatedAt = comment.updatedAt || new Date();
     return await generateDocHTML(comment, req);
@@ -26,10 +30,6 @@ const beforePut = async (comment: ICommentAttributes, req: Request): Promise<ICo
 }
 
 const generateDocHTML = async (comment: ICommentAttributes, req: Request): Promise<ICommentAttributes> => {
-    if (req.user) {
-        comment.authorUserId = req.user.id;
-    }
-    comment.docId = parseInt(req.params.docId);
     return new Promise<ICommentAttributes>((resolve, reject) => {
         if (comment.comment) {
             marked(comment.comment, (error: any, parsedResult: string) => {
