@@ -93,8 +93,8 @@ const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttrib
     doc.updatedAt = doc.updatedAt || new Date();
 
     if (req.user) {
-        doc.assigneeUserId = req.user.id;
-        doc.reporterUserId = req.user.id;
+        doc.assigneeUserId = doc.assigneeUserId || req.user.id;
+        doc.reporterUserId = doc.reporterUserId || req.user.id;
     }
 
     return doc;
