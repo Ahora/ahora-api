@@ -23,7 +23,7 @@ const generateQuery = async (req: Request): Promise<any> => {
 export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>) => {
     const router = routeCreate<TInstance, TAttributes, TCreationAttributes>(path, model, (req) => {
         return {
-            get: { getAdditionalParams: generateQuery },
+            get: { getAdditionalParams: generateQuery, order: [["updatedAt", "DESC"]] },
             post: { before: beforePost }
         }
     });
