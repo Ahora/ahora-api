@@ -11,6 +11,7 @@ import { IDocLabelAttributes } from "../models/docLabel";
 import { ILabelInstance } from "../models/labels";
 import { getUserFromGithubAlias } from "../helpers/users";
 import { addUserToWatchersList, unWatch } from "../helpers/docWatchers";
+import { IDocSourceInstance } from "../models/docSource";
 
 const afterPostOrPut = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
     //Update labels!
@@ -49,6 +50,7 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
         reporter: doc.reporter,
         docTypeId: doc.docTypeId,
         metadata: doc.metadata,
+        source: doc.source,
         organizationId: doc.organizationId,
         statusId: doc.statusId,
         updatedAt: doc.updatedAt,
@@ -83,7 +85,7 @@ const afterGetSingle = async (doc: IDocInstance, req: Request): Promise<any> => 
 
 
 const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttributes> => {
-    const updatedDoc = await generateDocHTML(doc);
+    const updatedDoc = await generateDocHTML(doc, req);
     if (req && req.org) {
         updatedDoc.statusId = doc.statusId || req.org.defaultStatus;
         updatedDoc.organizationId = req.org.id;
@@ -225,10 +227,21 @@ const generateQuery = async (req: Request): Promise<any> => {
 }
 
 
-const generateDocHTML = async (doc: IDocAttributes): Promise<IDocAttributes> => {
+const generateDocHTML = async (doc: IDocAttributes, req: Request): Promise<IDocAttributes> => {
 
     doc.createdAt = doc.createdAt || new Date();
     doc.updatedAt = doc.updatedAt || new Date();
+
+
+    if (req.body.source) {
+        const [source] = await db.docSources.findOrCreate({
+            where: { repo: req.body.source.repo, organization: req.body.source.organization }
+        });
+
+        if (source) {
+            doc.sourceId = source.id;
+        }
+    }
 
     return new Promise<IDocAttributes>((resolve, reject) => {
         if (doc.description) {
@@ -252,43 +265,56 @@ export default (path: string) => {
     const router = routeCreate<IDocInstance, IDocAttributes>(path, db.docs, (req) => {
 
         let after: ((doc: IDocInstance, req: Request) => Promise<any>) | undefined;
-        let group: any, attributes: any, limit: number | undefined, order: any | undefined;
+        let group: any = [], attributes: any[] = [], limit: number | undefined, order: any | undefined;
         let raw: boolean = false;
         let includes: any[] = [];
 
         if (req && req.query.group) {
-            switch (req.query.group) {
-                case "repoter":
-                    group = ["reporter.username", "reporter.displayName", "reporter.id"]
-                    attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
-                    includes = [{ as: "reporter", model: db.users, attributes: ["displayName", "username"] }]
-                    break;
-                case "assignee":
-                    group = ["assignee.username", "assignee.displayName", "assignee.id"]
-                    attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
-                    includes = [{ as: "assignee", model: db.users, attributes: ["displayName", "username"] }]
-                    break;
-                case "status":
-                    group = ["status.name", "status.id"]
-                    attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
-                    includes = [{ as: "status", model: db.docStatuses, attributes: ["name"] }]
-                    break;
-                case "docTypeId":
-                    group = ["docType.name", "docType.id"]
-                    attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
-                    includes = [{ as: "docType", model: db.docTypes, attributes: ["name"] }]
-                    break;
-                case "label":
-                    group = ["labelId"]
-                    attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
-                    includes = [{ as: "labels", model: db.docLabels, attributes: ["labelId"] }];
-                    raw = true;
-                    break;
-                default:
-                    group = [req.query.group]
-                    attributes = [req.query.group, [db.sequelize.fn('COUNT', '*'), 'count']];
-                    break;
+            if (!Array.isArray(req.query.group)) {
+                req.query.group = [req.query.group];
             }
+
+            attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
+
+            raw = true;
+            req.query.group.forEach((currentGroup: string) => {
+                switch (currentGroup) {
+                    case "repoter":
+                        group = [...group, "reporter.username", "reporter.displayName", "reporter.id"]
+                        attributes = [...attributes, [db.sequelize.fn('COUNT', '*'), 'count']];
+                        includes = [...includes, { as: "reporter", model: db.users, attributes: ["displayName", "username"] }]
+                        break;
+                    case "assignee":
+                        group = [...group, "assignee.username", "assignee.displayName", "assignee.id"]
+                        attributes = [...attributes, [db.sequelize.fn('COUNT', '*'), 'count']];
+                        includes = [...includes, { as: "assignee", model: db.users, attributes: ["displayName", "username"] }]
+                        break;
+                    case "status":
+                        group = [...group, "status.name", "status.id"]
+                        includes = [...includes, { as: "status", model: db.docStatuses, attributes: ["name"] }]
+                        break;
+                    case "docType":
+                        group = [...group, "docType.name", "docType.id"]
+                        includes = [...includes, { as: "docType", model: db.docTypes, attributes: ["name"] }]
+                        break;
+                    case "repo":
+                        group = [...group, "repo"]
+                        includes = [...includes, { as: "source", model: db.docSources, attributes: ["repo"] }];
+                        break;
+                    case "label":
+                        group = [...group, "labelId"]
+                        includes = [...includes, { as: "labels", model: db.docLabels, attributes: ["labelId"] }];
+                        break;
+                    case "labeldoctype":
+                        group = [...group, "labelId", "docTypeId"]
+                        attributes = [...attributes, "docTypeId"];
+                        includes = [...includes, { as: "labels", model: db.docLabels, attributes: ["labelId"] }];
+                        break;
+                    default:
+                        group = [...group, currentGroup]
+                        break;
+                }
+            });
             order = [["count", "DESC"]]
 
         }
@@ -296,6 +322,7 @@ export default (path: string) => {
             includes = [
                 { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
                 { as: "reporter", model: db.users, attributes: ["displayName", "username"] },
+                { as: "source", model: db.docSources, where: req && req.query.repo && { repo: req!.query.repo } },
                 { as: "labels", model: db.docLabels, attributes: ["labelId"] }
             ];
 
@@ -317,7 +344,7 @@ export default (path: string) => {
                 limit,
                 raw,
                 order,
-                attributes,
+                attributes: attributes.length > 0 ? attributes : undefined,
                 include: includes
             },
             getSingle: {

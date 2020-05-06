@@ -84,6 +84,11 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     offset = originalQuery.offset
                 }
 
+                if (group && group.length == 0) {
+                    group = undefined;
+
+                }
+
                 const count = await model.count({
                     where: req.query
                 });

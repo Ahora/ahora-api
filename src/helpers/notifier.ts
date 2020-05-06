@@ -41,9 +41,10 @@ export const notifyComment = async (user: IUserInstance, doc: IDocInstance, comm
                 templateId: 'd-8b18787f0f5c47339cd670bfb1c6a6b5',
                 dynamic_template_data: { user, doc, comment, organization, url: URL },
             };
-            await sgMail.send(msg).catch((error: any) => {
+            /*await sgMail.send(msg).catch((error: any) => {
                 console.error(error.response.body);
             });
+            */
         }
     }
 }

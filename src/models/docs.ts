@@ -13,6 +13,7 @@ export interface IDocAttributes {
     metadata: any;
     commentsNumber: number;
     views: number;
+    sourceId?: number;
     organizationId: number;
     statusId?: number;
     labels?: number[];
@@ -30,6 +31,10 @@ export interface IDocInstance extends Sequelize.Instance<IDocAttributes>, IDocAt
         username: string;
         displayName?: string;
     },
+    source?: {
+        organization: string;
+        repo: string;
+    }
     lastView: [{
         updatedAt: Date;
     }]
@@ -76,6 +81,10 @@ export const EventsFactory =
             organizationId: {
                 type: DataTypes.INTEGER,
                 allowNull: false
+            },
+            sourceId: {
+                type: DataTypes.INTEGER,
+                allowNull: true
             },
             assigneeUserId: {
                 type: DataTypes.INTEGER,
