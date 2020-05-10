@@ -12,6 +12,15 @@ import { ILabelInstance } from "../models/labels";
 import { getUserFromGithubAlias } from "../helpers/users";
 import { addUserToWatchersList, unWatch } from "../helpers/docWatchers";
 import { IDocSourceInstance } from "../models/docSource";
+import GroupByManager from "../helpers/groups/GroupByManager";
+import DocRepoterGroupHandler from "../helpers/groups/docs/DocRepoterGroupHandler";
+import DocAssigneeGroupHandler from "../helpers/groups/docs/DocAssigneeGroupHandler";
+import DocStatusGroupHandler from "../helpers/groups/docs/DocStatusGroupHandler";
+import DocLabelGroupHandler from "../helpers/groups/docs/DocLabelGroupHandler";
+import DocDocTypeGroupHandler from "../helpers/groups/docs/DocDocTypeGroupHandler";
+import { IGroupHandler, IGroupParameters, GroupInfo } from "../helpers/groups/IGroupHandler";
+import DocRepoGroupHandler from "../helpers/groups/docs/DocRepoGroupHandler";
+import DateGroupHandler from "../helpers/groups/docs/DateGroupHandler";
 
 const afterPostOrPut = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
     //Update labels!
@@ -62,6 +71,25 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
         reporterUserId: doc.reporterUserId,
         labels: labels && labels.map(label => label.labelId)
     };
+}
+
+const afterGroupByGet = async (item: any, req: Request): Promise<any> => {
+    const returnValue: any = { count: parseInt(item.count), criteria: {} };
+    if (req && req.query.group) {
+        if (!Array.isArray(req.query.group)) {
+            req.query.group = [req.query.group];
+        }
+
+        req.query.group.forEach((currentGroup: string) => {
+            const groupHandler: IGroupHandler | undefined = groupByManager.getGroup(currentGroup);
+            if (groupHandler) {
+                const groupInfo: GroupInfo = groupHandler.changeData(item);
+                returnValue.criteria = { ...returnValue.criteria, [currentGroup]: groupInfo.criteria };
+            }
+        });
+    }
+
+    return returnValue;
 }
 
 const afterGetSingle = async (doc: IDocInstance, req: Request): Promise<any> => {
@@ -261,9 +289,19 @@ const generateDocHTML = async (doc: IDocAttributes, req: Request): Promise<IDocA
     });
 }
 
+const groupByManager = new GroupByManager();
+groupByManager.registerGroup("reporter", new DocRepoterGroupHandler());
+groupByManager.registerGroup("assignee", new DocAssigneeGroupHandler());
+groupByManager.registerGroup("status", new DocStatusGroupHandler());
+groupByManager.registerGroup("label", new DocLabelGroupHandler());
+groupByManager.registerGroup("repo", new DocRepoGroupHandler());
+groupByManager.registerGroup("doctype", new DocDocTypeGroupHandler());
+groupByManager.registerGroup("createdAt", new DateGroupHandler("createdAt"));
+groupByManager.registerGroup("updatedAt", new DateGroupHandler("updatedAt"));
+
+
 export default (path: string) => {
     const router = routeCreate<IDocInstance, IDocAttributes>(path, db.docs, (req) => {
-
         let after: ((doc: IDocInstance, req: Request) => Promise<any>) | undefined;
         let group: any = [], attributes: any[] = [], limit: number | undefined, order: any | undefined;
         let raw: boolean = false;
@@ -274,55 +312,35 @@ export default (path: string) => {
                 req.query.group = [req.query.group];
             }
 
+            after = afterGroupByGet;
             attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
 
             raw = true;
             req.query.group.forEach((currentGroup: string) => {
-                switch (currentGroup) {
-                    case "repoter":
-                        group = [...group, "reporter.username", "reporter.displayName", "reporter.id"]
-                        attributes = [...attributes, [db.sequelize.fn('COUNT', '*'), 'count']];
-                        includes = [...includes, { as: "reporter", model: db.users, attributes: ["displayName", "username"] }]
-                        break;
-                    case "assignee":
-                        group = [...group, "assignee.username", "assignee.displayName", "assignee.id"]
-                        attributes = [...attributes, [db.sequelize.fn('COUNT', '*'), 'count']];
-                        includes = [...includes, { as: "assignee", model: db.users, attributes: ["displayName", "username"] }]
-                        break;
-                    case "status":
-                        group = [...group, "status.name", "status.id"]
-                        includes = [...includes, { as: "status", model: db.docStatuses, attributes: ["name"] }]
-                        break;
-                    case "docType":
-                        group = [...group, "docType.name", "docType.id"]
-                        includes = [...includes, { as: "docType", model: db.docTypes, attributes: ["name"] }]
-                        break;
-                    case "repo":
-                        group = [...group, "repo"]
-                        includes = [...includes, { as: "source", model: db.docSources, attributes: ["repo"] }];
-                        break;
-                    case "label":
-                        group = [...group, "labelId"]
-                        includes = [...includes, { as: "labels", model: db.docLabels, attributes: ["labelId"] }];
-                        break;
-                    case "labeldoctype":
-                        group = [...group, "labelId", "docTypeId"]
-                        attributes = [...attributes, "docTypeId"];
-                        includes = [...includes, { as: "labels", model: db.docLabels, attributes: ["labelId"] }];
-                        break;
-                    default:
-                        group = [...group, currentGroup]
-                        break;
+
+                const groupHandler: IGroupHandler | undefined = groupByManager.getGroup(currentGroup);
+                console.log(currentGroup, groupHandler);
+                if (groupHandler) {
+                    const groupParameters: IGroupParameters = groupHandler.handleGroup(currentGroup);
+
+                    if (groupParameters.attributes) {
+                        attributes = [...attributes, ...groupParameters.attributes];
+                    }
+
+                    if (groupParameters.includes) {
+                        includes = [...includes, ...groupParameters.includes]
+                    }
+
+                    group = [...group, ...groupParameters.group];
                 }
             });
             order = [["count", "DESC"]]
-
         }
         else {
             includes = [
                 { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
                 { as: "reporter", model: db.users, attributes: ["displayName", "username"] },
-                { as: "source", model: db.docSources, where: req && req.query.repo && { repo: req!.query.repo } },
+                { as: "source", model: db.docSources, attributes: ["repo", "organization"] },
                 { as: "labels", model: db.docLabels, attributes: ["labelId"] }
             ];
 
@@ -333,7 +351,6 @@ export default (path: string) => {
             limit = 30;
             order = [["updatedAt", "DESC"]]
         }
-
 
         return {
             get: {

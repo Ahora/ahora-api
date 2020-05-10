@@ -80,6 +80,8 @@ db.docs.belongsTo(db.docStatuses, { as: "status", foreignKey: 'statusId', onDele
 db.docStatuses.hasMany(db.docs, { foreignKey: 'statusId', onDelete: "CASCADE" });
 
 db.labels.hasMany(db.docLabels);
+db.docLabels.belongsTo(db.labels, { as: "tags", foreignKey: 'labelId', onDelete: "CASCADE" });
+
 
 db.organizationTeams.hasMany(db.organizationTeamsUsers);
 db.organizationTeamsUsers.belongsTo(db.users, { foreignKey: 'userId', onDelete: "CASCADE" });

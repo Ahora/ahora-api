@@ -40,15 +40,15 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
         router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
                 const hooks = hooksDelegate && hooksDelegate(req);
-                const originalQuery = req.query;
+                let generatedQuery = req.query;
                 if (hooks && hooks.get && hooks.get.getAdditionalParams) {
                     const additionalParams: any = await hooks.get.getAdditionalParams(req);
                     if (additionalParams !== null) {
                         if (hooks.get.useOnlyAdditionalParams) {
-                            req.query = additionalParams;
+                            generatedQuery = additionalParams;
                         }
                         else {
-                            req.query = { ...req.query, ...additionalParams }
+                            generatedQuery = { ...req.query, ...additionalParams }
                         }
                     }
                     else {
@@ -80,8 +80,8 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 }
 
                 let offset: number | undefined;
-                if (originalQuery.offset) {
-                    offset = originalQuery.offset
+                if (req.query.offset) {
+                    offset = req.query.offset
                 }
 
                 if (group && group.length == 0) {
@@ -90,13 +90,13 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 }
 
                 const count = await model.count({
-                    where: req.query
+                    where: generatedQuery
                 });
                 res.setHeader("X-Total-Count", count);
 
 
                 const entities = await model.findAll({
-                    where: req.query,
+                    where: generatedQuery,
                     attributes,
                     group,
                     include,
