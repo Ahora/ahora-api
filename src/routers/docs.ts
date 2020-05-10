@@ -74,7 +74,7 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
 }
 
 const afterGroupByGet = async (item: any, req: Request): Promise<any> => {
-    const returnValue: any = { count: parseInt(item.count), criteria: {} };
+    const returnValue: any = { count: parseInt(item.count), criteria: {}, values: [] };
     if (req && req.query.group) {
         if (!Array.isArray(req.query.group)) {
             req.query.group = [req.query.group];
@@ -85,6 +85,7 @@ const afterGroupByGet = async (item: any, req: Request): Promise<any> => {
             if (groupHandler) {
                 const groupInfo: GroupInfo = groupHandler.changeData(item);
                 returnValue.criteria = { ...returnValue.criteria, [currentGroup]: groupInfo.criteria };
+                returnValue.values = [...returnValue.values, groupInfo.criteria];
             }
         });
     }
@@ -319,7 +320,6 @@ export default (path: string) => {
             req.query.group.forEach((currentGroup: string) => {
 
                 const groupHandler: IGroupHandler | undefined = groupByManager.getGroup(currentGroup);
-                console.log(currentGroup, groupHandler);
                 if (groupHandler) {
                     const groupParameters: IGroupParameters = groupHandler.handleGroup(currentGroup);
 

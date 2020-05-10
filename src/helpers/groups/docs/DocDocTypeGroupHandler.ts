@@ -4,14 +4,14 @@ import db from "../../../models";
 export default class DocDocTypeGroupHandler implements IGroupHandler {
     public handleGroup(group: string): IGroupParameters {
         return {
-            group: ["docType.name"],
-            includes: [{ as: "docType", model: db.docTypes, attributes: ["name"] }]
+            group: ["docType.code"],
+            includes: [{ as: "docType", model: db.docTypes, attributes: ["code"] }]
         }
     }
 
     public changeData(row: any): GroupInfo {
         return {
-            criteria: row["docType.name"]
+            criteria: row["docType.code"]
         }
     }
 }
