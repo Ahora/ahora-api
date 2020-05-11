@@ -16,6 +16,7 @@ import { IAttachmentsInstance, IAttachmentsAttributes, AttachmentsFactory } from
 import { IDocUserViewInstance, IDocUserViewAttributes, DocUserViewFactory } from "./docUserView";
 import { SourcesFactory, ISourceInstance, ISourceAttributes } from "./sources";
 import { DocSourcesFactory, IDocSourceInstance, IDocSourceAttributes } from "./docSource";
+import { IDashboardInstance, IDashboardAttributes, DashboardsFactory } from "./organizationDashboards";
 
 export interface IDBInterface {
   docs: Sequelize.Model<IDocInstance, IDocAttributes>;
@@ -32,6 +33,7 @@ export interface IDBInterface {
   docWatchers: Sequelize.Model<IDocWatcherInstance, IDocWatcherAttributes>;
   docSources: Sequelize.Model<IDocSourceInstance, IDocSourceAttributes>;
   organizationTeams: Sequelize.Model<IOrganizationTeamInstance, IOrganizationTeamAttribute>;
+  organizationDashboards: Sequelize.Model<IDashboardInstance, IDashboardAttributes>;
   organizationTeamsUsers: Sequelize.Model<IOrganizationTeamUserInstance, IOrganizationTeamUserAttribute>;
   sequelize: Sequelize.Sequelize;
 }
@@ -62,11 +64,13 @@ const db: IDBInterface = {
   docSources: DocSourcesFactory(sequelize, Sequelize),
   organizationTeams: OrganizationTeamsFactory(sequelize, Sequelize),
   organizationTeamsUsers: OrganizationTeamUserFactory(sequelize, Sequelize),
-  docUserView: DocUserViewFactory(sequelize, Sequelize)
+  docUserView: DocUserViewFactory(sequelize, Sequelize),
+  organizationDashboards: DashboardsFactory(sequelize, Sequelize)
 };
 
 db.organizations.hasMany(db.sources);
 db.organizations.hasMany(db.labels);
+db.organizations.hasMany(db.organizationDashboards);
 db.organizations.hasMany(db.attachments);
 db.organizations.hasMany(db.organizationTeams);
 
@@ -87,6 +91,11 @@ db.organizationTeams.hasMany(db.organizationTeamsUsers);
 db.organizationTeamsUsers.belongsTo(db.users, { foreignKey: 'userId', onDelete: "CASCADE" });
 db.users.hasMany(db.organizationTeamsUsers, { foreignKey: 'userId', onDelete: "CASCADE" });
 
+db.organizationDashboards.belongsTo(db.users, { foreignKey: 'userId', onDelete: "CASCADE" });
+db.users.hasMany(db.organizationDashboards, { foreignKey: 'userId', onDelete: "CASCADE" });
+
+db.organizationDashboards.belongsTo(db.organizationTeams, { foreignKey: 'teamId', onDelete: "CASCADE" });
+db.organizationTeams.hasMany(db.organizationDashboards, { foreignKey: 'teamId', onDelete: "CASCADE" });
 
 db.organizationTeams.belongsTo(db.organizationTeams, { foreignKey: 'parentId', onDelete: "CASCADE" });
 db.organizationTeams.hasOne(db.organizationTeams, { foreignKey: 'parentId', onDelete: "CASCADE" });

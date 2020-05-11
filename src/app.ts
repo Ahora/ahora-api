@@ -12,6 +12,7 @@ import usersCreate from "./routers/users";
 import RouteTeamUsersCreate from "./routers/teamsusers";
 import organizationChildCreate from "./routers/organizationChildBase";
 import routeCommentCreate from "./routers/comments";
+import routeOrganizationDashboardCreate from "./routers/organizationDashboards";
 import routeAttachmentstCreate from "./routers/attachments";
 import routeDocWatchersCreate from "./routers/docWatchers";
 import { COOKIE_SECRET, DB_CONNECTION_STRING } from "./config";
@@ -92,6 +93,8 @@ app.use(organizationChildCreate("/api/organizations/:login/teams", db.organizati
 app.use("/api/organizations/:login", RouteTeamUsersCreate("/teams/:teamId/users"));
 
 app.use(routeDocCreate("/api/organizations/:login/docs"));
+
+app.use("/api/organizations/:login", routeOrganizationDashboardCreate("/dashboards"));
 app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments"));
 app.use("/api/organizations/:login", routeAttachmentstCreate("/attachments"));
 app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watchers"));
