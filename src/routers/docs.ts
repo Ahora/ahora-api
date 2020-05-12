@@ -340,7 +340,7 @@ export default (path: string) => {
             includes = [
                 { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
                 { as: "reporter", model: db.users, attributes: ["displayName", "username"] },
-                { as: "source", model: db.docSources, attributes: ["repo", "organization"] },
+                { as: "source", model: db.docSources, attributes: ["repo", "organization"], where: req && req.query && req.query.repo && { repo: req!.query.repo } },
                 { as: "labels", model: db.docLabels, attributes: ["labelId"] }
             ];
 
