@@ -8,6 +8,7 @@ import { Op } from "sequelize";
 const generateQuery = async (req: Request): Promise<any> => {
     if (req.user) {
         return {
+            organizationId: req.org!.id,
             [Op.or]: [
                 { userId: req.user.id },
                 { dashboardType: DashboardType.Public }
@@ -41,6 +42,13 @@ export default (path: string) => {
                 getAdditionalParams: generateQuery,
                 order: [["updatedAt", "DESC"]],
                 include: [{ model: db.users, attributes: ["displayName", "username"] }]
+            },
+            getSingle: {
+                getAdditionalParams: generateQuery,
+                include: [
+                    { model: db.users, attributes: ["displayName", "username"] },
+                    { as: "gadgets", model: db.organizationDashboardGadgets }
+                ]
             },
             post: { before: beforePost },
         }
