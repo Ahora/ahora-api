@@ -18,7 +18,6 @@ import { SourcesFactory, ISourceInstance, ISourceAttributes } from "./sources";
 import { DocSourcesFactory, IDocSourceInstance, IDocSourceAttributes } from "./docSource";
 import { IDashboardInstance, IDashboardAttributes, DashboardsFactory } from "./organizationDashboards";
 import { IDashboardGadgetInstance, IDashboardGadgetAttributes, DashboardGadgetsFactory } from "./organizationDashboardGadgets.ts";
-
 export interface IDBInterface {
   docs: Sequelize.Model<IDocInstance, IDocAttributes>;
   users: Sequelize.Model<IUserInstance, IUserAttributes>;
