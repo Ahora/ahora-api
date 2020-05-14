@@ -43,13 +43,6 @@ export default (path: string) => {
                 order: [["updatedAt", "DESC"]],
                 include: [{ model: db.users, attributes: ["displayName", "username"] }]
             },
-            getSingle: {
-                getAdditionalParams: generateQuery,
-                include: [
-                    { model: db.users, attributes: ["displayName", "username"] },
-                    { as: "gadgets", model: db.organizationDashboardGadgets }
-                ]
-            },
             post: { before: beforePost },
         }
     });

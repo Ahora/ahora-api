@@ -3,8 +3,12 @@ import { SequelizeAttributes } from "./base";
 
 export interface IDocSourceAttributes {
     id?: number;
+    organizationId: number;
     organization: string;
     repo: string;
+    lastUpdated?: Date;
+    syncing: true;
+    startSyncTime?: Date;
 }
 
 export interface IDocSourceInstance extends Sequelize.Instance<IDocSourceAttributes>, IDocSourceAttributes {
@@ -21,6 +25,10 @@ export const DocSourcesFactory =
                 autoIncrement: true,
                 primaryKey: true
             },
+            organizationId: {
+                type: DataTypes.INTEGER,
+                allowNull: false
+            },
             organization: {
                 type: DataTypes.STRING,
                 allowNull: false
@@ -28,6 +36,18 @@ export const DocSourcesFactory =
             repo: {
                 type: DataTypes.STRING,
                 allowNull: false
+            },
+            lastUpdated: {
+                type: DataTypes.DATE,
+                allowNull: true
+            },
+            syncing: {
+                type: DataTypes.BOOLEAN,
+                allowNull: false
+            },
+            startSyncTime: {
+                type: DataTypes.DATE,
+                allowNull: true
             }
         };
 

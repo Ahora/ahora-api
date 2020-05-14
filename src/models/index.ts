@@ -14,7 +14,6 @@ import { IOrganizationTeamAttribute, IOrganizationTeamInstance, OrganizationTeam
 import { IOrganizationTeamUserAttribute, IOrganizationTeamUserInstance, OrganizationTeamUserFactory } from "./organizationTeamsUsers";
 import { IAttachmentsInstance, IAttachmentsAttributes, AttachmentsFactory } from "./attachments";
 import { IDocUserViewInstance, IDocUserViewAttributes, DocUserViewFactory } from "./docUserView";
-import { SourcesFactory, ISourceInstance, ISourceAttributes } from "./sources";
 import { DocSourcesFactory, IDocSourceInstance, IDocSourceAttributes } from "./docSource";
 import { IDashboardInstance, IDashboardAttributes, DashboardsFactory } from "./organizationDashboards";
 import { IDashboardGadgetInstance, IDashboardGadgetAttributes, DashboardGadgetsFactory } from "./organizationDashboardGadgets.ts";
@@ -23,7 +22,6 @@ export interface IDBInterface {
   users: Sequelize.Model<IUserInstance, IUserAttributes>;
   comment: Sequelize.Model<ICommentInstance, ICommentAttributes>;
   organizations: Sequelize.Model<IOrganizationInstance, IOrganizationAttributes>;
-  sources: Sequelize.Model<ISourceInstance, ISourceAttributes>;
   labels: Sequelize.Model<ILabelInstance, ILabelAttributes>;
   attachments: Sequelize.Model<IAttachmentsInstance, IAttachmentsAttributes>;
   docLabels: Sequelize.Model<IDocLabelInstance, IDocLabelAttributes>;
@@ -61,7 +59,6 @@ const db: IDBInterface = {
   docStatuses: StatusesFactory(sequelize, Sequelize),
   docTypes: DocTypesFactory(sequelize, Sequelize),
   docWatchers: DocWatchersFactory(sequelize, Sequelize),
-  sources: SourcesFactory(sequelize, Sequelize),
   docSources: DocSourcesFactory(sequelize, Sequelize),
   organizationTeams: OrganizationTeamsFactory(sequelize, Sequelize),
   organizationTeamsUsers: OrganizationTeamUserFactory(sequelize, Sequelize),
@@ -70,7 +67,7 @@ const db: IDBInterface = {
   organizationDashboardGadgets: DashboardGadgetsFactory(sequelize, Sequelize)
 };
 
-db.organizations.hasMany(db.sources);
+db.organizations.hasMany(db.docSources);
 db.organizations.hasMany(db.labels);
 db.organizations.hasMany(db.organizationDashboards);
 db.organizations.hasMany(db.attachments);
@@ -99,8 +96,8 @@ db.users.hasMany(db.organizationDashboards, { foreignKey: 'userId', onDelete: "C
 db.organizationDashboardGadgets.belongsTo(db.users, { foreignKey: 'userId', onDelete: "CASCADE" });
 db.users.hasMany(db.organizationDashboardGadgets, { foreignKey: 'userId', onDelete: "CASCADE" });
 
-db.organizationDashboardGadgets.belongsTo(db.organizationDashboards, { as: "gadgets", foreignKey: 'dashboardId', onDelete: "CASCADE" });
-db.organizationDashboards.hasMany(db.organizationDashboardGadgets, { as: "gadgets", foreignKey: 'dashboardId', onDelete: "CASCADE" });
+db.organizationDashboardGadgets.belongsTo(db.organizationDashboards, { foreignKey: 'dashboardId', onDelete: "CASCADE" });
+db.organizationDashboards.hasMany(db.organizationDashboardGadgets, { foreignKey: 'dashboardId', onDelete: "CASCADE" });
 
 db.organizationDashboards.belongsTo(db.organizationTeams, { foreignKey: 'teamId', onDelete: "CASCADE" });
 db.organizationTeams.hasMany(db.organizationDashboards, { foreignKey: 'teamId', onDelete: "CASCADE" });

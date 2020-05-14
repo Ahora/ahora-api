@@ -17,6 +17,7 @@ export interface IDashboardAttributes {
     teamId: number;
     userId: number;
     title?: string;
+    gadgets: any;
     description?: string;
     dashboardType: DashboardType
     layout: DashboardLayout;
@@ -65,6 +66,10 @@ export const DashboardsFactory =
                 type: DataTypes.INTEGER,
                 allowNull: true,
             },
+            gadgets: {
+                type: DataTypes.JSON,
+                allowNull: true
+            }
         };
 
         return sequelize.define<IDashboardInstance, IDashboardAttributes>("organizationdashboards", attributes, {

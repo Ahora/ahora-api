@@ -88,6 +88,7 @@ app.get("/api/organizations/:login", async (req: Request, res: Response) => {
 
 
 app.use(organizationChildCreate("/api/organizations/:login/labels", db.labels));
+app.use(organizationChildCreate("/api/organizations/:login/docsources", db.docSources));
 app.use(organizationChildCreate("/api/organizations/:login/statuses", db.docStatuses));
 app.use(organizationChildCreate("/api/organizations/:login/doctypes", db.docTypes));
 app.use(organizationChildCreate("/api/organizations/:login/teams", db.organizationTeams));
