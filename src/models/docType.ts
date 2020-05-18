@@ -6,7 +6,7 @@ export interface IDocTypeAttributes {
     name: string;
     code: string;
     description?: string;
-    organizationId: number;
+    organizationId?: number;
     nextDocType?: number;
 }
 
@@ -34,7 +34,7 @@ export const DocTypesFactory =
             },
             organizationId: {
                 type: DataTypes.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             nextDocType: {
                 type: DataTypes.INTEGER,

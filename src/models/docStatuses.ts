@@ -6,7 +6,7 @@ export interface IDocStatusAttributes {
     name: string;
     color?: string;
     description?: string;
-    organizationId: number;
+    organizationId?: number;
 }
 
 export interface IDocStatusInstance extends Sequelize.Instance<IDocStatusAttributes>, IDocStatusAttributes {
@@ -15,33 +15,33 @@ export interface IDocStatusInstance extends Sequelize.Instance<IDocStatusAttribu
 
 // tslint:disable-next-line:typedef
 export const StatusesFactory =
-(sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-Sequelize.Model<IDocStatusInstance, IDocStatusAttributes> => {
-    let attributes:SequelizeAttributes<IDocStatusAttributes> = {
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true
-        },
-        name: {
-            type: DataTypes.STRING,
-            allowNull: false
-        },
-        color: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-        organizationId: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
-        description: {
-            type: DataTypes.STRING,
-            allowNull: true
-        }
-    };
+    (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
+        Sequelize.Model<IDocStatusInstance, IDocStatusAttributes> => {
+        let attributes: SequelizeAttributes<IDocStatusAttributes> = {
+            id: {
+                type: DataTypes.INTEGER,
+                autoIncrement: true,
+                primaryKey: true
+            },
+            name: {
+                type: DataTypes.STRING,
+                allowNull: false
+            },
+            color: {
+                type: DataTypes.STRING,
+                allowNull: true
+            },
+            organizationId: {
+                type: DataTypes.INTEGER,
+                allowNull: true
+            },
+            description: {
+                type: DataTypes.STRING,
+                allowNull: true
+            }
+        };
 
-    return sequelize.define<IDocStatusInstance, IDocStatusAttributes>("DocStatuses", attributes, {
-        timestamps: true
-    });
-  };
+        return sequelize.define<IDocStatusInstance, IDocStatusAttributes>("DocStatuses", attributes, {
+            timestamps: true
+        });
+    };
