@@ -10,12 +10,8 @@ import { Op } from "sequelize";
 const afterPost = async (org: IOrganizationInstance, req: Request): Promise<IOrganizationInstance> => {
 
     const orgId: number = org.id!;
-
-    const openedStatus: IDocStatusInstance = await db.docStatuses.create({ name: "Opened", organizationId: orgId });
-    await db.docStatuses.create({ name: "Closed", organizationId: orgId });
-
     await db.organizations.update({
-        defaultStatus: openedStatus.id
+        defaultStatus: 1,
     }, { where: { id: orgId } });
 
 

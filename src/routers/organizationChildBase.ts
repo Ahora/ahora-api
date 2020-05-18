@@ -2,7 +2,7 @@ import { Request } from "express";
 import { IDocInstance, IDocAttributes } from "../models/docs";
 import routeCreate, { RouterHooks } from "./base";
 import db from "../models/index";
-import Sequelize from "sequelize";
+import Sequelize, { Op } from "sequelize";
 import { IOrganizationInstance } from "../models/organization";
 
 const beforePost = async (entity: any, req: Request): Promise<any> => {
@@ -16,7 +16,13 @@ const beforePost = async (entity: any, req: Request): Promise<any> => {
 const generateQuery = async (req: Request): Promise<any> => {
 
     const currentOrg: IOrganizationInstance = req.org!;
-    const query: any = { organizationId: currentOrg.id };
+    const query: any = {
+        [Op.or]: [
+            { organizationId: null },
+            { organizationId: currentOrg.id }
+        ]
+    };
+
     return query;
 }
 
