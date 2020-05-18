@@ -300,17 +300,6 @@ const generateDocHTML = async (doc: IDocAttributes, req: Request): Promise<IDocA
     doc.createdAt = doc.createdAt || new Date();
     doc.updatedAt = doc.updatedAt || new Date();
 
-
-    if (req.body.source) {
-        const [source] = await db.docSources.findOrCreate({
-            where: { repo: req.body.source.repo, organization: req.body.source.organization }
-        });
-
-        if (source) {
-            doc.sourceId = source.id;
-        }
-    }
-
     return new Promise<IDocAttributes>((resolve, reject) => {
         if (doc.description) {
             marked(doc.description, (error: any, parsedResult: string) => {
