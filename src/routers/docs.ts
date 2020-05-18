@@ -232,6 +232,45 @@ const generateQuery = async (req: Request): Promise<any> => {
         query.assigneeUserId = userIds;
     }
 
+    //--------------reporter-------------------------------------------------
+
+    if (req.query.reporter) {
+        if (typeof (req.query.reporter) === "string") {
+            req.query.reporter = [req.query.reporter];
+        }
+    }
+
+    if (req.query.reporter) {
+        req.query.reporter = req.query.reporter.map((reporter: string) => {
+            switch (reporter) {
+                case "me":
+                    if (req.user) {
+                        return req.user.username;
+                    } else {
+                        return undefined
+                    }
+                case "null":
+                    return null;
+                default:
+                    return reporter;
+            }
+        });
+
+        const usersWithoutNull: string[] = req.query.reporter.filter((assignee: string) => assignee !== null);
+
+        const userIds: (number | null)[] = await db.users.findAll({
+            where: { username: usersWithoutNull },
+            attributes: ["id"]
+        }).map((user) => user.id);
+
+
+        if (usersWithoutNull.length !== req.query.reporter.length) {
+            userIds.push(null);
+        }
+
+        query.reporterUserId = userIds;
+    }
+
 
     if (req.query.docType) {
         if (typeof (req.query.docType) === "string") {
