@@ -21,6 +21,7 @@ import DocDocTypeGroupHandler from "../helpers/groups/docs/DocDocTypeGroupHandle
 import { IGroupHandler, IGroupParameters, GroupInfo } from "../helpers/groups/IGroupHandler";
 import DocRepoGroupHandler from "../helpers/groups/docs/DocRepoGroupHandler";
 import DateGroupHandler from "../helpers/groups/docs/DateGroupHandler";
+import { Op } from "sequelize";
 
 const afterPostOrPut = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
     //Update labels!
@@ -280,7 +281,11 @@ const generateQuery = async (req: Request): Promise<any> => {
 
     if (req.query.docType) {
         const docTypes: (number | null)[] = await db.docTypes.findAll({
-            where: { code: req.query.docType, organizationId: currentOrg.id },
+            where: {
+                code: req.query.docType, [Op.or]: [
+                    { organizationId: currentOrg.id },
+                    { organizationId: null }]
+            },
             attributes: ["id"]
         }).map((docType) => docType.id);
 
