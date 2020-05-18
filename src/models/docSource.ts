@@ -7,7 +7,7 @@ export interface IDocSourceAttributes {
     organization: string;
     repo: string;
     lastUpdated?: Date;
-    syncing: true;
+    syncing: boolean;
     startSyncTime?: Date;
 }
 
