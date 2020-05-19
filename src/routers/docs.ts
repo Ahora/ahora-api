@@ -142,7 +142,14 @@ const generateQuery = async (req: Request): Promise<any> => {
     const query: any = { organizationId: currentOrg.id };
 
     //--------------Status-------------------------------------------------
-    const statuses: IDocStatusInstance[] = await db.docStatuses.findAll({ where: { organizationId: currentOrg.id } });
+    const statuses: IDocStatusInstance[] = await db.docStatuses.findAll({
+        where: {
+            [Op.or]: [
+                { organizationId: currentOrg.id },
+                { organizationId: null }
+            ]
+        }
+    });
     const Statusmap: Map<string, IDocStatusInstance> = new Map();
     statuses.forEach(status => {
         Statusmap.set(status.name.toLowerCase(), status);
@@ -284,7 +291,8 @@ const generateQuery = async (req: Request): Promise<any> => {
             where: {
                 code: req.query.docType, [Op.or]: [
                     { organizationId: currentOrg.id },
-                    { organizationId: null }]
+                    { organizationId: null }
+                ]
             },
             attributes: ["id"]
         }).map((docType) => docType.id);
