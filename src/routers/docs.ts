@@ -51,36 +51,37 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
     const labels: IDocLabelAttributes[] | undefined = doc.labels as any;
 
     let newSource: any = doc.source;
-    if (newSource) {
+    if (doc.source) {
         newSource = {
-            ...doc.source,
+            organization: doc.source.organization,
+            repo: doc.source.repo,
             url: `https://github.com/${newSource.organization}/${newSource.repo}/issues/${doc.docId}`
         }
     }
-}
-return {
-    id: doc.id,
-    docId: doc.docId,
-    subject: doc.subject,
-    description: doc.description,
-    htmlDescription: doc.htmlDescription,
-    assigneeUserId: doc.assigneeUserId,
-    assignee: doc.assignee,
-    reporter: doc.reporter,
-    docTypeId: doc.docTypeId,
-    metadata: doc.metadata,
-    source: newSource,
-    organizationId: doc.organizationId,
-    statusId: doc.statusId,
-    updatedAt: doc.updatedAt,
-    closedAt: doc.closedAt,
-    commentsNumber: doc.commentsNumber,
-    views: doc.views,
-    createdAt: doc.createdAt,
-    lastView: (doc.lastView && doc.lastView.length) > 0 ? doc.lastView[0] : null,
-    reporterUserId: doc.reporterUserId,
-    labels: labels && labels.map(label => label.labelId)
-};
+
+    return {
+        id: doc.id,
+        docId: doc.docId,
+        subject: doc.subject,
+        description: doc.description,
+        htmlDescription: doc.htmlDescription,
+        assigneeUserId: doc.assigneeUserId,
+        assignee: doc.assignee,
+        reporter: doc.reporter,
+        docTypeId: doc.docTypeId,
+        metadata: doc.metadata,
+        source: newSource,
+        organizationId: doc.organizationId,
+        statusId: doc.statusId,
+        updatedAt: doc.updatedAt,
+        closedAt: doc.closedAt,
+        commentsNumber: doc.commentsNumber,
+        views: doc.views,
+        createdAt: doc.createdAt,
+        lastView: (doc.lastView && doc.lastView.length) > 0 ? doc.lastView[0] : null,
+        reporterUserId: doc.reporterUserId,
+        labels: labels && labels.map(label => label.labelId)
+    };
 }
 
 const afterGroupByGet = async (item: any, req: Request): Promise<any> => {
