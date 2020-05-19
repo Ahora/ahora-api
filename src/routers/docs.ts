@@ -94,8 +94,8 @@ const afterGroupByGet = async (item: any, req: Request): Promise<any> => {
         req.query.group.forEach((currentGroup: string) => {
             const groupHandler: IGroupHandler | undefined = groupByManager.getGroup(currentGroup);
             if (groupHandler) {
-                const groupInfo: GroupInfo = groupHandler.changeData(item);
-                returnValue.criteria = { ...returnValue.criteria, [currentGroup]: groupInfo.criteria.map((value) => value === null ? "null" : value) };
+                let groupInfo: GroupInfo = groupHandler.changeData(item);
+                returnValue.criteria = { ...returnValue.criteria, [currentGroup]: groupInfo.criteria };
                 returnValue.values = [...returnValue.values, groupInfo.criteria];
             }
         });
