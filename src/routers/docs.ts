@@ -49,29 +49,38 @@ const afterPostOrPut = async (doc: IDocInstance, req: Request): Promise<IDocInst
 
 const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
     const labels: IDocLabelAttributes[] | undefined = doc.labels as any;
-    return {
-        id: doc.id,
-        docId: doc.docId,
-        subject: doc.subject,
-        description: doc.description,
-        htmlDescription: doc.htmlDescription,
-        assigneeUserId: doc.assigneeUserId,
-        assignee: doc.assignee,
-        reporter: doc.reporter,
-        docTypeId: doc.docTypeId,
-        metadata: doc.metadata,
-        source: doc.source,
-        organizationId: doc.organizationId,
-        statusId: doc.statusId,
-        updatedAt: doc.updatedAt,
-        closedAt: doc.closedAt,
-        commentsNumber: doc.commentsNumber,
-        views: doc.views,
-        createdAt: doc.createdAt,
-        lastView: (doc.lastView && doc.lastView.length) > 0 ? doc.lastView[0] : null,
-        reporterUserId: doc.reporterUserId,
-        labels: labels && labels.map(label => label.labelId)
-    };
+
+    let newSource: any = doc.source;
+    if (newSource) {
+        newSource = {
+            ...doc.source,
+            url: `https://github.com/${newSource.organization}/${newSource.repo}/issues/${doc.docId}`
+        }
+    }
+}
+return {
+    id: doc.id,
+    docId: doc.docId,
+    subject: doc.subject,
+    description: doc.description,
+    htmlDescription: doc.htmlDescription,
+    assigneeUserId: doc.assigneeUserId,
+    assignee: doc.assignee,
+    reporter: doc.reporter,
+    docTypeId: doc.docTypeId,
+    metadata: doc.metadata,
+    source: newSource,
+    organizationId: doc.organizationId,
+    statusId: doc.statusId,
+    updatedAt: doc.updatedAt,
+    closedAt: doc.closedAt,
+    commentsNumber: doc.commentsNumber,
+    views: doc.views,
+    createdAt: doc.createdAt,
+    lastView: (doc.lastView && doc.lastView.length) > 0 ? doc.lastView[0] : null,
+    reporterUserId: doc.reporterUserId,
+    labels: labels && labels.map(label => label.labelId)
+};
 }
 
 const afterGroupByGet = async (item: any, req: Request): Promise<any> => {
@@ -85,7 +94,7 @@ const afterGroupByGet = async (item: any, req: Request): Promise<any> => {
             const groupHandler: IGroupHandler | undefined = groupByManager.getGroup(currentGroup);
             if (groupHandler) {
                 const groupInfo: GroupInfo = groupHandler.changeData(item);
-                returnValue.criteria = { ...returnValue.criteria, [currentGroup]: groupInfo.criteria };
+                returnValue.criteria = { ...returnValue.criteria, [currentGroup]: groupInfo.criteria.map((value) => value === null ? "null" : value) };
                 returnValue.values = [...returnValue.values, groupInfo.criteria];
             }
         });
@@ -196,7 +205,7 @@ const generateQuery = async (req: Request): Promise<any> => {
         });
 
         if (labelIds.length > 0) {
-            const labelsQuery = `SELECT "docId" FROM doclabels as "docquery" WHERE "labelId" in (${labelIds.join(",")}) GROUP BY "docId" HAVING COUNT(*)=${labelIds.length}`;
+            const labelsQuery = `SELECT "docId" FROM doclabels as "docquery" WHERE "labelId" in (${labelIds.join(",")}) GROUP BY "docId" HAVING COUNT(*) = ${labelIds.length} `;
             query.id = { $in: [db.sequelize.literal(labelsQuery)] }
         }
     }
@@ -416,7 +425,7 @@ export default (path: string) => {
         }
     });
 
-    router.post(`${path}/:id/assignee`, async (req: Request, res: Response, next: NextFunction) => {
+    router.post(`${path} /:id/assignee`, async (req: Request, res: Response, next: NextFunction) => {
         try {
             const username: string = req.body.username;
             const user: IUserInstance | null = await getUserFromGithubAlias(username);
@@ -433,7 +442,7 @@ export default (path: string) => {
         }
     });
 
-    router.post(`${path}/:id/watch`, async (req: Request, res: Response, next: NextFunction) => {
+    router.post(`${path} /:id/watch`, async (req: Request, res: Response, next: NextFunction) => {
         try {
             if (req.user) {
                 const watcher = await addUserToWatchersList(parseInt(req.params.id), req.user.id);
@@ -446,7 +455,7 @@ export default (path: string) => {
         }
     });
 
-    router.post(`${path}/:id/unwatch`, async (req: Request, res: Response, next: NextFunction) => {
+    router.post(`${path} /:id/unwatch`, async (req: Request, res: Response, next: NextFunction) => {
         try {
             if (req.user) {
                 const watcher = await unWatch(parseInt(req.params.id), req.user.id)
