@@ -386,6 +386,10 @@ export default (path: string) => {
                 }
             });
             order = [["count", "DESC"]]
+
+            if (req) {
+                order = req.query.sort ? [req.query.sort] : order;
+            }
         }
         else {
             includes = [
@@ -401,6 +405,10 @@ export default (path: string) => {
             after = afterGet
             limit = 30;
             order = [["updatedAt", "DESC"]]
+
+            if (req) {
+                order = req.query.sort ? [req.query.sort] : order;
+            }
         }
 
         return {
