@@ -13,6 +13,7 @@ import RouteTeamUsersCreate from "./routers/teamsusers";
 import organizationChildCreate from "./routers/organizationChildBase";
 import routeCommentCreate from "./routers/comments";
 import routeDashboardGadgetCreate from "./routers/organizationDashboardGadgets";
+import routeDocSourceLabelCreate from "./routers/docsourcelabel";
 import routeOrganizationDashboardCreate from "./routers/organizationDashboards";
 import routeAttachmentstCreate from "./routers/attachments";
 import routeDocWatchersCreate from "./routers/docWatchers";
@@ -93,6 +94,7 @@ app.use(organizationChildCreate("/api/organizations/:login/statuses", db.docStat
 app.use(organizationChildCreate("/api/organizations/:login/doctypes", db.docTypes));
 app.use(organizationChildCreate("/api/organizations/:login/teams", db.organizationTeams));
 app.use("/api/organizations/:login", RouteTeamUsersCreate("/teams/:teamId/users"));
+app.use("/api/organizations/:login", routeDocSourceLabelCreate("/docsources/:docSourceId/labels"));
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeOrganizationDashboardCreate("/dashboards"));
 app.use("/api/organizations/:login", routeDashboardGadgetCreate("/dashboards/:dashboardId/gadgets"));

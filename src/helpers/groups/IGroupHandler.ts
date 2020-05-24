@@ -9,6 +9,7 @@ export interface GroupInfo {
 }
 
 export interface IGroupHandler {
+    readonly groupable: boolean;
     handleGroup: (group: string) => IGroupParameters;
     changeData: (row: any) => GroupInfo;
 }

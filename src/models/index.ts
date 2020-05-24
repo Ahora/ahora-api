@@ -17,6 +17,7 @@ import { IDocUserViewInstance, IDocUserViewAttributes, DocUserViewFactory } from
 import { DocSourcesFactory, IDocSourceInstance, IDocSourceAttributes } from "./docSource";
 import { IDashboardInstance, IDashboardAttributes, DashboardsFactory } from "./organizationDashboards";
 import { IDashboardGadgetInstance, IDashboardGadgetAttributes, DashboardGadgetsFactory } from "./organizationDashboardGadgets.ts";
+import { IDocSourceLabelInstance, IDocSourceLabelAttributes, DocSourceLabelFactory } from "./docsourcelabel";
 export interface IDBInterface {
   docs: Sequelize.Model<IDocInstance, IDocAttributes>;
   users: Sequelize.Model<IUserInstance, IUserAttributes>;
@@ -25,6 +26,7 @@ export interface IDBInterface {
   labels: Sequelize.Model<ILabelInstance, ILabelAttributes>;
   attachments: Sequelize.Model<IAttachmentsInstance, IAttachmentsAttributes>;
   docLabels: Sequelize.Model<IDocLabelInstance, IDocLabelAttributes>;
+  docSourceLabels: Sequelize.Model<IDocSourceLabelInstance, IDocSourceLabelAttributes>;
   docUserView: Sequelize.Model<IDocUserViewInstance, IDocUserViewAttributes>;
   docStatuses: Sequelize.Model<IDocStatusInstance, IDocStatusAttributes>;
   docTypes: Sequelize.Model<IDocTypeInstance, IDocTypeAttributes>;
@@ -38,7 +40,7 @@ export interface IDBInterface {
 }
 
 const sequelize: Sequelize.Sequelize = new Sequelize(DB_CONNECTION_STRING, {
-  logging: true,
+  logging: false,
   pool: {
     max: 5,
     min: 0,
@@ -56,6 +58,7 @@ const db: IDBInterface = {
   labels: LabelsFactory(sequelize, Sequelize),
   attachments: AttachmentsFactory(sequelize, Sequelize),
   docLabels: DocsLabelFactory(sequelize, Sequelize),
+  docSourceLabels: DocSourceLabelFactory(sequelize, Sequelize),
   docStatuses: StatusesFactory(sequelize, Sequelize),
   docTypes: DocTypesFactory(sequelize, Sequelize),
   docWatchers: DocWatchersFactory(sequelize, Sequelize),
@@ -85,6 +88,11 @@ db.docStatuses.hasMany(db.docs, { foreignKey: 'statusId', onDelete: "CASCADE" })
 db.labels.hasMany(db.docLabels);
 db.docLabels.belongsTo(db.labels, { as: "tags", foreignKey: 'labelId', onDelete: "CASCADE" });
 
+db.docSources.hasMany(db.docLabels, { foreignKey: 'docSourceId', onDelete: "CASCADE" });
+db.docLabels.belongsTo(db.docSources, { foreignKey: 'docSourceId', onDelete: "CASCADE" });
+
+db.labels.hasMany(db.docLabels, { foreignKey: 'labelId', onDelete: "CASCADE" });
+db.docLabels.belongsTo(db.labels, { foreignKey: 'labelId', onDelete: "CASCADE" });
 
 db.organizationTeams.hasMany(db.organizationTeamsUsers);
 db.organizationTeamsUsers.belongsTo(db.users, { foreignKey: 'userId', onDelete: "CASCADE" });
@@ -104,7 +112,6 @@ db.organizationTeams.hasMany(db.organizationDashboards, { foreignKey: 'teamId', 
 
 db.organizationTeams.belongsTo(db.organizationTeams, { foreignKey: 'parentId', onDelete: "CASCADE" });
 db.organizationTeams.hasOne(db.organizationTeams, { foreignKey: 'parentId', onDelete: "CASCADE" });
-
 
 db.comment.belongsTo(db.docs, { foreignKey: 'docId', onDelete: "CASCADE" });
 db.docs.hasMany(db.comment, { foreignKey: 'docId', onDelete: "CASCADE" });

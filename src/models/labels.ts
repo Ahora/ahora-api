@@ -5,7 +5,7 @@ export interface ILabelAttributes {
     id?: number;
     name: string;
     color: string;
-    labelId?: number;
+    organizationId: number;
     description: string;
 }
 
@@ -31,12 +31,12 @@ export const LabelsFactory =
                 type: DataTypes.STRING,
                 allowNull: true
             },
+            organizationId: {
+                type: DataTypes.INTEGER,
+                allowNull: false
+            },
             description: {
                 type: DataTypes.STRING,
-                allowNull: true
-            },
-            labelId: {
-                type: DataTypes.INTEGER,
                 allowNull: true
             }
         };
