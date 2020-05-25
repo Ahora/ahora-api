@@ -36,6 +36,7 @@ export default (path: string) => {
 
 
     router.post(`${path}`, async (req: Request, res: Response, next: NextFunction) => {
+        console.log(req.body);
         try {
             const docSourceId = parseInt(req.params.docSourceId);
             const docMilestoneInput: DocMilestoneInput = req.body;
@@ -101,7 +102,7 @@ export default (path: string) => {
                         closedAt: docMilestoneInput.closedAt,
                         state: docMilestoneInput.state,
                         dueOn: docMilestoneInput.dueOn,
-                        sourceId: docMilestoneInput.id
+                        sourceId: docMilestoneInput.sourceId
                     }, {
                         where: { id: docSourceMilestoneFromDB.id }
                     });
