@@ -55,13 +55,13 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
         newSource = {
             organization: doc.source.organization,
             repo: doc.source.repo,
-            url: `https://github.com/${newSource.organization}/${newSource.repo}/issues/${doc.docId}`
+            url: `https://github.com/${newSource.organization}/${newSource.repo}/issues/${doc.sourceId}`
         }
     }
 
     return {
         id: doc.id,
-        docId: doc.docId,
+        sourceId: doc.sourceId,
         subject: doc.subject,
         description: doc.description,
         htmlDescription: doc.htmlDescription,

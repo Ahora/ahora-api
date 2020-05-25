@@ -5,11 +5,10 @@ import { IDocSourceLabelAttributes, IDocSourceLabelInstance } from "../models/do
 import { ILabelInstance } from "../models/labels";
 
 interface DocLabelInput {
-    "id": number,
-    "name": string,
-    "color": string,
-    "default": boolean,
-    "description": string
+    sourceId: number,
+    name: string,
+    color: string,
+    description: string
 }
 
 const generateQuery = async (req: Request): Promise<any> => {
@@ -39,7 +38,7 @@ export default (path: string) => {
             let docSourceLabelFromDB: IDocSourceLabelInstance | null = await db.docSourceLabels.findOne({
                 where: {
                     docSourceId: docSourceId,
-                    sourceId: docLabelInput.id
+                    sourceId: docLabelInput.sourceId
                 }
             });
 
@@ -87,7 +86,7 @@ export default (path: string) => {
                         name: docLabelInput.name,
                         description: docLabelInput.description,
                         color: docLabelInput.color,
-                        sourceId: docLabelInput.id
+                        sourceId: docLabelInput.sourceId
                     }, {
                         where: { id: docSourceLabelFromDB.id }
                     });
@@ -101,7 +100,7 @@ export default (path: string) => {
                     name: docLabelInput.name,
                     description: docLabelInput.description,
                     color: docLabelInput.color,
-                    sourceId: docLabelInput.id
+                    sourceId: docLabelInput.sourceId
                 })
             }
 

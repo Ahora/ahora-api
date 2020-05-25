@@ -14,6 +14,7 @@ import organizationChildCreate from "./routers/organizationChildBase";
 import routeCommentCreate from "./routers/comments";
 import routeDashboardGadgetCreate from "./routers/organizationDashboardGadgets";
 import routeDocSourceLabelCreate from "./routers/docsourcelabel";
+import routeDocSourceMilestoneCreate from "./routers/docsourcemilestone";
 import routeOrganizationDashboardCreate from "./routers/organizationDashboards";
 import routeAttachmentstCreate from "./routers/attachments";
 import routeDocWatchersCreate from "./routers/docWatchers";
@@ -90,11 +91,13 @@ app.get("/api/organizations/:login", async (req: Request, res: Response) => {
 
 app.use(organizationChildCreate("/api/organizations/:login/labels", db.labels));
 app.use(organizationChildCreate("/api/organizations/:login/docsources", db.docSources));
+app.use(organizationChildCreate("/api/organizations/:login/milestones", db.milestones));
 app.use(organizationChildCreate("/api/organizations/:login/statuses", db.docStatuses));
 app.use(organizationChildCreate("/api/organizations/:login/doctypes", db.docTypes));
 app.use(organizationChildCreate("/api/organizations/:login/teams", db.organizationTeams));
 app.use("/api/organizations/:login", RouteTeamUsersCreate("/teams/:teamId/users"));
 app.use("/api/organizations/:login", routeDocSourceLabelCreate("/docsources/:docSourceId/labels"));
+app.use("/api/organizations/:login", routeDocSourceMilestoneCreate("/docsources/:docSourceId/milestones"));
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeOrganizationDashboardCreate("/dashboards"));
 app.use("/api/organizations/:login", routeDashboardGadgetCreate("/dashboards/:dashboardId/gadgets"));

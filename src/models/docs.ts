@@ -3,7 +3,7 @@ import { SequelizeAttributes } from "./base";
 
 export interface IDocAttributes {
     id: number;
-    docId?: number;
+    sourceId?: number;
     subject: string;
     description?: string;
     htmlDescription?: string;
@@ -13,7 +13,7 @@ export interface IDocAttributes {
     metadata: any;
     commentsNumber: number;
     views: number;
-    sourceId?: number;
+    docSourceId?: number;
     organizationId: number;
     statusId?: number;
     labels?: number[];
@@ -50,7 +50,7 @@ export const EventsFactory =
                 autoIncrement: true,
                 primaryKey: true
             },
-            docId: {
+            sourceId: {
                 type: DataTypes.INTEGER,
                 allowNull: true
             },
@@ -82,7 +82,7 @@ export const EventsFactory =
                 type: DataTypes.INTEGER,
                 allowNull: false
             },
-            sourceId: {
+            docSourceId: {
                 type: DataTypes.INTEGER,
                 allowNull: true
             },

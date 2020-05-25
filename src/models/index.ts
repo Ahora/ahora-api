@@ -18,15 +18,19 @@ import { DocSourcesFactory, IDocSourceInstance, IDocSourceAttributes } from "./d
 import { IDashboardInstance, IDashboardAttributes, DashboardsFactory } from "./organizationDashboards";
 import { IDashboardGadgetInstance, IDashboardGadgetAttributes, DashboardGadgetsFactory } from "./organizationDashboardGadgets.ts";
 import { IDocSourceLabelInstance, IDocSourceLabelAttributes, DocSourceLabelFactory } from "./docsourcelabel";
+import { DocSourceMilestoneFactory, IDocSourceMilestoneInstance, IDocSourceMilestoneAttributes } from "./docsourcemilestone";
+import { MilestoneFactory, IMilestoneInstance, IMilestoneAttributes } from "./milestones";
 export interface IDBInterface {
   docs: Sequelize.Model<IDocInstance, IDocAttributes>;
   users: Sequelize.Model<IUserInstance, IUserAttributes>;
   comment: Sequelize.Model<ICommentInstance, ICommentAttributes>;
   organizations: Sequelize.Model<IOrganizationInstance, IOrganizationAttributes>;
   labels: Sequelize.Model<ILabelInstance, ILabelAttributes>;
+  milestones: Sequelize.Model<IMilestoneInstance, IMilestoneAttributes>;
   attachments: Sequelize.Model<IAttachmentsInstance, IAttachmentsAttributes>;
   docLabels: Sequelize.Model<IDocLabelInstance, IDocLabelAttributes>;
   docSourceLabels: Sequelize.Model<IDocSourceLabelInstance, IDocSourceLabelAttributes>;
+  docSourceMilestones: Sequelize.Model<IDocSourceMilestoneInstance, IDocSourceMilestoneAttributes>;
   docUserView: Sequelize.Model<IDocUserViewInstance, IDocUserViewAttributes>;
   docStatuses: Sequelize.Model<IDocStatusInstance, IDocStatusAttributes>;
   docTypes: Sequelize.Model<IDocTypeInstance, IDocTypeAttributes>;
@@ -56,9 +60,11 @@ const db: IDBInterface = {
   comment: CommentsFactory(sequelize, Sequelize),
   organizations: OrganizationsFactory(sequelize, Sequelize),
   labels: LabelsFactory(sequelize, Sequelize),
+  milestones: MilestoneFactory(sequelize, Sequelize),
   attachments: AttachmentsFactory(sequelize, Sequelize),
   docLabels: DocsLabelFactory(sequelize, Sequelize),
   docSourceLabels: DocSourceLabelFactory(sequelize, Sequelize),
+  docSourceMilestones: DocSourceMilestoneFactory(sequelize, Sequelize),
   docStatuses: StatusesFactory(sequelize, Sequelize),
   docTypes: DocTypesFactory(sequelize, Sequelize),
   docWatchers: DocWatchersFactory(sequelize, Sequelize),
@@ -73,6 +79,7 @@ const db: IDBInterface = {
 db.organizations.hasMany(db.docSources);
 db.organizations.hasMany(db.labels);
 db.organizations.hasMany(db.organizationDashboards);
+db.organizations.hasMany(db.milestones);
 db.organizations.hasMany(db.attachments);
 db.organizations.hasMany(db.organizationTeams);
 
