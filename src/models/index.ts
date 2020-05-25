@@ -86,11 +86,14 @@ db.organizations.hasMany(db.organizationTeams);
 db.docs.belongsTo(db.docTypes, { as: "docType", foreignKey: 'docTypeId', onDelete: "CASCADE" });
 db.docTypes.hasMany(db.docs, { foreignKey: 'docTypeId', onDelete: "CASCADE" });
 
-db.docs.belongsTo(db.docSources, { as: "source", foreignKey: 'sourceId', onDelete: "CASCADE" });
-db.docSources.hasMany(db.docs, { foreignKey: 'sourceId', onDelete: "CASCADE" });
+db.docs.belongsTo(db.docSources, { as: "source", foreignKey: 'docSourceId', onDelete: "CASCADE" });
+db.docSources.hasMany(db.docs, { foreignKey: 'docSourceId', onDelete: "CASCADE" });
 
 db.docs.belongsTo(db.docStatuses, { as: "status", foreignKey: 'statusId', onDelete: "CASCADE" });
 db.docStatuses.hasMany(db.docs, { foreignKey: 'statusId', onDelete: "CASCADE" });
+
+db.docs.belongsTo(db.milestones, { as: "milestone", foreignKey: 'milestoneId', onDelete: "CASCADE" });
+db.milestones.hasMany(db.docs, { foreignKey: 'milestoneId', onDelete: "CASCADE" });
 
 db.labels.hasMany(db.docLabels);
 db.docLabels.belongsTo(db.labels, { as: "tags", foreignKey: 'labelId', onDelete: "CASCADE" });

@@ -52,17 +52,27 @@ export default (path: string) => {
                 label = await db.labels.findOne({ where: { organizationId: req.org!.id, name: docLabelInput.name } });
             }
 
-            //Update or create label if it;s doesn't exists or name or description or color where changed
+            //Update or create label if it's doesn't exists or name or description or color where changed
             if (label === null) {
-                label = await db.labels.create({
-                    organizationId: req.org!.id,
-                    name: docLabelInput.name,
-                    description: docLabelInput.description,
-                    color: docLabelInput.color
-                });
+                try {
+                    label = await db.labels.create({
+                        organizationId: req.org!.id,
+                        name: docLabelInput.name,
+                        description: docLabelInput.description,
+                        color: docLabelInput.color
+                    });
+                } catch (error) {
+                    if (error.name !== "SequelizeUniqueConstraintError") {
+                        throw error;
+                    }
+                    else {
+                        label = await db.labels.findOne({ where: { organizationId: req.org!.id, name: docLabelInput.name } });
+                    }
+                }
+
             }
 
-            if ((label.name !== docLabelInput.name ||
+            if (label && (label.name !== docLabelInput.name ||
                 label.description !== docLabelInput.description ||
                 label.color !== docLabelInput.color)) {
 
@@ -82,7 +92,7 @@ export default (path: string) => {
                     docSourceLabelFromDB.color !== docLabelInput.color) {
                     await db.docSourceLabels.update({
                         docSourceId,
-                        labelId: label.id,
+                        labelId: label!.id,
                         name: docLabelInput.name,
                         description: docLabelInput.description,
                         color: docLabelInput.color,
@@ -94,14 +104,24 @@ export default (path: string) => {
                 }
             }
             else {
-                docSourceLabelFromDB = await db.docSourceLabels.create({
-                    docSourceId,
-                    labelId: label.id,
-                    name: docLabelInput.name,
-                    description: docLabelInput.description,
-                    color: docLabelInput.color,
-                    sourceId: docLabelInput.sourceId
-                })
+                try {
+                    docSourceLabelFromDB = await db.docSourceLabels.create({
+                        docSourceId,
+                        labelId: label!.id,
+                        name: docLabelInput.name,
+                        description: docLabelInput.description,
+                        color: docLabelInput.color,
+                        sourceId: docLabelInput.sourceId
+                    })
+                } catch (error) {
+                    if (error.name !== "SequelizeUniqueConstraintError") {
+                        throw error;
+                    }
+                    else {
+                        docSourceLabelFromDB = await db.docSourceLabels.findOne({ where: { docSourceId, sourceId: docLabelInput.sourceId } });
+                    }
+                }
+
             }
 
             //Return final and upserted, if needed doc source label

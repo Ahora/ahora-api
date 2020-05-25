@@ -22,6 +22,7 @@ import { IGroupHandler, IGroupParameters, GroupInfo } from "../helpers/groups/IG
 import DocRepoGroupHandler from "../helpers/groups/docs/DocRepoGroupHandler";
 import DateGroupHandler from "../helpers/groups/docs/DateGroupHandler";
 import { Op } from "sequelize";
+import DocMilestoneGroupHandler from "../helpers/groups/docs/DocMilestoneGroupHandler";
 
 const afterPostOrPut = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
     //Update labels!
@@ -71,6 +72,7 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
         docTypeId: doc.docTypeId,
         metadata: doc.metadata,
         source: newSource,
+        milestone: doc.milestone,
         organizationId: doc.organizationId,
         statusId: doc.statusId,
         updatedAt: doc.updatedAt,
@@ -347,6 +349,7 @@ groupByManager.registerGroup("assignee", new DocAssigneeGroupHandler());
 groupByManager.registerGroup("status", new DocStatusGroupHandler());
 groupByManager.registerGroup("label", new DocLabelGroupHandler());
 groupByManager.registerGroup("repo", new DocRepoGroupHandler());
+groupByManager.registerGroup("milestone", new DocMilestoneGroupHandler());
 groupByManager.registerGroup("doctype", new DocDocTypeGroupHandler());
 groupByManager.registerGroup("createdAt", new DateGroupHandler("createdAt"));
 groupByManager.registerGroup("updatedAt", new DateGroupHandler("updatedAt"));
@@ -395,6 +398,7 @@ export default (path: string) => {
             includes = [
                 { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
                 { as: "reporter", model: db.users, attributes: ["displayName", "username"] },
+                { as: "milestone", model: db.milestones, attributes: ["title"] },
                 { as: "source", model: db.docSources, attributes: ["repo", "organization"], where: req && req.query && req.query.repo && { repo: req!.query.repo } },
                 { as: "labels", model: db.docLabels, attributes: ["labelId"] }
             ];

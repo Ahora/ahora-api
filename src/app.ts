@@ -15,6 +15,7 @@ import routeCommentCreate from "./routers/comments";
 import routeDashboardGadgetCreate from "./routers/organizationDashboardGadgets";
 import routeDocSourceLabelCreate from "./routers/docsourcelabel";
 import routeDocSourceMilestoneCreate from "./routers/docsourcemilestone";
+import routeSyncIssues from "./routers/sync/SyncIssues";
 import routeOrganizationDashboardCreate from "./routers/organizationDashboards";
 import routeAttachmentstCreate from "./routers/attachments";
 import routeDocWatchersCreate from "./routers/docWatchers";
@@ -98,6 +99,7 @@ app.use(organizationChildCreate("/api/organizations/:login/teams", db.organizati
 app.use("/api/organizations/:login", RouteTeamUsersCreate("/teams/:teamId/users"));
 app.use("/api/organizations/:login", routeDocSourceLabelCreate("/docsources/:docSourceId/labels"));
 app.use("/api/organizations/:login", routeDocSourceMilestoneCreate("/docsources/:docSourceId/milestones"));
+app.use("/api/organizations/:login", routeSyncIssues);
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeOrganizationDashboardCreate("/dashboards"));
 app.use("/api/organizations/:login", routeDashboardGadgetCreate("/dashboards/:dashboardId/gadgets"));

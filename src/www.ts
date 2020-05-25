@@ -58,6 +58,7 @@ function normalizePort(val: any) {
 
 function onError(error: any) {
 
+
     if (error.syscall !== 'listen') {
         throw error;
     }
@@ -77,7 +78,6 @@ function onError(error: any) {
             process.exit(1);
             break;
         default:
-            console.error("error???", error, error[0])
             console.error(error);
             console.error(error.stack);
             break;
@@ -96,4 +96,4 @@ function onListening() {
     debug('Listening on ' + bind);
 }
 
-module.exports = { app: app, server: server};
+module.exports = { app: app, server: server };

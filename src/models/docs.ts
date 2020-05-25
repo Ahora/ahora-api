@@ -15,6 +15,7 @@ export interface IDocAttributes {
     views: number;
     docSourceId?: number;
     organizationId: number;
+    milestoneId?: number;
     statusId?: number;
     labels?: number[];
     createdAt: Date;
@@ -30,6 +31,9 @@ export interface IDocInstance extends Sequelize.Instance<IDocAttributes>, IDocAt
     reporter: {
         username: string;
         displayName?: string;
+    },
+    milestone?: {
+        title: string;
     },
     source?: {
         organization: string;
@@ -93,6 +97,10 @@ export const EventsFactory =
             reporterUserId: {
                 type: DataTypes.INTEGER,
                 allowNull: false
+            },
+            milestoneId: {
+                type: DataTypes.INTEGER,
+                allowNull: true
             },
             createdAt: {
                 type: DataTypes.DATE,
