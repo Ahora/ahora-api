@@ -1,4 +1,5 @@
 import { IGroupHandler, IGroupParameters, GroupInfo } from "../IGroupHandler";
+import { Request } from "express";
 import db from "../../../models";
 
 export default class DocMilestoneGroupHandler implements IGroupHandler {
@@ -10,14 +11,14 @@ export default class DocMilestoneGroupHandler implements IGroupHandler {
 
     public handleGroup(group: string): IGroupParameters {
         return {
-            group: ["milestone.name"],
+            group: ["milestone.title"],
             includes: [{ as: "milestone", model: db.milestones, attributes: ["title"] }]
         }
     }
 
     public changeData(row: any): GroupInfo {
         return {
-            criteria: row["milestone.name"]
+            criteria: row["milestone.title"]
         }
     }
 }

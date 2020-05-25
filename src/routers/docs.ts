@@ -312,6 +312,25 @@ const generateQuery = async (req: Request): Promise<any> => {
         query.docTypeId = docTypes;
     }
 
+    // --------------------------------------------------------
+    if (req.query.milestone) {
+        if (typeof (req.query.milestone) === "string") {
+            req.query.milestone = [req.query.milestone];
+        }
+    }
+
+    if (req.query.milestone) {
+        const milestones: (number | null)[] = await db.milestones.findAll({
+            where: {
+                title: req.query.milestone,
+                organizationId: currentOrg.id
+            },
+            attributes: ["id"]
+        }).map((docType) => docType.id);
+
+        query.milestoneId = milestones;
+    }
+
     if (req.query.docId) {
         query.docId = req.query.docId;
     }
