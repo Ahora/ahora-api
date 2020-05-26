@@ -40,6 +40,13 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
         router.get(path, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
                 const hooks = hooksDelegate && hooksDelegate(req);
+
+                for (const key in req.query) {
+                    if (req.query[key] === "null") {
+                        req.query[key] = null
+                    }
+                }
+
                 let generatedQuery = req.query;
                 if (hooks && hooks.get && hooks.get.getAdditionalParams) {
                     const additionalParams: any = await hooks.get.getAdditionalParams(req);
@@ -55,12 +62,6 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                         //Incase the additional parameters are null consider the result as not valid and return empty array
                         res.send([]);
                         return;
-                    }
-                }
-
-                for (const key in req.query) {
-                    if (req.query[key] === "null") {
-                        req.query[key] = null
                     }
                 }
 
