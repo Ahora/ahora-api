@@ -1,7 +1,7 @@
 import * as Sequelize from "sequelize";
 import { SequelizeAttributes } from "./base";
 
-enum TeamUserType {
+export enum TeamUserType {
     Member = 0,
     Owner = 1
 }

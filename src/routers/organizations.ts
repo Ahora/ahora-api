@@ -4,6 +4,7 @@ import db from "../models/index";
 import { IOrganizationInstance, IOrganizationAttributes, OrganizationType } from "../models/organization";
 import { IDocStatusInstance } from "../models/docStatuses";
 import { Op } from "sequelize";
+import { TeamUserType } from "../models/organizationTeamsUsers";
 
 
 //Create default statuses, update default status.
@@ -19,6 +20,7 @@ const afterPost = async (org: IOrganizationInstance, req: Request): Promise<IOrg
         await db.organizationTeamsUsers.create({
             organizationId: orgId,
             userId: req.user.id,
+            permissionType: TeamUserType.Owner,
             teamId: null
         });
     }
