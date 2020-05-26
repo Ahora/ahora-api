@@ -1,9 +1,15 @@
 import * as Sequelize from "sequelize";
 import { SequelizeAttributes } from "./base";
 
+enum TeamUserType {
+    Member = 0,
+    Owner = 1
+}
+
 export interface IOrganizationTeamUserAttribute {
     id?: number;
     userId: number;
+    permissionType: TeamUserType,
     organizationId: number;
     teamId: number | null;
 }
@@ -34,6 +40,12 @@ export const OrganizationTeamUserFactory =
                 type: DataTypes.INTEGER,
                 allowNull: false
             },
+            permissionType: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: TeamUserType.Member
+            },
+
             teamId: {
                 type: DataTypes.INTEGER,
                 allowNull: true

@@ -22,6 +22,7 @@ const afterPost = async (team: IOrganizationTeamUserAttribute, req: Request): Pr
         userId: team.userId,
         id: team.id,
         organizationId: req.org!.id,
+        permissionType: team.permissionType,
         teamId: team.teamId
     };
 

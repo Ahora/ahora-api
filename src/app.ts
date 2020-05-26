@@ -60,33 +60,44 @@ app.use("/api/organizations/:login", async (req: Request, res: Response, next: N
   const org = await db.organizations.findOne({ where: { login: req.params.login } });
   if (org) {
     req.org = org;
-  }
-  if (req.org) {
-    if (req.org.orgType == OrganizationType.Public) {
-      next();
-    } else {
-      if (req.user) {
-        const userPermission: IOrganizationTeamUserInstance | null = await db.organizationTeamsUsers.findOne({
-          where: { userId: req.user!.id, organizationId: req.org!.id }
-        });
 
-        if (userPermission) {
+    if (req.user) {
+      const userPermission: IOrganizationTeamUserInstance | null = await db.organizationTeamsUsers.findOne({
+        where: { userId: req.user.id, organizationId: req.org.id }
+      });
+
+      if (userPermission) {
+        req.orgPermission = userPermission;
+      }
+    }
+    if (req.org) {
+      if (req.org.orgType == OrganizationType.Public) {
+        next();
+      } else {
+        //We are in private mode!
+        if (req.orgPermission) {
           next();
         } else {
           res.status(401).send();
         }
       }
-      else {
-        res.status(401).send();
-      }
+    } else {
+      res.status(404).send();
     }
-  } else {
-    res.status(404).send();
   }
 });
 
 app.get("/api/organizations/:login", async (req: Request, res: Response) => {
-  res.send(req.org);
+  if (req.org) {
+    res.send({
+      login: req.org.login,
+      displayName: req.org.displayName,
+      id: req.org.id,
+      orgType: req.org.orgType,
+      premission: req.orgPermission,
+      defaultStatus: req.org.defaultStatus
+    });
+  }
 });
 
 
