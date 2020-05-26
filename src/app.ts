@@ -94,7 +94,7 @@ app.get("/api/organizations/:login", async (req: Request, res: Response) => {
       displayName: req.org.displayName,
       id: req.org.id,
       orgType: req.org.orgType,
-      premission: req.orgPermission,
+      permission: req.orgPermission,
       defaultStatus: req.org.defaultStatus
     });
   }
