@@ -1,5 +1,7 @@
 import { IGroupHandler, IGroupParameters, GroupInfo } from "../IGroupHandler";
 import db from "../../../models";
+import DocLabel from "../../../models/docLabel";
+import Label from "../../../models/labels";
 
 export default class DocLabelGroupHandler implements IGroupHandler {
     public readonly groupable: boolean;
@@ -12,7 +14,7 @@ export default class DocLabelGroupHandler implements IGroupHandler {
         return {
             group: ["labels->tags.name", "labels->tags.id"],
             includes: [
-                { as: "labels", model: db.docLabels, attributes: [], include: { as: "tags", raw: true, tableName: "tags", model: db.labels, attributes: ["name"] } }]
+                { as: "labels", model: DocLabel, attributes: [], include: { as: "tags", raw: true, tableName: "tags", model: Label, attributes: ["name"] } }]
         }
     }
 

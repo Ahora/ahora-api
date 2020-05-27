@@ -1,7 +1,7 @@
 import express, { Router, Request, Response, NextFunction } from "express";
-import { IDocInstance } from "../models/docs";
-import Sequelize, { Model, IncludeOptions, FindOptionsAttributesArray } from "sequelize";
+import { Model, IncludeOptions, FindAttributeOptions } from "sequelize";
 import marked from "marked";
+import Organization from "../models/organization";
 
 export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
     put?: MethodHook<TAttributes, TInstance>;
@@ -16,7 +16,7 @@ export interface GetMethodHook<TAttributes, TInstance extends TAttributes> exten
     include?: Array<Model<any, any> | IncludeOptions>;
     limit?: number;
     raw?: boolean;
-    attributes?: FindOptionsAttributesArray;
+    attributes?: FindAttributeOptions;
     group?: string | string[];
     order?: any;
 }
@@ -30,7 +30,7 @@ export interface MethodHook<TAttributes, TInstance extends TAttributes> {
     disable?: boolean
 }
 
-export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>, hooksDelegate: ((req: Request | null) => RouterHooks<TAttributes, TInstance>) | null = null) => {
+export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: any, hooksDelegate: ((req: Request | null) => RouterHooks<TAttributes, TInstance>) | null = null) => {
     const router: Router = express.Router();
 
     const primaryField: string = (hooksDelegate && hooksDelegate(null).primaryField) || "id";
@@ -90,13 +90,14 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
                 }
 
-                const count = await model.count({
+                /*const count = await model.count({
                     where: generatedQuery
                 });
-                res.setHeader("X-Total-Count", count);
+                */
 
+                model.findOne();
 
-                const entities = await model.findAll({
+                const result = await model.findAndCountAll({
                     where: generatedQuery,
                     attributes,
                     group,
@@ -106,6 +107,11 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     limit,
                     offset
                 });
+
+                console.log(result.count);
+
+                const entities = result.rows;
+                res.setHeader("X-Total-Count", result.count);
 
                 const newentities: TInstance[] = [];
                 for (let index = 0; index < entities.length; index++) {

@@ -1,64 +1,66 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import Organization from './organization';
+import docsourcelabel from '../routers/docsourcelabel';
+import DocSourceLabel from './docsourcelabel';
 
-export interface IDocSourceAttributes {
-    id?: number;
-    organizationId: number;
-    organization: string;
-    repo: string;
-    lastUpdated?: Date;
-    syncing: boolean;
-    startSyncTime?: Date;
+class DocSource extends Model {
+    public id!: number;
+    public organizationId!: number;
+    public organization!: string;
+    public repo!: string;
+    public lastUpdated!: Date | null;
+    public syncing!: boolean;
+    public startSyncTime!: Date | null;
+
+    // timestamps!
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
-export interface IDocSourceInstance extends Sequelize.Instance<IDocSourceAttributes>, IDocSourceAttributes {
-    id: number;
-}
+DocSource.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    organizationId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    organization: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    repo: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    lastUpdated: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    syncing: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false
+    },
+    startSyncTime: {
+        type: DataTypes.DATE,
+        allowNull: true
+    }
+}, {
+    sequelize: db.sequelize,
+    tableName: "docsources",
+    indexes: [
+        {
+            unique: true,
+            name: 'docSources',
+            fields: ["organization", "repo"]
+        }
+    ]
+});
 
-// tslint:disable-next-line:typedef
-export const DocSourcesFactory =
-    (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-        Sequelize.Model<IDocSourceInstance, IDocSourceAttributes> => {
-        let attributes: SequelizeAttributes<IDocSourceAttributes> = {
-            id: {
-                type: DataTypes.INTEGER,
-                autoIncrement: true,
-                primaryKey: true
-            },
-            organizationId: {
-                type: DataTypes.INTEGER,
-                allowNull: false
-            },
-            organization: {
-                type: DataTypes.STRING,
-                allowNull: false
-            },
-            repo: {
-                type: DataTypes.STRING,
-                allowNull: false
-            },
-            lastUpdated: {
-                type: DataTypes.DATE,
-                allowNull: true
-            },
-            syncing: {
-                type: DataTypes.BOOLEAN,
-                allowNull: false
-            },
-            startSyncTime: {
-                type: DataTypes.DATE,
-                allowNull: true
-            }
-        };
+DocSource.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+DocSource.hasMany(DocSourceLabel, { foreignKey: "docSourceId", onDelete: 'CASCADE' });
 
-        return sequelize.define<IDocSourceInstance, IDocSourceAttributes>("docsources", attributes, {
-            timestamps: true,
-            indexes: [
-                {
-                    unique: true,
-                    name: 'docSources',
-                    fields: ["organization", "repo"]
-                }
-            ]
-        });
-    };
+export default DocSource;

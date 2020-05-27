@@ -1,64 +1,63 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import Organization from './organization';
 
 export enum MilestoneStatus {
     open = "open",
     closed = "closed"
 }
 
+class OrganizationMilestone extends Model {
+    public id!: number;
+    public title!: string;
+    public description!: string | null;
+    public organizationId!: number;
+    public closedAt!: Date | null;
+    public dueOn?: Date | null;
+    public state!: MilestoneStatus;
 
-export interface IMilestoneAttributes {
-    id?: number;
-    title: string;
-    description: string;
-    organizationId: number;
-    closedAt?: Date;
-    dueOn?: Date;
-    state: MilestoneStatus;
+    // timestamps!
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
-export interface IMilestoneInstance extends Sequelize.Instance<IMilestoneAttributes>, IMilestoneAttributes {
-    id: number;
-}
+OrganizationMilestone.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    organizationId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    title: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    dueOn: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    closedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    state: {
+        type: DataTypes.ENUM(MilestoneStatus.open, MilestoneStatus.closed),
+        allowNull: false,
+        defaultValue: MilestoneStatus.open
+    },
+    description: {
+        type: DataTypes.STRING,
+        allowNull: true
+    }
+}, {
+    sequelize: db.sequelize,
+    tableName: "organizationmilestones",
+});
 
-// tslint:disable-next-line:typedef
-export const MilestoneFactory =
-    (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-        Sequelize.Model<IMilestoneInstance, IMilestoneAttributes> => {
-        let attributes: SequelizeAttributes<IMilestoneAttributes> = {
-            id: {
-                type: DataTypes.INTEGER,
-                autoIncrement: true,
-                primaryKey: true
-            },
-            organizationId: {
-                type: DataTypes.INTEGER,
-                allowNull: false
-            },
-            title: {
-                type: DataTypes.STRING,
-                allowNull: false
-            },
-            dueOn: {
-                type: DataTypes.DATE,
-                allowNull: true
-            },
-            closedAt: {
-                type: DataTypes.DATE,
-                allowNull: true
-            },
-            state: {
-                type: DataTypes.ENUM(MilestoneStatus.open, MilestoneStatus.closed),
-                allowNull: false,
-                defaultValue: MilestoneStatus.open
-            },
-            description: {
-                type: DataTypes.STRING,
-                allowNull: true
-            }
-        };
+OrganizationMilestone.hasMany(OrganizationMilestone, { foreignKey: "milestoneId", onDelete: 'CASCADE' });
+OrganizationMilestone.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
 
-        return sequelize.define<IMilestoneInstance, IMilestoneAttributes>("organizationmilestones", attributes, {
-            timestamps: true
-        });
-    };
+export default OrganizationMilestone;

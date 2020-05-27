@@ -1,9 +1,8 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import passport from "passport";
 import { Strategy as GitHubStrategy } from "passport-github2";
-import db from "../models";
-import { IUserInstance, IUserAttributes } from "../models/users";
 import { GIT_HUB_CLIENT_ID, GIT_HUB_CLIENT_SECRET, GIT_HUB_CALLBACK_URL } from "../config";
+import User from "../models/users";
 
 // Configure Passport authenticated session persistence.
 //
@@ -18,7 +17,7 @@ passport.serializeUser(function (user: any, cb: any) {
 
 passport.deserializeUser(async (id: number, cb) => {
     try {
-        const user: IUserInstance | null = await db.users.findOne({ where: { id } });
+        const user: User | null = await User.findOne({ where: { id } });
         cb(null, user);
 
     } catch (error) {
@@ -35,17 +34,17 @@ passport.use(new GitHubStrategy({
 },
     async (accessToken: string, refreshToken: string, profile: any, cb: any) => {
         try {
-            let existingUser: IUserInstance | null = await db.users.findOne({
+            let existingUser: User | null = await User.findOne({
                 where: { gitHubId: profile.id }
             });
 
-            let email: string | undefined;
+            let email: string | null = null;
             if (profile.emails && profile.emails.length > 0) {
                 email = profile.emails[0].value
             }
 
 
-            const userToUpdateOrCreate: IUserAttributes = {
+            const userToUpdateOrCreate: any = {
                 displayName: profile.displayName,
                 gitHubId: profile.id,
                 username: profile.username!,
@@ -55,8 +54,8 @@ passport.use(new GitHubStrategy({
             }
 
             if (existingUser != null) {
-                const updatedInstances = await db.users.update(userToUpdateOrCreate, { where: { id: existingUser.id } });
-                const user: IUserInstance | null = await db.users.findOne({ where: { id: existingUser.id } });
+                const updatedInstances = await User.update(userToUpdateOrCreate, { where: { id: existingUser.id } });
+                const user: User | null = await User.findOne({ where: { id: existingUser.id } });
                 if (user) {
                     cb(null, user);
                 }
@@ -65,7 +64,7 @@ passport.use(new GitHubStrategy({
                 }
 
             } else {
-                const newUser: IUserInstance = await db.users.create(userToUpdateOrCreate);
+                const newUser: User = await User.create(userToUpdateOrCreate);
                 cb(null, newUser);
             }
         }

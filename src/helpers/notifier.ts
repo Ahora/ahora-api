@@ -1,10 +1,10 @@
-import { IUserInstance } from "../models/users";
-import { IDocInstance } from "../models/docs";
+import User from "../models/users";
+import Doc from "../models/docs";
 import db from "../models";
-import { DocWatcherType } from "../models/docWatcher";
+import DocWatcher, { DocWatcherType } from "../models/docWatcher";
 import { SEND_GRID_SECRET, EMAIL_DOMAIN, URL } from "../config";
-import { ICommentInstance } from "../models/comments";
-import { IOrganizationInstance } from "../models/organization";
+import Comment from "../models/comments";
+import Organization from "../models/organization";
 
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(SEND_GRID_SECRET);
@@ -19,15 +19,15 @@ interface NotificationUser {
     }
 }
 
-export const notifyComment = async (user: IUserInstance, doc: IDocInstance, comment: ICommentInstance, organization: IOrganizationInstance): Promise<void> => {
+export const notifyComment = async (user: User, doc: Doc, comment: Comment, organization: Organization): Promise<void> => {
     if (SEND_GRID_SECRET) {
-        let watchers: NotificationUser[] = await db.docWatchers.findAll({
+        let watchers: NotificationUser[] = await DocWatcher.findAll({
             where: {
                 docId: doc.id,
                 watcherType: DocWatcherType.Watcher //return only watchers!
             },
             attributes: ["id", "userId"],
-            include: [{ model: db.users, attributes: ["displayName", "username", "email"] }]
+            include: [{ model: User, attributes: ["displayName", "username", "email"] }]
         }) as any;
 
         // Remove current user email address

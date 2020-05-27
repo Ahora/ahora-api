@@ -1,43 +1,44 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import Organization from './organization';
+import Doc from './docs';
+import User from './users';
 
-export interface IDocUserViewAttributes {
-    id?: number;
-    docId: number;
-    userId: number;
+class DocUserView extends Model {
+    public id!: number;
+    public docId!: number;
+    public userId!: number;
+
+    // timestamps!
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
-export interface IDocUserViewInstance extends Sequelize.Instance<IDocUserViewAttributes>, IDocUserViewAttributes {
-    id: number;
-}
+DocUserView.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    docId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    }
+}, {
+    sequelize: db.sequelize,
+    tableName: "docsuserview",
+    indexes: [{
+        unique: true,
+        name: 'docuserviewdocidanduserid',
+        fields: ["docId", "userId"]
+    }]
+});
 
-// tslint:disable-next-line:typedef
-export const DocUserViewFactory = (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-    Sequelize.Model<IDocUserViewInstance, IDocUserViewAttributes> => {
-    let attributes: SequelizeAttributes<IDocUserViewAttributes> = {
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true
-        },
-        docId: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
-        userId: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        }
-    };
+DocUserView.belongsTo(Doc, { foreignKey: "docId", onDelete: 'CASCADE' });
+DocUserView.belongsTo(User, { foreignKey: "userId", onDelete: 'CASCADE' });
 
-    return sequelize.define<IDocUserViewInstance, IDocUserViewAttributes>("docsuserview", attributes, {
-        timestamps: true,
-        indexes: [
-            {
-                unique: true,
-                name: 'docuserviewdocidanduserid',
-                fields: ["docId", "userId"]
-            }
-        ]
-    });
-};
+export default DocUserView;

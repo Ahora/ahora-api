@@ -1,9 +1,8 @@
 import { Request } from "express";
-import { IDocInstance, IDocAttributes } from "../models/docs";
-import routeCreate, { RouterHooks } from "./base";
+import routeCreate from "./base";
 import db from "../models/index";
 import Sequelize, { Op } from "sequelize";
-import { IOrganizationInstance } from "../models/organization";
+import Organization from "../models/organization";
 
 const beforePost = async (entity: any, req: Request): Promise<any> => {
     if (req && req.org) {
@@ -15,7 +14,7 @@ const beforePost = async (entity: any, req: Request): Promise<any> => {
 
 const generateQuery = async (req: Request): Promise<any> => {
 
-    const currentOrg: IOrganizationInstance = req.org!;
+    const currentOrg: Organization = req.org!;
     const query: any = {
         [Op.or]: [
             { organizationId: null },
@@ -26,7 +25,7 @@ const generateQuery = async (req: Request): Promise<any> => {
     return query;
 }
 
-export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: Sequelize.Model<TInstance, TAttributes, TCreationAttributes>) => {
+export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: any) => {
     const router = routeCreate<TInstance, TAttributes, TCreationAttributes>(path, model, (req) => {
         return {
             get: { getAdditionalParams: generateQuery, order: [["updatedAt", "DESC"]] },

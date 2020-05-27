@@ -1,17 +1,13 @@
 import express, { Router, Request, Response, NextFunction } from "express";
-import routeCreate, { RouterHooks } from "./../base";
-import db from "../../models/index";
-import { IDocSourceLabelAttributes, IDocSourceLabelInstance } from "../../models/docsourcelabel";
-import { ILabelInstance } from "../../models/labels";
-import { IDocAttributes, IDocInstance } from "../../models/docs";
-import { IDocLabelAttributes } from "../../models/docLabel";
+import Doc from "../../models/docs";
+import DocLabel from "../../models/docLabel";
 import marked from "marked";
 
 
 const router = express.Router();
 
-const generateDocHTML = async (doc: IDocAttributes): Promise<IDocAttributes> => {
-    return new Promise<IDocAttributes>((resolve, reject) => {
+const generateDocHTML = async (doc: Doc): Promise<Doc> => {
+    return new Promise<Doc>((resolve, reject) => {
         if (doc.description) {
             marked(doc.description, (error: any, parsedResult: string) => {
                 if (error) {
@@ -32,8 +28,7 @@ const generateDocHTML = async (doc: IDocAttributes): Promise<IDocAttributes> => 
 router.post("/docsources/:docSourceId/issues", async (req: Request, res: Response, next: NextFunction) => {
     try {
         const docSourceId = parseInt(req.params.docSourceId);
-        let docInput = req.body as IDocAttributes;
-
+        let docInput = req.body as Doc;
 
         docInput = await generateDocHTML(docInput);
 
@@ -43,7 +38,7 @@ router.post("/docsources/:docSourceId/issues", async (req: Request, res: Respons
             docInput.organizationId = req.org.id;
         }
 
-        let docFromDB: IDocInstance | null = await db.docs.findOne({
+        let docFromDB: Doc | null = await Doc.findOne({
             where: {
                 docSourceId: docSourceId,
                 sourceId: docInput.sourceId
@@ -51,26 +46,29 @@ router.post("/docsources/:docSourceId/issues", async (req: Request, res: Respons
         });
 
         if (docFromDB) {
-            await db.docs.update(docInput, { where: { id: docFromDB.id } });
+            await Doc.update(docInput, { where: { id: docFromDB.id } });
         }
         else {
-            docFromDB = await db.docs.create(docInput);
+            docFromDB = await Doc.create(docInput);
         }
 
-        //Update labels!
-        const labelIds: number[] | undefined = req.body.labels;
-        if (labelIds) {
-            const itemsToAdd: IDocLabelAttributes[] = labelIds.map((id: number) => {
-                return {
-                    docId: docFromDB!.id,
-                    labelId: id
-                }
-            });
+        if (docFromDB) {
 
-            await db.docLabels.destroy({
-                where: { docId: docFromDB.id }
-            });
-            await db.docLabels.bulkCreate(itemsToAdd);
+            //Update labels!
+            const labelIds: number[] | undefined = req.body.labels;
+            if (labelIds) {
+                const itemsToAdd: DocLabel[] = labelIds.map((id: number) => {
+                    return new DocLabel({
+                        docId: docFromDB!.id,
+                        labelId: id
+                    });
+                });
+
+                await DocLabel.destroy({
+                    where: { docId: docFromDB.id }
+                });
+                await DocLabel.bulkCreate(itemsToAdd);
+            }
         }
 
         res.send(docFromDB);

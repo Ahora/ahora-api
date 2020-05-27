@@ -1,5 +1,6 @@
 import { IGroupHandler, IGroupParameters, GroupInfo } from "../IGroupHandler";
 import db from "../../../models";
+import DocSource from "../../../models/docSource";
 
 export default class DocRepoGroupHandler implements IGroupHandler {
     public readonly groupable: boolean;
@@ -12,7 +13,7 @@ export default class DocRepoGroupHandler implements IGroupHandler {
         return {
             group: ["repo"],
             includes: [
-                { as: "source", model: db.docSources, attributes: ["repo"] }
+                { as: "source", model: DocSource, attributes: ["repo"] }
             ]
         }
     }

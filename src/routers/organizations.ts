@@ -1,23 +1,22 @@
 import { Request, Response, NextFunction } from "express";
 import routeCreate from "./base";
-import db from "../models/index";
-import { IOrganizationInstance, IOrganizationAttributes, OrganizationType } from "../models/organization";
-import { IDocStatusInstance } from "../models/docStatuses";
+import Organization, { OrganizationType } from "../models/organization";
 import { Op } from "sequelize";
-import { TeamUserType } from "../models/organizationTeamsUsers";
+import OrganizationTeamUser, { TeamUserType } from "../models/organizationTeamsUsers";
+import OrganizationTeam from "../models/organizationTeams";
 
 
 //Create default statuses, update default status.
-const afterPost = async (org: IOrganizationInstance, req: Request): Promise<IOrganizationInstance> => {
+const afterPost = async (org: Organization, req: Request): Promise<Organization> => {
 
     const orgId: number = org.id!;
-    await db.organizations.update({
+    await Organization.update({
         defaultStatus: 1,
     }, { where: { id: orgId } });
 
 
     if (req.user) {
-        await db.organizationTeamsUsers.create({
+        await OrganizationTeamUser.create({
             organizationId: orgId,
             userId: req.user.id,
             permissionType: TeamUserType.Owner,
@@ -39,7 +38,7 @@ const handlePostError = (error: any, req: Request, res: Response, next: NextFunc
 
 const getAdditionalParams = async (req: Request): Promise<any> => {
     if (req.user) {
-        const currentUserPermissions = await db.organizationTeamsUsers.findAll({
+        const currentUserPermissions: OrganizationTeamUser[] = await OrganizationTeamUser.findAll({
             attributes: ["organizationId"],
             where: { userId: req.user!.id }
         });
@@ -56,7 +55,7 @@ const getAdditionalParams = async (req: Request): Promise<any> => {
 }
 
 export default (path: string) => {
-    const router = routeCreate<IOrganizationInstance, IOrganizationAttributes>(path, db.organizations, (req) => {
+    const router = routeCreate(path, Organization, (req) => {
         return {
             primaryField: "login",
             post: { after: afterPost, handleError: handlePostError },
@@ -66,6 +65,6 @@ export default (path: string) => {
         }
     });
 
-    router.use(routeCreate(`${path}/teams`, db.organizationTeams));
+    router.use(routeCreate(`${path}/teams`, OrganizationTeam));
     return router;
 };

@@ -1,5 +1,6 @@
 import { IGroupHandler, IGroupParameters, GroupInfo } from "../IGroupHandler";
 import db from "../../../models";
+import DocType from "../../../models/docType";
 
 export default class DocDocTypeGroupHandler implements IGroupHandler {
     public readonly groupable: boolean;
@@ -11,7 +12,7 @@ export default class DocDocTypeGroupHandler implements IGroupHandler {
     public handleGroup(group: string): IGroupParameters {
         return {
             group: ["docType.code"],
-            includes: [{ as: "docType", model: db.docTypes, attributes: ["code"] }]
+            includes: [{ as: "docType", model: DocType, attributes: ["code"] }]
         }
     }
 

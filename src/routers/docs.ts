@@ -1,17 +1,16 @@
 import { Request, Response, NextFunction } from "express";
-import { IDocInstance, IDocAttributes } from "../models/docs";
+import Doc from "../models/docs";
 import routeCreate from "./base";
 import db from "./../models/index";
+import { literal, fn } from "sequelize";
 import marked from "marked";
-import { IOrganizationInstance } from "../models/organization";
-import { IDocStatusInstance } from "../models/docStatuses";
+import Organization from "../models/organization";
 import { isArray } from "util";
-import { IUserInstance } from "../models/users";
-import { IDocLabelAttributes } from "../models/docLabel";
-import { ILabelInstance } from "../models/labels";
+import User from "../models/users";
+import DocLabel from "../models/docLabel";
+import Label from "../models/labels";
 import { getUserFromGithubAlias } from "../helpers/users";
 import { addUserToWatchersList, unWatch } from "../helpers/docWatchers";
-import { IDocSourceInstance } from "../models/docSource";
 import GroupByManager from "../helpers/groups/GroupByManager";
 import DocRepoterGroupHandler from "../helpers/groups/docs/DocRepoterGroupHandler";
 import DocAssigneeGroupHandler from "../helpers/groups/docs/DocAssigneeGroupHandler";
@@ -23,22 +22,27 @@ import DocRepoGroupHandler from "../helpers/groups/docs/DocRepoGroupHandler";
 import DateGroupHandler from "../helpers/groups/docs/DateGroupHandler";
 import { Op } from "sequelize";
 import DocMilestoneGroupHandler from "../helpers/groups/docs/DocMilestoneGroupHandler";
+import OrganizationStatus from "../models/docStatuses";
+import DocType from "../models/docType";
+import OrganizationMilestone from "../models/milestones";
+import DocSource from "../models/docSource";
+import DocUserView from "../models/docUserView";
 
-const afterPostOrPut = async (doc: IDocInstance, req: Request): Promise<IDocInstance> => {
+const afterPostOrPut = async (doc: Doc, req: Request): Promise<Doc> => {
     //Update labels!
     const labelIds: number[] | undefined = req.body.labels;
     if (labelIds) {
-        const itemsToAdd: IDocLabelAttributes[] = labelIds.map((id: number) => {
-            return {
+        const itemsToAdd: DocLabel[] = labelIds.map((id: number) => {
+            return new DocLabel({
                 docId: doc.id,
                 labelId: id
-            }
+            })
         });
 
-        await db.docLabels.destroy({
+        await DocLabel.destroy({
             where: { docId: doc.id }
         });
-        await db.docLabels.bulkCreate(itemsToAdd);
+        await DocLabel.bulkCreate(itemsToAdd);
     }
 
     if (req.user) {
@@ -48,8 +52,8 @@ const afterPostOrPut = async (doc: IDocInstance, req: Request): Promise<IDocInst
     return doc;
 }
 
-const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
-    const labels: IDocLabelAttributes[] | undefined = doc.labels as any;
+const afterGet = async (doc: any, req: Request): Promise<any> => {
+    const labels: Doc[] | undefined = doc.labels as any;
 
     let newSource: any = doc.source;
     if (doc.source) {
@@ -82,7 +86,7 @@ const afterGet = async (doc: IDocInstance, req: Request): Promise<any> => {
         createdAt: doc.createdAt,
         lastView: (doc.lastView && doc.lastView.length) > 0 ? doc.lastView[0] : null,
         reporterUserId: doc.reporterUserId,
-        labels: labels && labels.map(label => label.labelId)
+        labels: labels && labels.map((label: any) => label.labelId)
     };
 }
 
@@ -106,11 +110,11 @@ const afterGroupByGet = async (item: any, req: Request): Promise<any> => {
     return returnValue;
 }
 
-const afterGetSingle = async (doc: IDocInstance, req: Request): Promise<any> => {
-    const returnedDoc: IDocInstance = await afterGet(doc, req);
+const afterGetSingle = async (doc: Doc, req: Request): Promise<any> => {
+    const returnedDoc: Doc = await afterGet(doc, req);
 
     if (req.user) {
-        var promiseUpSert = db.docUserView.upsert({
+        var promiseUpSert = DocUserView.upsert({
             userId: req.user.id,
             docId: doc.id
         });
@@ -126,21 +130,14 @@ const afterGetSingle = async (doc: IDocInstance, req: Request): Promise<any> => 
 }
 
 
-const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttributes> => {
+const beforePost = async (doc: Doc, req: Request): Promise<Doc> => {
     const updatedDoc = await generateDocHTML(doc, req);
     if (req && req.org) {
         updatedDoc.statusId = doc.statusId || req.org.defaultStatus;
         updatedDoc.organizationId = req.org.id;
     }
 
-    doc.createdAt = doc.createdAt || new Date();
-    doc.updatedAt = doc.updatedAt || new Date();
-
-    if (doc.reporterUserId) {
-        doc.assigneeUserId = doc.assigneeUserId;
-        doc.reporterUserId = doc.reporterUserId;
-    }
-    else if (req.user) {
+    if (req.user) {
         doc.assigneeUserId = req.user.id;
         doc.reporterUserId = req.user.id;
     }
@@ -150,11 +147,11 @@ const beforePost = async (doc: IDocAttributes, req: Request): Promise<IDocAttrib
 
 const generateQuery = async (req: Request): Promise<any> => {
 
-    const currentOrg: IOrganizationInstance = req.org!;
+    const currentOrg: Organization = req.org!;
     const query: any = { organizationId: currentOrg.id };
 
     //--------------Status-------------------------------------------------
-    const statuses: IDocStatusInstance[] = await db.docStatuses.findAll({
+    const statuses: OrganizationStatus[] = await OrganizationStatus.findAll({
         where: {
             [Op.or]: [
                 { organizationId: currentOrg.id },
@@ -162,7 +159,7 @@ const generateQuery = async (req: Request): Promise<any> => {
             ]
         }
     });
-    const Statusmap: Map<string, IDocStatusInstance> = new Map();
+    const Statusmap: Map<string, OrganizationStatus> = new Map();
     statuses.forEach(status => {
         Statusmap.set(status.name.toLowerCase(), status);
     });
@@ -177,7 +174,7 @@ const generateQuery = async (req: Request): Promise<any> => {
     if (isArray(req.query.status)) {
         const statusIds: number[] = [];
         req.query.status.forEach((statusName: string) => {
-            const value: IDocStatusInstance | undefined = Statusmap.get(statusName.toLowerCase());
+            const value: OrganizationStatus | undefined = Statusmap.get(statusName.toLowerCase());
             if (value) {
                 statusIds.push(value.id);
             }
@@ -186,8 +183,8 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 
     //--------------Label-------------------------------------------------
-    const labels: ILabelInstance[] = await db.labels.findAll({ where: { organizationId: currentOrg.id } });
-    const labelMap: Map<string, ILabelInstance> = new Map();
+    const labels: Label[] = await Label.findAll({ where: { organizationId: currentOrg.id } });
+    const labelMap: Map<string, Label> = new Map();
     labels.forEach(label => {
         labelMap.set(label.name.toLowerCase(), label);
     });
@@ -201,7 +198,7 @@ const generateQuery = async (req: Request): Promise<any> => {
     if (isArray(req.query.label)) {
         const labelIds: number[] = [];
         req.query.label.forEach((statusName: string) => {
-            const value: ILabelInstance | undefined = labelMap.get(statusName.toLowerCase());
+            const value: Label | undefined = labelMap.get(statusName.toLowerCase());
             if (value) {
                 labelIds.push(value.id);
             }
@@ -209,7 +206,7 @@ const generateQuery = async (req: Request): Promise<any> => {
 
         if (labelIds.length > 0) {
             const labelsQuery = `SELECT "docId" FROM doclabels as "docquery" WHERE "labelId" in (${labelIds.join(",")}) GROUP BY "docId" HAVING COUNT(*) = ${labelIds.length} `;
-            query.id = { $in: [db.sequelize.literal(labelsQuery)] }
+            query.id = { $in: [literal(labelsQuery)] }
         }
     }
 
@@ -239,12 +236,12 @@ const generateQuery = async (req: Request): Promise<any> => {
 
         const usersWithoutNull: string[] = req.query.assignee.filter((assignee: string) => assignee !== null);
 
-        const userIds: (number | null)[] = await db.users.findAll({
+        const users: User[] = await User.findAll({
             where: { username: usersWithoutNull },
             attributes: ["id"]
-        }).map((user) => user.id);
+        });
 
-
+        const userIds = users.map((user: any) => user.id);
         if (usersWithoutNull.length !== req.query.assignee.length) {
             userIds.push(null);
         }
@@ -278,10 +275,12 @@ const generateQuery = async (req: Request): Promise<any> => {
 
         const usersWithoutNull: string[] = req.query.reporter.filter((assignee: string) => assignee !== null);
 
-        const userIds: (number | null)[] = await db.users.findAll({
+        const users: User[] = await User.findAll({
             where: { username: usersWithoutNull },
             attributes: ["id"]
-        }).map((user) => user.id);
+        });
+
+        const userIds = users.map((user: any) => user.id);
 
 
         if (usersWithoutNull.length !== req.query.reporter.length) {
@@ -299,7 +298,7 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 
     if (req.query.docType) {
-        const docTypes: (number | null)[] = await db.docTypes.findAll({
+        const docTypes: (DocType)[] = await DocType.findAll({
             where: {
                 code: req.query.docType, [Op.or]: [
                     { organizationId: currentOrg.id },
@@ -307,9 +306,10 @@ const generateQuery = async (req: Request): Promise<any> => {
                 ]
             },
             attributes: ["id"]
-        }).map((docType) => docType.id);
+        });
 
-        query.docTypeId = docTypes;
+        const docTypesIds = docTypes.map((docType: any) => docType.id);
+        query.docTypeId = docTypesIds;
     }
 
     // --------------------------------------------------------
@@ -320,15 +320,15 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 
     if (req.query.milestone) {
-        const milestones: (number | null)[] = await db.milestones.findAll({
+        const milestones: OrganizationMilestone[] = await OrganizationMilestone.findAll({
             where: {
                 title: req.query.milestone,
                 organizationId: currentOrg.id
             },
             attributes: ["id"]
-        }).map((docType) => docType.id);
+        });
 
-        query.milestoneId = milestones;
+        query.milestoneId = milestones.map((milestone: any) => milestone.id);;
     }
 
     if (req.query.docId) {
@@ -339,12 +339,8 @@ const generateQuery = async (req: Request): Promise<any> => {
 }
 
 
-const generateDocHTML = async (doc: IDocAttributes, req: Request): Promise<IDocAttributes> => {
-
-    doc.createdAt = doc.createdAt || new Date();
-    doc.updatedAt = doc.updatedAt || new Date();
-
-    return new Promise<IDocAttributes>((resolve, reject) => {
+const generateDocHTML = async (doc: Doc, req: Request): Promise<Doc> => {
+    return new Promise<Doc>((resolve, reject) => {
         if (doc.description) {
             marked(doc.description, (error: any, parsedResult: string) => {
                 if (error) {
@@ -375,8 +371,8 @@ groupByManager.registerGroup("updatedAt", new DateGroupHandler("updatedAt"));
 
 
 export default (path: string) => {
-    const router = routeCreate<IDocInstance, IDocAttributes>(path, db.docs, (req) => {
-        let after: ((doc: IDocInstance, req: Request) => Promise<any>) | undefined;
+    const router = routeCreate(path, Doc, (req) => {
+        let after: ((doc: Doc, req: Request) => Promise<any>) | undefined;
         let group: any = [], attributes: any[] = [], limit: number | undefined, order: any | undefined;
         let raw: boolean = false;
         let includes: any[] = [];
@@ -387,7 +383,7 @@ export default (path: string) => {
             }
 
             after = afterGroupByGet;
-            attributes = [[db.sequelize.fn('COUNT', '*'), 'count']];
+            attributes = [[fn('COUNT', '*'), 'count']];
 
             raw = true;
             req.query.group.forEach((currentGroup: string) => {
@@ -415,15 +411,15 @@ export default (path: string) => {
         }
         else {
             includes = [
-                { as: "assignee", model: db.users, attributes: ["displayName", "username"] },
-                { as: "reporter", model: db.users, attributes: ["displayName", "username"] },
-                { as: "milestone", model: db.milestones, attributes: ["title"] },
-                { as: "source", model: db.docSources, attributes: ["repo", "organization"], where: req && req.query && req.query.repo && { repo: req!.query.repo } },
-                { as: "labels", model: db.docLabels, attributes: ["labelId"] }
+                { as: "assignee", model: User, attributes: ["displayName", "username"] },
+                { as: "reporter", model: User, attributes: ["displayName", "username"] },
+                { as: "milestone", model: OrganizationMilestone, attributes: ["title"] },
+                { as: "source", model: DocSource, attributes: ["repo", "organization"], where: req && req.query && req.query.repo && { repo: req!.query.repo } },
+                { as: "labels", model: DocLabel, attributes: ["labelId"] }
             ];
 
             if (req && req.user) {
-                includes.push({ required: false, as: "lastView", model: db.docUserView, attributes: ["updatedAt"], where: { userId: req.user.id } })
+                includes.push({ required: false, as: "lastView", model: DocUserView, attributes: ["updatedAt"], where: { userId: req.user.id } })
             }
             after = afterGet
             limit = 30;
@@ -460,9 +456,9 @@ export default (path: string) => {
     router.post(`${path} /:id/assignee`, async (req: Request, res: Response, next: NextFunction) => {
         try {
             const username: string = req.body.username;
-            const user: IUserInstance | null = await getUserFromGithubAlias(username);
+            const user: User | null = await getUserFromGithubAlias(username);
             if (user) {
-                await db.docs.update({
+                await Doc.update({
                     assigneeUserId: user.id
                 }, { where: { id: req.params.id } });
                 res.send(user);

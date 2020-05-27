@@ -1,13 +1,12 @@
 import express, { Router, Request, Response, NextFunction } from "express";
-import db from "../../models";
-import { IUserInstance } from "../../models/users";
-import { ICommentInstance } from "../../models/comments";
+import Comment from "../../models/comments";
 import { simpleParser, ParsedMail } from "mailparser";
 import { EMAIL_DOMAIN } from "../../config";
 import multer from "multer";
 import { notifyComment } from "../../helpers/notifier";
-import { IDocInstance } from "../../models/docs";
-import { IOrganizationInstance } from "../../models/organization";
+import Doc from "../../models/docs";
+import Organization from "../../models/organization";
+import User from "../../models/users";
 
 const router: Router = express.Router();
 
@@ -37,7 +36,7 @@ router.post("/", multer().any(), async (req: Request, res: Response, next: NextF
             }
         }
 
-        const user: IUserInstance | null = await db.users.findOne({
+        const user: User | null = await User.findOne({
             where: { email: from }
         });
 
@@ -46,13 +45,11 @@ router.post("/", multer().any(), async (req: Request, res: Response, next: NextF
             return;
         }
 
-        const comment: ICommentInstance | null = await db.comment.findOne({
-            where: { id: commentId }
-        });
+        const comment: Comment | null = await Comment.findByPk(commentId);
 
         docId = comment ? comment.docId : docId;
 
-        const addedComment = await db.comment.create({
+        const addedComment = await Comment.create({
             docId: docId!,
             comment: mail.text,
             updatedAt: new Date(),
@@ -63,9 +60,9 @@ router.post("/", multer().any(), async (req: Request, res: Response, next: NextF
             authorUserId: user.id
         });
 
-        const currentDoc: IDocInstance | null = await db.docs.findOne({ where: { id: addedComment.docId } });
+        const currentDoc: Doc | null = await Doc.findOne({ where: { id: addedComment.docId } });
         if (currentDoc) {
-            const currentOrg: IOrganizationInstance | null = await db.organizations.findOne({ where: { id: currentDoc.organizationId } });
+            const currentOrg: Organization | null = await Organization.findOne({ where: { id: currentDoc.organizationId } });
             if (currentOrg) {
                 await notifyComment(req.user!, currentDoc, addedComment, currentOrg);
             }

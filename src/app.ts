@@ -12,7 +12,6 @@ import usersCreate from "./routers/users";
 import RouteTeamUsersCreate from "./routers/teamsusers";
 import organizationChildCreate from "./routers/organizationChildBase";
 import routeCommentCreate from "./routers/comments";
-import routeDashboardGadgetCreate from "./routers/organizationDashboardGadgets";
 import routeDocSourceLabelCreate from "./routers/docsourcelabel";
 import routeDocSourceMilestoneCreate from "./routers/docsourcemilestone";
 import routeSyncIssues from "./routers/sync/SyncIssues";
@@ -21,8 +20,14 @@ import routeAttachmentstCreate from "./routers/attachments";
 import routeDocWatchersCreate from "./routers/docWatchers";
 import { COOKIE_SECRET, DB_CONNECTION_STRING } from "./config";
 import pgSession from "connect-pg-simple";
-import { OrganizationType } from "./models/organization";
-import { IOrganizationTeamUserInstance } from "./models/organizationTeamsUsers";
+import Organization, { OrganizationType } from "./models/organization";
+import OrganizationTeamUser from "./models/organizationTeamsUsers";
+import Label from "./models/labels";
+import DocSource from "./models/docSource";
+import OrganizationMilestone from "./models/milestones";
+import OrganizationStatus from "./models/docStatuses";
+import DocType from "./models/docType";
+import OrganizationTeam from "./models/organizationTeams";
 
 const app: Express = ExpressInstance();
 
@@ -57,13 +62,13 @@ app.get("/api/me", (req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use("/api/organizations/:login", async (req: Request, res: Response, next: NextFunction) => {
-  const org = await db.organizations.findOne({ where: { login: req.params.login } });
+  const org = await Organization.findOne({ where: { login: req.params.login } });
   if (org) {
     req.org = org;
 
     if (req.user) {
-      const userPermission: IOrganizationTeamUserInstance | null = await db.organizationTeamsUsers.findOne({
-        where: { userId: req.user.id, organizationId: req.org.id }
+      const userPermission: OrganizationTeamUser | null = await OrganizationTeamUser.findOne({
+        where: { userId: req.user.id, organizationId: req.org!.id }
       });
 
       if (userPermission) {
@@ -101,19 +106,18 @@ app.get("/api/organizations/:login", async (req: Request, res: Response) => {
 });
 
 
-app.use(organizationChildCreate("/api/organizations/:login/labels", db.labels));
-app.use(organizationChildCreate("/api/organizations/:login/docsources", db.docSources));
-app.use(organizationChildCreate("/api/organizations/:login/milestones", db.milestones));
-app.use(organizationChildCreate("/api/organizations/:login/statuses", db.docStatuses));
-app.use(organizationChildCreate("/api/organizations/:login/doctypes", db.docTypes));
-app.use(organizationChildCreate("/api/organizations/:login/teams", db.organizationTeams));
+app.use(organizationChildCreate("/api/organizations/:login/labels", Label));
+app.use(organizationChildCreate("/api/organizations/:login/docsources", DocSource));
+app.use(organizationChildCreate("/api/organizations/:login/milestones", OrganizationMilestone));
+app.use(organizationChildCreate("/api/organizations/:login/statuses", OrganizationStatus));
+app.use(organizationChildCreate("/api/organizations/:login/doctypes", DocType));
+app.use(organizationChildCreate("/api/organizations/:login/teams", OrganizationTeam));
 app.use("/api/organizations/:login", RouteTeamUsersCreate("/teams/:teamId/users"));
 app.use("/api/organizations/:login", routeDocSourceLabelCreate("/docsources/:docSourceId/labels"));
 app.use("/api/organizations/:login", routeDocSourceMilestoneCreate("/docsources/:docSourceId/milestones"));
 app.use("/api/organizations/:login", routeSyncIssues);
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeOrganizationDashboardCreate("/dashboards"));
-app.use("/api/organizations/:login", routeDashboardGadgetCreate("/dashboards/:dashboardId/gadgets"));
 app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments"));
 app.use("/api/organizations/:login", routeAttachmentstCreate("/attachments"));
 app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watchers"));

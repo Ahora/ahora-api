@@ -1,57 +1,64 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
 
-export interface IUserAttributes {
-    id?: number;
-    displayName?: string;
-    username: string;
-    gitHubId?: string;
-    email?: string;
-    accessToken?: string;
-    refreshToken?: string;
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import OrganizationDashboard from './organizationDashboards';
+import OrganizationTeamUser from './organizationTeamsUsers';
+import Doc from './docs';
+import Comment from './comments';
+import DocWatcher from './docWatcher';
+import DocUserView from './docUserView';
+
+class User extends Model {
+    public id!: number;
+    public displayName!: string | null;
+    public username!: string;
+    public gitHubId!: string | null;
+    public email!: string | null;
+    public accessToken!: string | null;
+    public refreshToken!: string | null;
 }
 
-export interface IUserInstance extends Sequelize.Instance<IUserAttributes>, IUserAttributes {
-    id: number;
-}
+User.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    displayName: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    gitHubId: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    username: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    accessToken: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    refreshToken: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    email: {
+        type: DataTypes.STRING,
+        allowNull: true
+    }
+}, {
+    sequelize: db.sequelize,
+    tableName: "users",
+});
 
-// tslint:disable-next-line:typedef
-export const UsersFactory =
-(sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-Sequelize.Model<IUserInstance, IUserAttributes> => {
-    let attributes:SequelizeAttributes<IUserAttributes> = {
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true
-        },
-        displayName: {
-            type: DataTypes.STRING,
-            allowNull: true
-        }, 
-        gitHubId: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-        username: {
-            type: DataTypes.STRING,
-            allowNull: true
-        }, 
-        accessToken: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-        refreshToken: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-        email: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-    };
+User.hasMany(OrganizationDashboard, { foreignKey: "userId", onDelete: 'CASCADE' });
+User.hasMany(OrganizationTeamUser, { foreignKey: "userId", onDelete: 'CASCADE' });
+User.hasMany(Doc, { foreignKey: "assigneeUserId", onDelete: 'CASCADE' });
+User.hasMany(Doc, { foreignKey: "reporterUserId", onDelete: 'CASCADE' });
+User.hasMany(DocWatcher, { foreignKey: "userId", onDelete: 'CASCADE' });
+User.hasMany(DocUserView, { foreignKey: "userId", onDelete: 'CASCADE' });
+User.hasMany(Comment, { foreignKey: "authorUserId", onDelete: 'CASCADE' });
 
-    return sequelize.define<IUserInstance, IUserAttributes>("users", attributes, {
-        timestamps: true
-    });
-  };
+export default User;

@@ -1,4 +1,5 @@
 import { IGroupHandler, IGroupParameters, GroupInfo } from "../IGroupHandler";
+import { fn, col } from "sequelize";
 import db from "../../../models";
 
 export default class DateGroupHandler implements IGroupHandler {
@@ -10,7 +11,7 @@ export default class DateGroupHandler implements IGroupHandler {
 
     public handleGroup(): IGroupParameters {
         return {
-            attributes: [[db.sequelize.fn('date_trunc', 'day', db.sequelize.col(`docs.${this.group}`)), this.group]],
+            attributes: [[fn('date_trunc', 'day', col(`docs.${this.group}`)), this.group]],
             group: [this.group]
         }
     }

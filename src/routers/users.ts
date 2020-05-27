@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import routeCreate from "./base";
 import db from "../models/index";
 import { Op } from "sequelize";
-import { IUserInstance, IUserAttributes } from "../models/users";
+import User from "../models/users";
 
 const handlePostError = (error: any, req: Request, res: Response, next: NextFunction) => {
     if (error.name === "SequelizeUniqueConstraintError") {
@@ -36,7 +36,7 @@ const getAdditionalParams = async (req: Request): Promise<any> => {
 }
 
 export default (path: string) => {
-    const router = routeCreate<IUserInstance, IUserAttributes>(path, db.users, (req) => {
+    const router = routeCreate(path, User, (req) => {
         return {
             post: { handleError: handlePostError },
             get: { getAdditionalParams: getAdditionalParams, useOnlyAdditionalParams: true },

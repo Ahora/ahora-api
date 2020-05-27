@@ -1,11 +1,11 @@
 
-import { IUserInstance } from "./../models/users";
+import User from "./../models/users";
 import { RestCollectorClient } from "rest-collector";
 import db from "../models";
 const githubUserClient: RestCollectorClient = new RestCollectorClient("https://api.github.com/users/{username}");
 
 
-export const getUserFromGithubAlias = async (username: string): Promise<IUserInstance | null> => {
+export const getUserFromGithubAlias = async (username: string): Promise<User | null> => {
     const result = await githubUserClient.get({
         params: { username }
     });
@@ -15,12 +15,12 @@ export const getUserFromGithubAlias = async (username: string): Promise<IUserIns
         return null;
     }
 
-    let user: IUserInstance | null = await db.users.findOne({
+    let user: User | null = await User.findOne({
         where: { gitHubId: gitHubUser.id.toString() }
     });
 
     if (!user) {
-        user = await db.users.create({
+        user = await User.create({
             displayName: gitHubUser.name,
             gitHubId: gitHubUser.id,
             username

@@ -1,8 +1,7 @@
 import express, { Router, Request, Response, NextFunction } from "express";
-import routeCreate, { RouterHooks } from "./base";
-import db from "../models/index";
-import { IDocSourceMilestoneAttributes, IDocSourceMilestoneInstance } from "../models/docsourcemilestone";
-import { IMilestoneInstance, MilestoneStatus } from "../models/milestones";
+import routeCreate from "./base";
+import DocSourceMilestone from "../models/docsourcemilestone";
+import OrganizationMilestone, { MilestoneStatus } from "../models/milestones";
 
 interface DocMilestoneInput {
     id?: number;
@@ -24,7 +23,7 @@ const generateQuery = async (req: Request): Promise<any> => {
 
 export default (path: string) => {
 
-    const router = routeCreate<IDocSourceMilestoneInstance, IDocSourceMilestoneAttributes>(path, db.docSourceMilestones, (req) => {
+    const router = routeCreate(path, DocSourceMilestone, (req) => {
         return {
             get: {
                 getAdditionalParams: generateQuery
@@ -36,32 +35,31 @@ export default (path: string) => {
 
 
     router.post(`${path}`, async (req: Request, res: Response, next: NextFunction) => {
-        console.log(req.body);
         try {
             const docSourceId = parseInt(req.params.docSourceId);
             const docMilestoneInput: DocMilestoneInput = req.body;
 
 
-            let docSourceMilestoneFromDB: IDocSourceMilestoneInstance | null = await db.docSourceMilestones.findOne({
+            let docSourceMilestoneFromDB: DocSourceMilestone | null = await DocSourceMilestone.findOne({
                 where: {
                     docSourceId: docSourceId,
                     sourceId: docMilestoneInput.sourceId
                 }
             });
 
-            let milestone: IMilestoneInstance | null = null;
+            let milestone: OrganizationMilestone | null = null;
             if (docSourceMilestoneFromDB) {
-                milestone = await db.milestones.findOne({ where: { id: docSourceMilestoneFromDB.milestoneId } });
+                milestone = await OrganizationMilestone.findOne({ where: { id: docSourceMilestoneFromDB.milestoneId } });
             }
 
             // Try to find relevant milestone by name!
             if (milestone === null) {
-                milestone = await db.milestones.findOne({ where: { organizationId: req.org!.id, title: docMilestoneInput.title } });
+                milestone = await OrganizationMilestone.findOne({ where: { organizationId: req.org!.id, title: docMilestoneInput.title } });
             }
 
             //Update or create milestone if it;s doesn't exists or name or description or color where changed
             if (milestone === null) {
-                milestone = await db.milestones.create({
+                milestone = await OrganizationMilestone.create({
                     organizationId: req.org!.id,
                     title: docMilestoneInput.title,
                     description: docMilestoneInput.description,
@@ -71,12 +69,12 @@ export default (path: string) => {
                 });
             }
 
-            if ((milestone.title !== docMilestoneInput.title ||
+            if (milestone && (milestone.title !== docMilestoneInput.title ||
                 milestone.description !== docMilestoneInput.description ||
                 milestone.dueOn !== docMilestoneInput.dueOn ||
                 milestone.closedAt !== docMilestoneInput.closedAt)) {
 
-                await db.milestones.update({
+                await OrganizationMilestone.update({
                     organizationId: req.org!.id,
                     title: docMilestoneInput.title,
                     description: docMilestoneInput.description,
@@ -94,9 +92,9 @@ export default (path: string) => {
                     docSourceMilestoneFromDB.dueOn !== docMilestoneInput.dueOn ||
                     docSourceMilestoneFromDB.state !== docMilestoneInput.state ||
                     docSourceMilestoneFromDB.closedAt !== docMilestoneInput.closedAt) {
-                    await db.docSourceMilestones.update({
+                    await DocSourceMilestone.update({
                         docSourceId,
-                        milestoneId: milestone.id,
+                        milestoneId: milestone!.id,
                         title: docMilestoneInput.title,
                         description: docMilestoneInput.description,
                         closedAt: docMilestoneInput.closedAt,
@@ -110,8 +108,8 @@ export default (path: string) => {
                 }
             }
             else {
-                docSourceMilestoneFromDB = await db.docSourceMilestones.create({
-                    milestoneId: milestone.id,
+                docSourceMilestoneFromDB = await DocSourceMilestone.create({
+                    milestoneId: milestone!.id,
                     docSourceId,
                     description: docMilestoneInput.description,
                     sourceId: docMilestoneInput.sourceId,

@@ -1,71 +1,79 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import Label from './labels';
+import OrganizationMilestone from './milestones';
+import DocType from './docType';
+import organizationDashboards from '../routers/organizationDashboards';
+import OrganizationDashboard from './organizationDashboards';
+import OrganizationTeam from './organizationTeams';
 
 export enum OrganizationType {
-    Public=0,
+    Public = 0,
     Private = 1
 }
 
-export interface IOrganizationAttributes {
-    id?: number;
-    login: string;
-    displayName: string;
-    node_id?: string;
-    description?: string;
-    defaultStatus?: number;
-    orgType: OrganizationType
+class Organization extends Model {
+    public id!: number;
+    public login!: string;
+    public displayName!: string;
+    public node_id!: string | null; // for nullable fields
+    public description!: string | null; // for nullable fields
+    public defaultStatus!: number | null; // for nullable fields
+    public orgType!: OrganizationType;
+
+    // timestamps!
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
-export interface IOrganizationInstance extends Sequelize.Instance<IOrganizationAttributes>, IOrganizationAttributes {
-    id: number;
-}
-
-// tslint:disable-next-line:typedef
-export const OrganizationsFactory =
-(sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-Sequelize.Model<IOrganizationInstance, IOrganizationAttributes> => {
-    let attributes:SequelizeAttributes<IOrganizationAttributes> = {
-        id: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            primaryKey: true,
-            autoIncrement: true
-        },
-        login: {
-            type: DataTypes.STRING,
-            allowNull: false
-        },
-        displayName: {
-            type: DataTypes.STRING,
-            allowNull: false
-        },
-        node_id: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-        defaultStatus: {
-            type: DataTypes.INTEGER,
-            allowNull: true
-        }, 
-        description: {
-            type: DataTypes.STRING,
-            allowNull: true
-        },
-        orgType: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            defaultValue: OrganizationType.Public
+Organization.init({
+    id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    login: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    displayName: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    node_id: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    defaultStatus: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    description: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    orgType: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: OrganizationType.Public
+    }
+}, {
+    sequelize: db.sequelize,
+    tableName: "organizations",
+    indexes: [
+        {
+            unique: true,
+            name: 'login',
+            fields: ["login"]
         }
-    };
+    ]
+});
 
-    return sequelize.define<IOrganizationInstance, IOrganizationAttributes>("organizations", attributes, {
-        timestamps: true,
-        indexes: [
-            { 
-              unique: true,   
-              name: 'login',  
-              fields: [sequelize.fn('lower', sequelize.col('login'))]   
-            }
-          ]
-    });
-  };
+Organization.hasMany(Label);
+Organization.hasMany(OrganizationDashboard);
+Organization.hasMany(OrganizationMilestone);
+Organization.hasMany(OrganizationTeam);
+Organization.hasMany(DocType);
+
+export default Organization;

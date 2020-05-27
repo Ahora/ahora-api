@@ -1,52 +1,55 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
 
-export interface IDocTypeAttributes {
-    id?: number;
-    name: string;
-    code: string;
-    description?: string;
-    organizationId?: number;
-    nextDocType?: number;
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import Organization from './organization';
+import Doc from './docs';
+
+class DocType extends Model {
+    public id!: number;
+
+    public name!: string;
+    public code!: string;
+    public description!: string | null;
+    public organizationId!: number | null;
+    public nextDocType?: number;
+
+    // timestamps!
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
-export interface IDocTypeInstance extends Sequelize.Instance<IDocTypeAttributes>, IDocTypeAttributes {
-    id: number;
-}
+DocType.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    name: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    code: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    organizationId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    nextDocType: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    description: {
+        type: DataTypes.STRING,
+        allowNull: true
+    }
+}, {
+    sequelize: db.sequelize,
+    tableName: "DocTypes",
+});
 
-// tslint:disable-next-line:typedef
-export const DocTypesFactory =
-    (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-        Sequelize.Model<IDocTypeInstance, IDocTypeAttributes> => {
-        let attributes: SequelizeAttributes<IDocTypeAttributes> = {
-            id: {
-                type: DataTypes.INTEGER,
-                autoIncrement: true,
-                primaryKey: true
-            },
-            name: {
-                type: DataTypes.STRING,
-                allowNull: false
-            },
-            code: {
-                type: DataTypes.STRING,
-                allowNull: false
-            },
-            organizationId: {
-                type: DataTypes.INTEGER,
-                allowNull: true
-            },
-            nextDocType: {
-                type: DataTypes.INTEGER,
-                allowNull: true
-            },
-            description: {
-                type: DataTypes.STRING,
-                allowNull: true
-            }
-        };
+DocType.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+DocType.hasMany(Doc, { foreignKey: "docTypeId", onDelete: 'CASCADE' });
 
-        return sequelize.define<IDocTypeInstance, IDocTypeAttributes>("DocTypes", attributes, {
-            timestamps: true
-        });
-    };
+export default DocType;

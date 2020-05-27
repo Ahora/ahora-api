@@ -1,65 +1,64 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import Organization from './organization';
+import User from './users';
+import OrganizationTeam from './organizationTeams';
 
 export enum TeamUserType {
     Member = 0,
     Owner = 1
 }
 
-export interface IOrganizationTeamUserAttribute {
-    id?: number;
-    userId: number;
-    permissionType: TeamUserType,
-    organizationId: number;
-    teamId: number | null;
+
+class OrganizationTeamUser extends Model {
+    public id!: number;
+    public userId!: number;
+    public permissionType!: TeamUserType;
+    public organizationId!: number;
+    public teamId!: number | null;
+
+    // timestamps!
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
-export interface IOrganizationTeamUserInstance extends Sequelize.Instance<IOrganizationTeamUserAttribute>, IOrganizationTeamUserAttribute {
-    id: number;
-    user: {
-        username: string;
-        displayName?: string;
+OrganizationTeamUser.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    organizationId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    permissionType: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: TeamUserType.Member
+    },
+    teamId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
     }
-}
+}, {
+    sequelize: db.sequelize,
+    tableName: "organizationteamsusers",
+    indexes: [
+        {
+            unique: true,
+            name: 'organizationId_teamId_userId',
+            fields: ["organizationId", "teamId", "userId"]
+        }
+    ]
+});
 
-// tslint:disable-next-line:typedef
-export const OrganizationTeamUserFactory =
-    (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-        Sequelize.Model<IOrganizationTeamUserInstance, IOrganizationTeamUserAttribute> => {
-        let attributes: SequelizeAttributes<IOrganizationTeamUserAttribute> = {
-            id: {
-                type: DataTypes.INTEGER,
-                autoIncrement: true,
-                primaryKey: true
-            },
-            organizationId: {
-                type: DataTypes.INTEGER,
-                allowNull: false
-            },
-            userId: {
-                type: DataTypes.INTEGER,
-                allowNull: false
-            },
-            permissionType: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-                defaultValue: TeamUserType.Member
-            },
+OrganizationTeamUser.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+OrganizationTeamUser.belongsTo(User, { foreignKey: "userId", onDelete: 'CASCADE' });
+OrganizationTeamUser.belongsTo(OrganizationTeam, { foreignKey: "teamId", onDelete: 'CASCADE' });
 
-            teamId: {
-                type: DataTypes.INTEGER,
-                allowNull: true
-            }
-        };
-
-        return sequelize.define<IOrganizationTeamUserInstance, IOrganizationTeamUserAttribute>("organizationteamsusers", attributes, {
-            timestamps: true,
-            indexes: [
-                {
-                    unique: true,
-                    name: 'organizationId_teamId_userId',
-                    fields: ["organizationId", "teamId", "userId"]
-                }
-            ]
-        });
-    };
+export default OrganizationTeamUser;

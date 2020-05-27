@@ -1,58 +1,56 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import Organization from './organization';
+import Doc from './docs';
+import User from './users';
 
 export enum DocWatcherType {
     Watcher = 0,
     NonWatcher = 1
 }
 
-export interface IDocWatcherAttributes {
-    id?: number;
-    docId: number;
-    watcherType: DocWatcherType;
-    userId: number;
+
+class DocWatcher extends Model {
+    public id!: number;
+    public docId!: number;
+    public watcherType!: DocWatcherType;
+    public userId!: number;
+
+    // timestamps!
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
-export interface IDocWatcherInstance extends Sequelize.Instance<IDocWatcherAttributes>, IDocWatcherAttributes {
-    id: number;
-    user: {
-        username: string;
-        displayName?: string;
+DocWatcher.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    docId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    watcherType: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: DocWatcherType.Watcher
     }
-}
+}, {
+    sequelize: db.sequelize,
+    tableName: "docwatchers",
+    indexes: [{
+        unique: true,
+        name: 'docidanduserid',
+        fields: ["docId", "userId"]
+    }]
+});
 
-// tslint:disable-next-line:typedef
-export const DocWatchersFactory = (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-    Sequelize.Model<IDocWatcherInstance, IDocWatcherAttributes> => {
-    let attributes: SequelizeAttributes<IDocWatcherAttributes> = {
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true
-        },
-        docId: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
-        userId: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
-        watcherType: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-            defaultValue: DocWatcherType.Watcher
-        }
-    };
+DocWatcher.belongsTo(Doc, { foreignKey: "docId", onDelete: 'CASCADE' });
+DocWatcher.belongsTo(User, { foreignKey: "userId", onDelete: 'CASCADE' });
 
-    return sequelize.define<IDocWatcherInstance, IDocWatcherAttributes>("docwatchers", attributes, {
-        timestamps: true,
-        indexes: [
-            {
-                unique: true,
-                name: 'docidanduserid',
-                fields: ["docId", "userId"]
-            }
-        ]
-    });
-};
+export default DocWatcher;

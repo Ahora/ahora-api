@@ -1,6 +1,7 @@
 import { IGroupHandler, IGroupParameters, GroupInfo } from "../IGroupHandler";
 import { Request } from "express";
 import db from "../../../models";
+import OrganizationMilestone from "../../../models/milestones";
 
 export default class DocMilestoneGroupHandler implements IGroupHandler {
     public readonly groupable: boolean;
@@ -12,7 +13,7 @@ export default class DocMilestoneGroupHandler implements IGroupHandler {
     public handleGroup(group: string): IGroupParameters {
         return {
             group: ["milestone.title"],
-            includes: [{ as: "milestone", model: db.milestones, attributes: ["title"] }]
+            includes: [{ as: "milestone", model: OrganizationMilestone, attributes: ["title"] }]
         }
     }
 

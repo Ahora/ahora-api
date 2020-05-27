@@ -1,37 +1,44 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import Doc from './docs';
+import User from './users';
+import Label from './labels';
 
-export interface IDocLabelAttributes {
-    id?: number;
-    docId: number;
-    labelId: number;
+class DocLabel extends Model {
+    public id!: number;
+    public docId!: number;
+    public labelId!: number;
+
+    // timestamps!
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
-export interface IDocLabelInstance extends Sequelize.Instance<IDocLabelAttributes>, IDocLabelAttributes {
-    id: number;
-}
+DocLabel.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    docId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    labelId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    }
+}, {
+    sequelize: db.sequelize,
+    tableName: "docsuserview",
+    indexes: [{
+        unique: true,
+        name: 'docslabel',
+        fields: ["docId", "labelId"]
+    }]
+});
 
-// tslint:disable-next-line:typedef
-export const DocsLabelFactory =
-    (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-        Sequelize.Model<IDocLabelInstance, IDocLabelAttributes> => {
-        let attributes: SequelizeAttributes<IDocLabelAttributes> = {
-            id: {
-                type: DataTypes.INTEGER,
-                autoIncrement: true,
-                primaryKey: true
-            },
-            docId: {
-                type: DataTypes.INTEGER,
-                allowNull: false
-            },
-            labelId: {
-                type: DataTypes.INTEGER,
-                allowNull: false
-            }
-        };
+DocLabel.belongsTo(Doc, { foreignKey: "docId", onDelete: 'CASCADE' });
+DocLabel.belongsTo(Label, { foreignKey: "labelId", onDelete: 'CASCADE' });
 
-        return sequelize.define<IDocLabelInstance, IDocLabelAttributes>("doclabels", attributes, {
-            timestamps: true
-        });
-    };
+export default DocLabel;

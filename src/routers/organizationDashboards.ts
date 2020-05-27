@@ -1,9 +1,10 @@
 import express, { Request } from "express";
 import routeCreate from "./base";
 import db from "../models/index";
-import { ICommentAttributes, ICommentInstance } from "../models/comments";
-import { IDashboardAttributes, IDashboardInstance, DashboardType } from "../models/organizationDashboards";
+import OrganizationDashboard, { DashboardType } from "../models/organizationDashboards";
 import { Op } from "sequelize";
+import User from "../models/users";
+import Organization from "../models/organization";
 
 const generateQuery = async (req: Request): Promise<any> => {
     if (req.user) {
@@ -23,7 +24,7 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 }
 
-const beforePost = async (dashboard: IDashboardAttributes, req: Request): Promise<IDashboardAttributes> => {
+const beforePost = async (dashboard: OrganizationDashboard, req: Request): Promise<OrganizationDashboard> => {
     if (req.user) {
         dashboard.userId = dashboard.userId || req.user.id;
     }
@@ -36,12 +37,12 @@ const beforePost = async (dashboard: IDashboardAttributes, req: Request): Promis
 
 export default (path: string) => {
 
-    const router = routeCreate<IDashboardInstance, IDashboardAttributes>(path, db.organizationDashboards, (req) => {
+    const router = routeCreate(path, OrganizationDashboard, (req) => {
         return {
             get: {
                 getAdditionalParams: generateQuery,
                 order: [["updatedAt", "DESC"]],
-                include: [{ model: db.users, attributes: ["displayName", "username"] }]
+                include: [{ model: User, attributes: ["displayName", "username"] }]
             },
             post: { before: beforePost },
         }

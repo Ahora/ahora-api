@@ -1,77 +1,74 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import Doc from './docs';
+import User from './users';
 
-export interface ICommentAttributes {
-    id?: number;
-    comment: string;
-    commentId?: number;
-    htmlComment: string;
-    pinned: boolean;
-    parentId?: number;
-    docId: number;
-    authorUserId: number;
-    createdAt: Date;
-    updatedAt: Date;
+class Comment extends Model {
+    public id!: number;
+    public comment!: string;
+    public commentId!: number | null;
+    public htmlComment!: string;
+    public pinned!: boolean;
+    public parentId!: number | null;
+    public docId!: number;
+    public authorUserId!: number;
+
+    // timestamps!
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
-export interface ICommentInstance extends Sequelize.Instance<ICommentAttributes>, ICommentAttributes {
-    id: number;
-    user: {
-        username: string;
-        displayName?: string;
+Comment.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    comment: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+    },
+    htmlComment: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+    },
+    docId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    commentId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    authorUserId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    parentId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    pinned: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+    },
+    createdAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
     }
-}
+}, {
+    sequelize: db.sequelize,
+    tableName: "comments",
+});
 
-// tslint:disable-next-line:typedef
-export const CommentsFactory = (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-    Sequelize.Model<ICommentInstance, ICommentAttributes> => {
-    let attributes: SequelizeAttributes<ICommentAttributes> = {
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true
-        },
-        comment: {
-            type: DataTypes.TEXT,
-            allowNull: false,
-        },
-        htmlComment: {
-            type: DataTypes.TEXT,
-            allowNull: false,
-        },
-        docId: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
-        commentId: {
-            type: DataTypes.INTEGER,
-            allowNull: true
-        },
-        authorUserId: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
-        parentId: {
-            type: DataTypes.INTEGER,
-            allowNull: true
-        },
-        pinned: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            defaultValue: false
-        },
-        createdAt: {
-            type: DataTypes.DATE,
-            allowNull: true
-        },
-        updatedAt: {
-            type: DataTypes.DATE,
-            allowNull: true
-        }
+Comment.belongsTo(Doc, { foreignKey: "docId", onDelete: 'CASCADE' });
+Comment.belongsTo(Comment, { foreignKey: "parentId", onDelete: 'CASCADE' });
+Comment.hasMany(Comment, { foreignKey: "parentId", onDelete: 'CASCADE' });
+Comment.belongsTo(User, { foreignKey: "authorUserId", onDelete: 'CASCADE' });
 
-    };
-
-    return sequelize.define<ICommentInstance, ICommentAttributes>("comments", attributes, {
-        timestamps: false
-    });
-};
+export default Comment;

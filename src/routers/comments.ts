@@ -1,12 +1,13 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import Sequelize from "sequelize";
-import { IDocInstance, IDocAttributes } from "../models/docs";
+import Doc from "../models/docs";
 import routeCreate, { RouterHooks } from "./base";
 import db from "../models/index";
 import marked from "marked";
-import { ICommentAttributes, ICommentInstance } from "../models/comments";
+import Comment from "../models/comments";
 import { addUserToWatchersList } from "../helpers/docWatchers";
 import { notifyComment } from "../helpers/notifier";
+import User from "../models/users";
 
 const generateQuery = async (req: Request): Promise<any> => {
     return {
@@ -14,23 +15,20 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 }
 
-const beforePost = async (comment: ICommentAttributes, req: Request): Promise<ICommentAttributes> => {
+const beforePost = async (comment: Comment, req: Request): Promise<Comment> => {
     if (req.user) {
         comment.authorUserId = comment.authorUserId || req.user.id;
     }
     comment.docId = parseInt(req.params.docId);
-    comment.createdAt = comment.createdAt || new Date();
-    comment.updatedAt = comment.updatedAt || new Date();
     return await generateDocHTML(comment, req);
 }
 
-const beforePut = async (comment: ICommentAttributes, req: Request): Promise<ICommentAttributes> => {
-    comment.updatedAt = comment.updatedAt || new Date();
+const beforePut = async (comment: Comment, req: Request): Promise<Comment> => {
     return await generateDocHTML(comment, req);
 }
 
-const generateDocHTML = async (comment: ICommentAttributes, req: Request): Promise<ICommentAttributes> => {
-    return new Promise<ICommentAttributes>((resolve, reject) => {
+const generateDocHTML = async (comment: Comment, req: Request): Promise<Comment> => {
+    return new Promise<Comment>((resolve, reject) => {
         if (comment.comment) {
             marked(comment.comment, (error: any, parsedResult: string) => {
                 if (error) {
@@ -48,11 +46,11 @@ const generateDocHTML = async (comment: ICommentAttributes, req: Request): Promi
 }
 
 const updateCommentsNumberAndTime = async (docId: number, updateTime: Date): Promise<void> => {
-    const count = await db.comment.count({
+    const count = await Comment.count({
         where: { docId }
     });
 
-    db.docs.update({
+    Doc.update({
         commentsNumber: count,
         updatedAt: updateTime
     }, {
@@ -60,17 +58,17 @@ const updateCommentsNumberAndTime = async (docId: number, updateTime: Date): Pro
     });
 }
 
-const afterPut = async (comment: ICommentInstance, req: Request): Promise<ICommentInstance> => {
+const afterPut = async (comment: Comment, req: Request): Promise<Comment> => {
     await updateCommentsNumberAndTime(comment.docId, comment.updatedAt);
     return comment;
 }
 
-const afterDelete = async (comment: ICommentInstance, req: Request): Promise<ICommentInstance> => {
+const afterDelete = async (comment: Comment, req: Request): Promise<Comment> => {
     await updateCommentsNumberAndTime(comment.docId, comment.updatedAt);
     return comment;
 }
 
-const afterPost = async (comment: ICommentInstance, req: Request): Promise<ICommentInstance> => {
+const afterPost = async (comment: Comment, req: Request): Promise<Comment> => {
     const returnValue: any = {
         authorUserId: comment.authorUserId,
         id: comment.id,
@@ -93,7 +91,7 @@ const afterPost = async (comment: ICommentInstance, req: Request): Promise<IComm
     await addUserToWatchersList(comment.docId, comment.authorUserId);
 
 
-    const currentDoc: IDocInstance | null = await db.docs.findOne({ where: { id: comment.docId } });
+    const currentDoc: Doc | null = await Doc.findOne({ where: { id: comment.docId } });
     if (currentDoc && req.user) {
         await notifyComment(req.user, currentDoc, comment, req.org!);
     }
@@ -103,12 +101,12 @@ const afterPost = async (comment: ICommentInstance, req: Request): Promise<IComm
 
 export default (path: string) => {
 
-    const router = routeCreate<ICommentInstance, ICommentAttributes>(path, db.comment, (req) => {
+    const router = routeCreate(path, Comment, (req) => {
         return {
             get: {
                 getAdditionalParams: generateQuery,
                 order: [["updatedAt", "DESC"]],
-                include: [{ model: db.users, attributes: ["displayName", "username"] }]
+                include: [{ model: User, attributes: ["displayName", "username"] }]
             },
             post: { before: beforePost, after: afterPost },
             put: { before: beforePut, after: afterPut },

@@ -1,47 +1,59 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import Organization from './organization';
+import OrganizationMilestone from './milestones';
+import DocSourceLabel from './docsourcelabel';
+import DocLabel from './docLabel';
 
-export interface ILabelAttributes {
-    id?: number;
-    name: string;
-    color: string;
-    organizationId: number;
-    description: string;
+class Label extends Model {
+    public id!: number;
+    public name!: string;
+    public color!: string | null; // for nullable fields
+    public description!: string | null; // for nullable fields
+    public organizationId!: number | null; // for nullable fields
+
+    // timestamps!
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
-export interface ILabelInstance extends Sequelize.Instance<ILabelAttributes>, ILabelAttributes {
-    id: number;
-}
+Label.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    name: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    color: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    organizationId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    description: {
+        type: DataTypes.STRING,
+        allowNull: true
+    }
+}, {
+    sequelize: db.sequelize,
+    tableName: "tags",
+    indexes: [
+        {
+            unique: true,
+            name: 'tags_organizationId_Name',
+            fields: ["organizationId", "name"]
+        }
+    ]
+});
 
-// tslint:disable-next-line:typedef
-export const LabelsFactory =
-    (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-        Sequelize.Model<ILabelInstance, ILabelAttributes> => {
-        let attributes: SequelizeAttributes<ILabelAttributes> = {
-            id: {
-                type: DataTypes.INTEGER,
-                autoIncrement: true,
-                primaryKey: true
-            },
-            name: {
-                type: DataTypes.STRING,
-                allowNull: false
-            },
-            color: {
-                type: DataTypes.STRING,
-                allowNull: true
-            },
-            organizationId: {
-                type: DataTypes.INTEGER,
-                allowNull: false
-            },
-            description: {
-                type: DataTypes.STRING,
-                allowNull: true
-            }
-        };
+Label.hasMany(DocLabel, { foreignKey: "labelId", onDelete: 'CASCADE' });
+Label.hasMany(DocSourceLabel, { foreignKey: "labelId", onDelete: 'CASCADE' });
+Label.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
 
-        return sequelize.define<ILabelInstance, ILabelAttributes>("tags", attributes, {
-            timestamps: true
-        });
-    };
+
+export default Label;

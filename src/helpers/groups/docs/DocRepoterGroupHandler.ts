@@ -1,5 +1,6 @@
 import { IGroupHandler, IGroupParameters, GroupInfo } from "../IGroupHandler";
 import db from "../../../models";
+import User from "../../../models/users";
 
 export default class DocRepoterGroupHandler implements IGroupHandler {
     public readonly groupable: boolean;
@@ -11,7 +12,7 @@ export default class DocRepoterGroupHandler implements IGroupHandler {
     public handleGroup(group: string): IGroupParameters {
         return {
             group: ["reporter.username", "reporter.displayName"],
-            includes: [{ as: "reporter", model: db.users, attributes: ["displayName", "username"] }]
+            includes: [{ as: "reporter", model: User, attributes: ["displayName", "username"] }]
         }
     }
 

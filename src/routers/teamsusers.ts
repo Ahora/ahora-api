@@ -1,8 +1,8 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import routeCreate, { RouterHooks } from "./base";
 import db from "../models/index";
-import { IOrganizationTeamUserAttribute } from "../models/organizationTeamsUsers";
-import { IUserInstance } from "../models/users";
+import OrganizationTeamUser from "../models/organizationTeamsUsers";
+import User from "../models/users";
 
 const generateQuery = async (req: Request): Promise<any> => {
     return {
@@ -11,13 +11,13 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 }
 
-const beforePost = async (user: IOrganizationTeamUserAttribute, req: Request): Promise<IOrganizationTeamUserAttribute> => {
+const beforePost = async (user: OrganizationTeamUser, req: Request): Promise<OrganizationTeamUser> => {
     user.teamId = (req.params.teamId === "null") ? null : parseInt(req.params.teamId);
     user.organizationId = req.org!.id;
     return Promise.resolve(user);
 }
 
-const afterPost = async (team: IOrganizationTeamUserAttribute, req: Request): Promise<IOrganizationTeamUserAttribute> => {
+const afterPost = async (team: OrganizationTeamUser, req: Request): Promise<OrganizationTeamUser> => {
     const returnValue: any = {
         userId: team.userId,
         id: team.id,
@@ -26,7 +26,7 @@ const afterPost = async (team: IOrganizationTeamUserAttribute, req: Request): Pr
         teamId: team.teamId
     };
 
-    const user: IUserInstance | null = await db.users.findOne({ where: { id: team.userId } });
+    const user: User | null = await User.findOne({ where: { id: team.userId } });
     if (user) {
         returnValue.user = {
             displayName: user.displayName,
@@ -40,11 +40,11 @@ const afterPost = async (team: IOrganizationTeamUserAttribute, req: Request): Pr
 
 export default (path: string) => {
 
-    const router = routeCreate<IOrganizationTeamUserAttribute, IOrganizationTeamUserAttribute>(path, db.organizationTeamsUsers, (req) => {
+    const router = routeCreate(path, OrganizationTeamUser, (req) => {
         return {
             get: {
                 getAdditionalParams: generateQuery,
-                include: [{ model: db.users, attributes: ["displayName", "username"] }]
+                include: [{ model: User, attributes: ["displayName", "username"] }]
             },
             post: { before: beforePost, after: afterPost },
             put: { before: beforePost }

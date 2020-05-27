@@ -1,43 +1,43 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import Organization from './organization';
 
-export interface IOrganizationTeamAttribute {
-    id?: number;
-    name: number;
-    organizationId: number;
-    parentId?: number
+class OrganizationTeam extends Model {
+    public id!: number;
+    public name!: number;
+    public organizationId!: number;
+    public parentId!: number | null
+
+    // timestamps!
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
-export interface IOrganizationTeamInstance extends Sequelize.Instance<IOrganizationTeamAttribute>, IOrganizationTeamAttribute {
-    id: number;
-}
+OrganizationTeam.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    organizationId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    parentId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    name: {
+        type: DataTypes.STRING,
+        allowNull: false
+    }
+}, {
+    sequelize: db.sequelize,
+    tableName: "organizationteams"
+});
 
-// tslint:disable-next-line:typedef
-export const OrganizationTeamsFactory =
-    (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-        Sequelize.Model<IOrganizationTeamInstance, IOrganizationTeamAttribute> => {
-        let attributes: SequelizeAttributes<IOrganizationTeamAttribute> = {
-            id: {
-                type: DataTypes.INTEGER,
-                autoIncrement: true,
-                primaryKey: true
-            },
-            organizationId: {
-                type: DataTypes.INTEGER,
-                allowNull: false
-            },
-            parentId: {
-                type: DataTypes.INTEGER,
-                allowNull: true
-            },
-            name: {
-                type: DataTypes.STRING,
-                allowNull: false
-            }
-        };
+OrganizationTeam.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+OrganizationTeam.belongsTo(OrganizationTeam, { foreignKey: "parentId", onDelete: 'CASCADE' });
+OrganizationTeam.hasOne(OrganizationTeam, { foreignKey: "parentId", onDelete: 'CASCADE' });
 
-        return sequelize.define<IOrganizationTeamInstance, IOrganizationTeamAttribute>("organizationteams", attributes, {
-
-            timestamps: true
-        });
-    };
+export default OrganizationTeam;

@@ -1,5 +1,6 @@
 import { IGroupHandler, IGroupParameters, GroupInfo } from "../IGroupHandler";
 import db from "../../../models";
+import User from "../../../models/users";
 
 export default class DocAssigneeGroupHandler implements IGroupHandler {
 
@@ -13,7 +14,7 @@ export default class DocAssigneeGroupHandler implements IGroupHandler {
         return {
             group: ["assignee.username", "assignee.displayName"],
             includes: [
-                { as: "assignee", model: db.users, attributes: ["displayName", "username"] }]
+                { as: "assignee", model: User, attributes: ["displayName", "username"] }]
         }
     }
 

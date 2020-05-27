@@ -1,132 +1,127 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
 
-export interface IDocAttributes {
-    id: number;
-    sourceId?: number;
-    subject: string;
-    description?: string;
-    htmlDescription?: string;
-    assigneeUserId?: number;
-    reporterUserId?: number;
-    docTypeId: number;
-    metadata: any;
-    commentsNumber: number;
-    views: number;
-    docSourceId?: number;
-    organizationId: number;
-    milestoneId?: number;
-    statusId?: number;
-    labels?: number[];
-    createdAt: Date;
-    closedAt?: Date;
-    updatedAt: Date;
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import Organization from './organization';
+import OrganizationStatus from './docStatuses';
+import User from './users';
+import DocType from './docType';
+import DocWatcher from './docWatcher';
+import DocUserView from './docUserView';
+import DocLabel from './docLabel';
+
+class Doc extends Model {
+    public id!: number;
+    public sourceId!: number | null;
+    public subject!: string;
+    public description!: string | null;
+    public htmlDescription!: string | null;
+    public assigneeUserId!: number | null;
+    public reporterUserId!: number | null;
+    public docTypeId!: number;
+    public metadata!: any | null;
+    public commentsNumber!: number;
+    public views!: number;
+    public docSourceId!: number | null;
+    public milestoneId!: number | null;
+    public organizationId!: number;
+    public statusId!: number | null;
+    public closedAt!: Date[] | null;
+
+    // timestamps!
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
-export interface IDocInstance extends Sequelize.Instance<IDocAttributes>, IDocAttributes {
-    assignee: {
-        username: string;
-        displayName?: string;
+Doc.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
     },
-    reporter: {
-        username: string;
-        displayName?: string;
+    sourceId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
     },
-    milestone?: {
-        title: string;
+    subject: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
-    source?: {
-        organization: string;
-        repo: string;
+    docTypeId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    metadata: {
+        type: DataTypes.JSON,
+        allowNull: true
+    },
+    statusId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    description: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    htmlDescription: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    organizationId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    docSourceId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    assigneeUserId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    reporterUserId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    milestoneId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    createdAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    closedAt: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    commentsNumber: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
+    views: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
     }
-    lastView: [{
-        updatedAt: Date;
-    }]
-}
+}, {
+    sequelize: db.sequelize,
+    tableName: "docs",
+});
 
-// tslint:disable-next-line:typedef
-export const EventsFactory =
-    (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-        Sequelize.Model<IDocInstance, IDocAttributes> => {
-        let attributes: SequelizeAttributes<IDocAttributes> = {
-            id: {
-                type: DataTypes.INTEGER,
-                autoIncrement: true,
-                primaryKey: true
-            },
-            sourceId: {
-                type: DataTypes.INTEGER,
-                allowNull: true
-            },
-            subject: {
-                type: DataTypes.STRING,
-                allowNull: false
-            },
-            docTypeId: {
-                type: DataTypes.INTEGER,
-                allowNull: false
-            },
-            metadata: {
-                type: DataTypes.JSON,
-                allowNull: true
-            },
-            statusId: {
-                type: DataTypes.INTEGER,
-                allowNull: true
-            },
-            description: {
-                type: DataTypes.TEXT,
-                allowNull: true
-            },
-            htmlDescription: {
-                type: DataTypes.TEXT,
-                allowNull: true
-            },
-            organizationId: {
-                type: DataTypes.INTEGER,
-                allowNull: false
-            },
-            docSourceId: {
-                type: DataTypes.INTEGER,
-                allowNull: true
-            },
-            assigneeUserId: {
-                type: DataTypes.INTEGER,
-                allowNull: true
-            },
-            reporterUserId: {
-                type: DataTypes.INTEGER,
-                allowNull: false
-            },
-            milestoneId: {
-                type: DataTypes.INTEGER,
-                allowNull: true
-            },
-            createdAt: {
-                type: DataTypes.DATE,
-                allowNull: true
-            },
-            updatedAt: {
-                type: DataTypes.DATE,
-                allowNull: true
-            },
-            closedAt: {
-                type: DataTypes.DATE,
-                allowNull: true
-            },
-            commentsNumber: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-                defaultValue: 0
-            },
-            views: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-                defaultValue: 0
-            }
-        };
+Doc.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+Doc.belongsTo(OrganizationStatus, { foreignKey: "statusId", onDelete: 'CASCADE' });
+Doc.belongsTo(User, { foreignKey: "assigneeUserId", onDelete: 'CASCADE' });
+Doc.belongsTo(User, { foreignKey: "reporterUserId", onDelete: 'CASCADE' });
+Doc.belongsTo(DocType, { foreignKey: "docTypeId", onDelete: 'CASCADE' });
 
-        return sequelize.define<IDocInstance, IDocAttributes>("docs", attributes, {
-            timestamps: false
-        });
-    };
+Doc.hasMany(DocWatcher, { foreignKey: "docId", onDelete: 'CASCADE' });
+Doc.hasMany(DocUserView, { foreignKey: "docId", onDelete: 'CASCADE' });
+Doc.hasMany(DocLabel, { foreignKey: "docId", onDelete: 'CASCADE' });
+
+
+export default Doc;

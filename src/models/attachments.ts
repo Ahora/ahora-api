@@ -1,53 +1,56 @@
-import * as Sequelize from "sequelize";
-import { SequelizeAttributes } from "./base";
 
-export interface IAttachmentsAttributes {
-    id?: number;
-    organizationId: number;
-    contentType: string;
-    filename: string;
-    identifier: string;
-    isUploaded: boolean;
+import { Model, DataTypes } from 'sequelize';
+import db from '.';
+import Doc from './docs';
+import User from './users';
+import Label from './labels';
+import Organization from './organization';
+
+class Attachment extends Model {
+    id!: number;
+    organizationId!: number;
+    contentType!: string;
+    filename!: string;
+    identifier!: string;
+    isUploaded!: boolean;
+
+    // timestamps!
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
-export interface IAttachmentsInstance extends Sequelize.Instance<IAttachmentsAttributes>, IAttachmentsAttributes {
-    id: number;
-}
+Attachment.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
+    organizationId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    contentType: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    filename: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    identifier: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    isUploaded: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+    }
+}, {
+    sequelize: db.sequelize,
+    tableName: "attachments",
+});
 
-// tslint:disable-next-line:typedef
-export const AttachmentsFactory =
-    (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes):
-        Sequelize.Model<IAttachmentsInstance, IAttachmentsAttributes> => {
-        let attributes: SequelizeAttributes<IAttachmentsAttributes> = {
-            id: {
-                type: DataTypes.INTEGER,
-                autoIncrement: true,
-                primaryKey: true
-            },
-            organizationId: {
-                type: DataTypes.INTEGER,
-                allowNull: false
-            },
-            contentType: {
-                type: DataTypes.STRING,
-                allowNull: false
-            },
-            filename: {
-                type: DataTypes.STRING,
-                allowNull: false
-            },
-            identifier: {
-                type: DataTypes.STRING,
-                allowNull: false
-            },
-            isUploaded: {
-                type: DataTypes.BOOLEAN,
-                allowNull: false,
-                defaultValue: false
-            }
-        };
+Attachment.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
 
-        return sequelize.define<IAttachmentsInstance, IAttachmentsAttributes>("attachments", attributes, {
-            timestamps: true
-        });
-    };
+export default Attachment;
