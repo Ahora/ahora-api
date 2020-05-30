@@ -21,7 +21,7 @@ export default (path: string) => {
         return {
             get: {
                 getAdditionalParams: generateQuery,
-                include: [{ model: User, attributes: ["displayName", "username"] }]
+                include: [{ model: User, as: "user", attributes: ["displayName", "username"] }]
             },
             post: { before: beforePost },
             put: { disable: true },

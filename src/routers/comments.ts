@@ -106,7 +106,7 @@ export default (path: string) => {
             get: {
                 getAdditionalParams: generateQuery,
                 order: [["updatedAt", "DESC"]],
-                include: [{ model: User, attributes: ["displayName", "username"] }]
+                include: [{ model: User, as: "user", attributes: ["displayName", "username"] }]
             },
             post: { before: beforePost, after: afterPost },
             put: { before: beforePut, after: afterPut },
