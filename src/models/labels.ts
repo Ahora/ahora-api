@@ -1,7 +1,6 @@
 import { Model, DataTypes } from 'sequelize';
 import db from '.';
 import Organization from './organization';
-import OrganizationMilestone from './milestones';
 import DocSourceLabel from './docsourcelabel';
 import DocLabel from './docLabel';
 
@@ -31,10 +30,6 @@ Label.init({
         type: DataTypes.STRING,
         allowNull: true
     },
-    organizationId: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-    },
     description: {
         type: DataTypes.STRING,
         allowNull: true
@@ -51,9 +46,10 @@ Label.init({
     ]
 });
 
-Label.hasMany(DocLabel, { foreignKey: "labelId", onDelete: 'CASCADE' });
-Label.hasMany(DocSourceLabel, { foreignKey: "labelId", onDelete: 'CASCADE' });
-Label.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
-
+export const initAssociationLabel = () => {
+    Label.hasMany(DocLabel, { foreignKey: "labelId", onDelete: 'CASCADE' });
+    Label.hasMany(DocSourceLabel, { foreignKey: "labelId", onDelete: 'CASCADE' });
+    Label.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+}
 
 export default Label;

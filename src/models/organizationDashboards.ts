@@ -73,7 +73,9 @@ OrganizationDashboard.init({
     tableName: "organizationdashboards",
 });
 
-OrganizationDashboard.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
-OrganizationDashboard.belongsTo(User, { foreignKey: "userId", onDelete: 'CASCADE' });
+export const initAssociationOrganizationDashboard = () => {
+    OrganizationDashboard.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    OrganizationDashboard.belongsTo(User, { foreignKey: "userId", onDelete: 'CASCADE', as: "user" });
+}
 
 export default OrganizationDashboard;

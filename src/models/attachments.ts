@@ -51,6 +51,7 @@ Attachment.init({
     tableName: "attachments",
 });
 
-Attachment.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
-
+export const initAssociationAttachments = () => {
+    Attachment.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+}
 export default Attachment;

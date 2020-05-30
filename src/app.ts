@@ -1,11 +1,9 @@
 import ExpressInstance, { Express, Request, Response, NextFunction } from "express";
 import bodyParser from "body-parser";
 import authRouter from "./routers/auth";
-import db from "./models/index";
 import passport from "passport";
 import session from "express-session";
 import publicemailRouter from "./routers/public/email";
-import routeCreate from "./routers/base";
 import routeDocCreate from "./routers/docs";
 import routeOrgCreate from "./routers/organizations";
 import usersCreate from "./routers/users";
@@ -28,6 +26,9 @@ import OrganizationMilestone from "./models/milestones";
 import OrganizationStatus from "./models/docStatuses";
 import DocType from "./models/docType";
 import OrganizationTeam from "./models/organizationTeams";
+import initAssociation from "./models/Association";
+
+initAssociation();
 
 const app: Express = ExpressInstance();
 
@@ -49,7 +50,6 @@ app.use(passport.session());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api/public/email", publicemailRouter)
-
 
 app.use(bodyParser.json());
 

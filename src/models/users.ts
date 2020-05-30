@@ -53,12 +53,14 @@ User.init({
     tableName: "users",
 });
 
-User.hasMany(OrganizationDashboard, { foreignKey: "userId", onDelete: 'CASCADE' });
-User.hasMany(OrganizationTeamUser, { foreignKey: "userId", onDelete: 'CASCADE' });
-User.hasMany(Doc, { foreignKey: "assigneeUserId", onDelete: 'CASCADE' });
-User.hasMany(Doc, { foreignKey: "reporterUserId", onDelete: 'CASCADE' });
-User.hasMany(DocWatcher, { foreignKey: "userId", onDelete: 'CASCADE' });
-User.hasMany(DocUserView, { foreignKey: "userId", onDelete: 'CASCADE' });
-User.hasMany(Comment, { foreignKey: "authorUserId", onDelete: 'CASCADE' });
+export const initAssociationUser = () => {
+    User.hasMany(OrganizationDashboard, { foreignKey: "userId", onDelete: 'CASCADE', as: "user" });
+    User.hasMany(OrganizationTeamUser, { foreignKey: "userId", onDelete: 'CASCADE' });
+    User.hasMany(Doc, { foreignKey: "assigneeUserId", onDelete: 'CASCADE', as: "assignee" });
+    User.hasMany(Doc, { foreignKey: "reporterUserId", onDelete: 'CASCADE', as: "reporter" });
+    User.hasMany(DocWatcher, { foreignKey: "userId", onDelete: 'CASCADE', as: "watcher" });
+    User.hasMany(DocUserView, { foreignKey: "userId", onDelete: 'CASCADE' });
+    User.hasMany(Comment, { foreignKey: "authorUserId", onDelete: 'CASCADE' });
+}
 
 export default User;

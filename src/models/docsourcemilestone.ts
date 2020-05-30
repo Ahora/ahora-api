@@ -71,7 +71,9 @@ DocSourceMilestone.init({
     ]
 });
 
-DocSourceMilestone.belongsTo(OrganizationMilestone, { foreignKey: "milestoneId", onDelete: 'CASCADE' });
-DocSourceMilestone.belongsTo(DocSource, { foreignKey: "docSourceId", onDelete: 'CASCADE' });
+export const initAssociationDocSourceMilestone = () => {
+    DocSourceMilestone.belongsTo(OrganizationMilestone, { foreignKey: "milestoneId", onDelete: 'CASCADE' });
+    DocSourceMilestone.belongsTo(DocSource, { foreignKey: "docSourceId", onDelete: 'CASCADE' });
+}
 
 export default DocSourceMilestone;

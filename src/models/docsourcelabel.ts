@@ -59,7 +59,11 @@ DocSourceLabel.init({
     ]
 });
 
-DocSourceLabel.belongsTo(Label, { foreignKey: "labelId", onDelete: 'CASCADE' });
-DocSourceLabel.belongsTo(DocSource, { foreignKey: "docSourceId", onDelete: 'CASCADE' });
+
+
+export const initAssociationDocSourceLabel = () => {
+    DocSourceLabel.belongsTo(Label, { foreignKey: "labelId", onDelete: 'CASCADE' });
+    DocSourceLabel.belongsTo(DocSource, { foreignKey: "docSourceId", onDelete: 'CASCADE' });
+}
 
 export default DocSourceLabel;

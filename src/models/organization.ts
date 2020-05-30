@@ -6,6 +6,7 @@ import DocType from './docType';
 import organizationDashboards from '../routers/organizationDashboards';
 import OrganizationDashboard from './organizationDashboards';
 import OrganizationTeam from './organizationTeams';
+import OrganizationStatus from './docStatuses';
 
 export enum OrganizationType {
     Public = 0,
@@ -70,10 +71,13 @@ Organization.init({
     ]
 });
 
-Organization.hasMany(Label);
-Organization.hasMany(OrganizationDashboard);
-Organization.hasMany(OrganizationMilestone);
-Organization.hasMany(OrganizationTeam);
-Organization.hasMany(DocType);
+export const initAssociationOrganization = () => {
+    Organization.hasMany(Label, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    Organization.hasMany(OrganizationDashboard, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    Organization.hasMany(OrganizationStatus, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    Organization.hasMany(OrganizationMilestone, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    Organization.hasMany(OrganizationTeam, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    Organization.hasMany(DocType, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+}
 
 export default Organization;

@@ -8,6 +8,8 @@ import DocType from './docType';
 import DocWatcher from './docWatcher';
 import DocUserView from './docUserView';
 import DocLabel from './docLabel';
+import DocSource from './docSource';
+import OrganizationMilestone from './milestones';
 
 class Doc extends Model {
     public id!: number;
@@ -113,15 +115,17 @@ Doc.init({
     tableName: "docs",
 });
 
-Doc.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
-Doc.belongsTo(OrganizationStatus, { foreignKey: "statusId", onDelete: 'CASCADE' });
-Doc.belongsTo(User, { foreignKey: "assigneeUserId", onDelete: 'CASCADE' });
-Doc.belongsTo(User, { foreignKey: "reporterUserId", onDelete: 'CASCADE' });
-Doc.belongsTo(DocType, { foreignKey: "docTypeId", onDelete: 'CASCADE' });
-
-Doc.hasMany(DocWatcher, { foreignKey: "docId", onDelete: 'CASCADE' });
-Doc.hasMany(DocUserView, { foreignKey: "docId", onDelete: 'CASCADE' });
-Doc.hasMany(DocLabel, { foreignKey: "docId", onDelete: 'CASCADE' });
-
+export const initAssociationDocs = () => {
+    Doc.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    Doc.belongsTo(OrganizationStatus, { foreignKey: "statusId", onDelete: 'CASCADE', as: "status" });
+    Doc.belongsTo(DocSource, { foreignKey: "docSourceId", onDelete: 'CASCADE', as: "source" });
+    Doc.belongsTo(User, { foreignKey: "assigneeUserId", onDelete: 'CASCADE', as: "assignee" });
+    Doc.belongsTo(User, { foreignKey: "reporterUserId", onDelete: 'CASCADE', as: "reporter" });
+    Doc.belongsTo(DocType, { foreignKey: "docTypeId", onDelete: 'CASCADE', as: "docType" });
+    Doc.belongsTo(OrganizationMilestone, { foreignKey: "milestoneId", onDelete: 'CASCADE', as: "milestone" });
+    Doc.hasMany(DocWatcher, { foreignKey: "docId", onDelete: 'CASCADE' });
+    Doc.hasMany(DocUserView, { foreignKey: "docId", onDelete: 'CASCADE', as: "docsuserview" });
+    Doc.hasMany(DocLabel, { foreignKey: "docId", onDelete: 'CASCADE', as: "labels" });
+}
 
 export default Doc;

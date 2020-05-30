@@ -36,8 +36,10 @@ OrganizationTeam.init({
     tableName: "organizationteams"
 });
 
-OrganizationTeam.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
-OrganizationTeam.belongsTo(OrganizationTeam, { foreignKey: "parentId", onDelete: 'CASCADE' });
-OrganizationTeam.hasOne(OrganizationTeam, { foreignKey: "parentId", onDelete: 'CASCADE' });
+export const initAssociationOrganizationTeams = () => {
+    OrganizationTeam.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    OrganizationTeam.belongsTo(OrganizationTeam, { foreignKey: "parentId", onDelete: 'CASCADE' });
+    OrganizationTeam.hasOne(OrganizationTeam, { foreignKey: "parentId", onDelete: 'CASCADE' });
+}
 
 export default OrganizationTeam;

@@ -90,13 +90,6 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
                 }
 
-                /*const count = await model.count({
-                    where: generatedQuery
-                });
-                */
-
-                model.findOne();
-
                 const result = await model.findAndCountAll({
                     where: generatedQuery,
                     attributes,
@@ -107,8 +100,6 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     limit,
                     offset
                 });
-
-                console.log(result.count);
 
                 const entities = result.rows;
                 res.setHeader("X-Total-Count", result.count);

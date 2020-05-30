@@ -1,5 +1,4 @@
 import { IGroupHandler, IGroupParameters, GroupInfo } from "../IGroupHandler";
-import db from "../../../models";
 import DocSource from "../../../models/docSource";
 
 export default class DocRepoGroupHandler implements IGroupHandler {
@@ -11,7 +10,7 @@ export default class DocRepoGroupHandler implements IGroupHandler {
 
     public handleGroup(group: string): IGroupParameters {
         return {
-            group: ["repo"],
+            group: ["source.repo"],
             includes: [
                 { as: "source", model: DocSource, attributes: ["repo"] }
             ]

@@ -4,7 +4,6 @@ import db from "../models/index";
 import OrganizationDashboard, { DashboardType } from "../models/organizationDashboards";
 import { Op } from "sequelize";
 import User from "../models/users";
-import Organization from "../models/organization";
 
 const generateQuery = async (req: Request): Promise<any> => {
     if (req.user) {
@@ -42,7 +41,7 @@ export default (path: string) => {
             get: {
                 getAdditionalParams: generateQuery,
                 order: [["updatedAt", "DESC"]],
-                include: [{ model: User, attributes: ["displayName", "username"] }]
+                include: [{ model: User, attributes: ["displayName", "username"], as: "user" }]
             },
             post: { before: beforePost },
         }

@@ -57,8 +57,10 @@ OrganizationTeamUser.init({
     ]
 });
 
-OrganizationTeamUser.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
-OrganizationTeamUser.belongsTo(User, { foreignKey: "userId", onDelete: 'CASCADE' });
-OrganizationTeamUser.belongsTo(OrganizationTeam, { foreignKey: "teamId", onDelete: 'CASCADE' });
+export const initAssociationOrganizationTeamsUsers = () => {
+    OrganizationTeamUser.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    OrganizationTeamUser.belongsTo(User, { foreignKey: "userId", onDelete: 'CASCADE' });
+    OrganizationTeamUser.belongsTo(OrganizationTeam, { foreignKey: "teamId", onDelete: 'CASCADE' });
+}
 
 export default OrganizationTeamUser;

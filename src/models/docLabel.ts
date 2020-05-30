@@ -30,7 +30,7 @@ DocLabel.init({
     }
 }, {
     sequelize: db.sequelize,
-    tableName: "docsuserview",
+    tableName: "doclabels",
     indexes: [{
         unique: true,
         name: 'docslabel',
@@ -38,7 +38,9 @@ DocLabel.init({
     }]
 });
 
-DocLabel.belongsTo(Doc, { foreignKey: "docId", onDelete: 'CASCADE' });
-DocLabel.belongsTo(Label, { foreignKey: "labelId", onDelete: 'CASCADE' });
+export const initAssociationDocLabel = () => {
+    DocLabel.belongsTo(Doc, { foreignKey: "docId", onDelete: 'CASCADE', as: "labels" });
+    DocLabel.belongsTo(Label, { foreignKey: "labelId", onDelete: 'CASCADE', as: "tags" });
+}
 
 export default DocLabel;

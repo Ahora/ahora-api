@@ -49,7 +49,9 @@ DocType.init({
     tableName: "DocTypes",
 });
 
-DocType.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
-DocType.hasMany(Doc, { foreignKey: "docTypeId", onDelete: 'CASCADE' });
+export const initAssociationDocType = () => {
+    DocType.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    DocType.hasMany(Doc, { foreignKey: "docTypeId", onDelete: 'CASCADE', as: "docType" });
+}
 
 export default DocType;

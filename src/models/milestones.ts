@@ -57,7 +57,9 @@ OrganizationMilestone.init({
     tableName: "organizationmilestones",
 });
 
-OrganizationMilestone.hasMany(OrganizationMilestone, { foreignKey: "milestoneId", onDelete: 'CASCADE' });
-OrganizationMilestone.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+export const initAssociationOrganizationMilestone = () => {
+    OrganizationMilestone.hasMany(OrganizationMilestone, { foreignKey: "milestoneId", onDelete: 'CASCADE', as: "milestone" });
+    OrganizationMilestone.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+}
 
 export default OrganizationMilestone;

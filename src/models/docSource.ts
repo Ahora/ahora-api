@@ -3,6 +3,7 @@ import db from '.';
 import Organization from './organization';
 import docsourcelabel from '../routers/docsourcelabel';
 import DocSourceLabel from './docsourcelabel';
+import Doc from './docs';
 
 class DocSource extends Model {
     public id!: number;
@@ -60,7 +61,11 @@ DocSource.init({
     ]
 });
 
-DocSource.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
-DocSource.hasMany(DocSourceLabel, { foreignKey: "docSourceId", onDelete: 'CASCADE' });
+export const initAssociationDocSource = () => {
+    DocSource.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    DocSource.hasMany(DocSourceLabel, { foreignKey: "docSourceId", onDelete: 'CASCADE' });
+    DocSource.hasMany(Doc, { foreignKey: "docSourceId", onDelete: 'CASCADE', as: "source" });
+
+}
 
 export default DocSource;

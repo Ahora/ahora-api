@@ -1,8 +1,6 @@
 import { Model, DataTypes } from 'sequelize';
 import db from '.';
 import Organization from './organization';
-import OrganizationMilestone from './milestones';
-import DocSourceOrganizationStatus from './docsourcelabel';
 import Doc from './docs';
 
 class OrganizationStatus extends Model {
@@ -51,8 +49,9 @@ OrganizationStatus.init({
     ]
 });
 
-OrganizationStatus.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
-OrganizationStatus.hasMany(Doc, { foreignKey: "statusId", onDelete: 'CASCADE' });
-
+export const initAssociationOrganizationStatus = () => {
+    OrganizationStatus.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    OrganizationStatus.hasMany(Doc, { foreignKey: "statusId", onDelete: 'CASCADE', as: "status" });
+}
 
 export default OrganizationStatus;
