@@ -1,0 +1,1 @@
+process.env.GIT_HUB_AUTH_URL = "http://localhost:3002/login/oauth/authorize";
