@@ -423,7 +423,7 @@ export default (path: string) => {
                 includes.push({ required: false, as: "lastView", model: DocUserView, attributes: ["updatedAt"], where: { userId: req.user.id } })
             }
             after = afterGet
-            limit = 30;
+            limit = (req && req.query) ? parseInt(req.query.limit) : 30;
             order = [["updatedAt", "DESC"]]
             if (req) {
                 order = req.query.sort ? [req.query.sort] : order;
