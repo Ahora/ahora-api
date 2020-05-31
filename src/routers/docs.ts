@@ -410,12 +410,13 @@ export default (path: string) => {
             }
         }
         else {
+
             includes = [
                 { as: "assignee", model: User, attributes: ["displayName", "username"] },
                 { as: "reporter", model: User, attributes: ["displayName", "username"] },
                 { as: "milestone", model: OrganizationMilestone, attributes: ["title"] },
-                { as: "source", model: DocSource, attributes: ["repo", "organization"] },
-                { as: "labels", model: DocLabel, attributes: ["labelId"] }
+                { as: "source", model: DocSource, attributes: ["repo", "organization"], where: (req && req.query && req.query.repo) && { repo: req.query.repo } },
+                { as: "labels", separate: true, model: DocLabel, attributes: ["labelId"] }
             ];
 
             if (req && req.user) {
