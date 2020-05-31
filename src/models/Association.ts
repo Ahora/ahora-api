@@ -16,6 +16,7 @@ import { initAssociationOrganizationStatus } from "./docStatuses";
 import { initAssociationOrganizationTeams } from "./organizationTeams";
 import { initAssociationOrganizationTeamsUsers } from "./organizationTeamsUsers";
 import { initAssociationUser } from "./users";
+import { initAssociationOrganizationNotification } from "./OrganizationNotifications";
 
 export default () => {
     initAssociationAttachments();
@@ -30,8 +31,10 @@ export default () => {
     initAssociationDocs();
     initAssociationLabel();
     initAssociationOrganization();
+    initAssociationOrganizationNotification()
     initAssociationOrganizationDashboard();
     initAssociationOrganizationMilestone();
+    initAssociationOrganization
     initAssociationOrganizationStatus();
     initAssociationOrganizationTeams();
     initAssociationOrganizationTeamsUsers();
