@@ -39,7 +39,7 @@ DocUserView.init({
 });
 
 export const initAssociationDocUserView = () => {
-    DocUserView.belongsTo(Doc, { foreignKey: "docId", onDelete: 'CASCADE', as: "docsuserview" });
+    DocUserView.belongsTo(Doc, { foreignKey: "docId", onDelete: 'CASCADE', as: "lastView" });
     DocUserView.belongsTo(User, { foreignKey: "userId", onDelete: 'CASCADE' });
 }
 

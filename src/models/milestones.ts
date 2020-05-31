@@ -1,6 +1,7 @@
 import { Model, DataTypes } from 'sequelize';
 import db from '.';
 import Organization from './organization';
+import DocSourceMilestone from './docsourcemilestone';
 
 export enum MilestoneStatus {
     open = "open",
@@ -58,7 +59,7 @@ OrganizationMilestone.init({
 });
 
 export const initAssociationOrganizationMilestone = () => {
-    OrganizationMilestone.hasMany(OrganizationMilestone, { foreignKey: "milestoneId", onDelete: 'CASCADE', as: "milestone" });
+    OrganizationMilestone.hasMany(DocSourceMilestone, { foreignKey: "milestoneId", onDelete: 'CASCADE', as: "milestone" });
     OrganizationMilestone.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
 }
 

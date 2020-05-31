@@ -58,7 +58,7 @@ Doc.init({
     },
     statusId: {
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: true,
     },
     description: {
         type: DataTypes.TEXT,
@@ -124,7 +124,7 @@ export const initAssociationDocs = () => {
     Doc.belongsTo(DocType, { foreignKey: "docTypeId", onDelete: 'CASCADE', as: "docType" });
     Doc.belongsTo(OrganizationMilestone, { foreignKey: "milestoneId", onDelete: 'CASCADE', as: "milestone" });
     Doc.hasMany(DocWatcher, { foreignKey: "docId", onDelete: 'CASCADE' });
-    Doc.hasMany(DocUserView, { foreignKey: "docId", onDelete: 'CASCADE', as: "docsuserview" });
+    Doc.hasMany(DocUserView, { foreignKey: "docId", onDelete: 'CASCADE', as: "lastView" });
     Doc.hasMany(DocLabel, { foreignKey: "docId", onDelete: 'CASCADE', as: "labels" });
 }
 

@@ -62,7 +62,7 @@ DocSource.init({
 });
 
 export const initAssociationDocSource = () => {
-    DocSource.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    DocSource.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE', as: "organizationFK" });
     DocSource.hasMany(DocSourceLabel, { foreignKey: "docSourceId", onDelete: 'CASCADE' });
     DocSource.hasMany(Doc, { foreignKey: "docSourceId", onDelete: 'CASCADE', as: "source" });
 

@@ -10,8 +10,8 @@ import usersCreate from "./routers/users";
 import RouteTeamUsersCreate from "./routers/teamsusers";
 import organizationChildCreate from "./routers/organizationChildBase";
 import routeCommentCreate from "./routers/comments";
-import routeDocSourceLabelCreate from "./routers/docsourcelabel";
-import routeDocSourceMilestoneCreate from "./routers/docsourcemilestone";
+import routeDocSourceLabelCreate from "./routers/sync/SyncLabels";
+import routeDocSourceMilestoneCreate from "./routers/sync/SyncMilestone";
 import routeSyncIssues from "./routers/sync/SyncIssues";
 import routeOrganizationDashboardCreate from "./routers/organizationDashboards";
 import routeAttachmentstCreate from "./routers/attachments";
@@ -27,6 +27,7 @@ import OrganizationStatus from "./models/docStatuses";
 import DocType from "./models/docType";
 import OrganizationTeam from "./models/organizationTeams";
 import initAssociation from "./models/Association";
+import internalDocSourceRoute from "./routers/internal/docSources";
 
 initAssociation();
 
@@ -47,6 +48,7 @@ app.disable('view cache');
 
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(bodyParser({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api/public/email", publicemailRouter)
@@ -56,6 +58,9 @@ app.use(bodyParser.json());
 app.get("/status", (req: Request, res: Response, next: NextFunction) => {
   res.send();
 });
+
+
+app.use(internalDocSourceRoute);
 
 app.get("/api/me", (req: Request, res: Response, next: NextFunction) => {
   res.send(req.user);
@@ -113,9 +118,9 @@ app.use(organizationChildCreate("/api/organizations/:login/statuses", Organizati
 app.use(organizationChildCreate("/api/organizations/:login/doctypes", DocType));
 app.use(organizationChildCreate("/api/organizations/:login/teams", OrganizationTeam));
 app.use("/api/organizations/:login", RouteTeamUsersCreate("/teams/:teamId/users"));
-app.use("/api/organizations/:login", routeDocSourceLabelCreate("/docsources/:docSourceId/labels"));
-app.use("/api/organizations/:login", routeDocSourceMilestoneCreate("/docsources/:docSourceId/milestones"));
 app.use("/api/organizations/:login", routeSyncIssues);
+app.use("/api/organizations/:login", routeDocSourceLabelCreate);
+app.use("/api/organizations/:login", routeDocSourceMilestoneCreate);
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeOrganizationDashboardCreate("/dashboards"));
 app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments"));

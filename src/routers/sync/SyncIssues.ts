@@ -52,22 +52,30 @@ router.post("/docsources/:docSourceId/issues", async (req: Request, res: Respons
             docFromDB = await Doc.create(docInput);
         }
 
+
         if (docFromDB) {
 
             //Update labels!
             const labelIds: number[] | undefined = req.body.labels;
             if (labelIds) {
-                const itemsToAdd: DocLabel[] = labelIds.map((id: number) => {
-                    return new DocLabel({
+                const itemsToAdd: any[] = labelIds.map((labelId: number) => {
+                    return {
                         docId: docFromDB!.id,
-                        labelId: id
-                    });
+                        labelId: labelId
+                    };
                 });
 
                 await DocLabel.destroy({
                     where: { docId: docFromDB.id }
                 });
-                await DocLabel.bulkCreate(itemsToAdd);
+
+                try {
+                    await DocLabel.bulkCreate(itemsToAdd);
+
+                } catch (error) {
+                    console.log("errrrrrrrrrrrrrrrrrrrrr", docFromDB!.id);
+                    console.log(error, itemsToAdd);
+                }
             }
         }
 

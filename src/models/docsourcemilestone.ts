@@ -51,9 +51,9 @@ DocSourceMilestone.init({
         allowNull: true
     },
     state: {
-        type: DataTypes.ENUM(MilestoneStatus.open, MilestoneStatus.closed),
+        type: DataTypes.ENUM("open", "closed"),
         allowNull: false,
-        defaultValue: MilestoneStatus.open
+        defaultValue: "open"
     },
     description: {
         type: DataTypes.STRING,

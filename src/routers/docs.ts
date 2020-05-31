@@ -414,7 +414,7 @@ export default (path: string) => {
                 { as: "assignee", model: User, attributes: ["displayName", "username"] },
                 { as: "reporter", model: User, attributes: ["displayName", "username"] },
                 { as: "milestone", model: OrganizationMilestone, attributes: ["title"] },
-                { as: "source", model: DocSource, attributes: ["repo", "organization"], where: req && req.query && req.query.repo && { repo: req!.query.repo } },
+                { as: "source", model: DocSource, attributes: ["repo", "organization"] },
                 { as: "labels", model: DocLabel, attributes: ["labelId"] }
             ];
 
@@ -424,7 +424,6 @@ export default (path: string) => {
             after = afterGet
             limit = 30;
             order = [["updatedAt", "DESC"]]
-
             if (req) {
                 order = req.query.sort ? [req.query.sort] : order;
             }
