@@ -1,7 +1,5 @@
 
 import DocWatcher, { DocWatcherType } from "./../models/docWatcher";
-import db from "../models";
-
 
 export const addUserToWatchersList = async (docId: number, userId: number): Promise<DocWatcher | null> => {
     let watcher: DocWatcher | null = await DocWatcher.findOne({

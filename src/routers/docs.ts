@@ -32,11 +32,11 @@ const afterPostOrPut = async (doc: Doc, req: Request): Promise<Doc> => {
     //Update labels!
     const labelIds: number[] | undefined = req.body.labels;
     if (labelIds) {
-        const itemsToAdd: DocLabel[] = labelIds.map((id: number) => {
-            return new DocLabel({
+        const itemsToAdd: any[] = labelIds.map((id: number) => {
+            return {
                 docId: doc.id,
                 labelId: id
-            })
+            }
         });
 
         await DocLabel.destroy({
