@@ -5,7 +5,8 @@ import OrganizationNotification from "../models/OrganizationNotifications";
 
 const generateQuery = async (req: Request): Promise<any> => {
     return {
-        userId: req.user!.id
+        userId: req.user!.id,
+        organizationId: req.org!.id
     }
 }
 
