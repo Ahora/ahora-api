@@ -197,8 +197,8 @@ const generateQuery = async (req: Request): Promise<any> => {
 
     if (isArray(req.query.label)) {
         const labelIds: number[] = [];
-        req.query.label.forEach((statusName: string) => {
-            const value: Label | undefined = labelMap.get(statusName.toLowerCase());
+        req.query.label.forEach((labelName: string) => {
+            const value: Label | undefined = labelMap.get(labelName.toLowerCase());
             if (value) {
                 labelIds.push(value.id);
             }
@@ -206,7 +206,7 @@ const generateQuery = async (req: Request): Promise<any> => {
 
         if (labelIds.length > 0) {
             const labelsQuery = `SELECT "docId" FROM doclabels as "docquery" WHERE "labelId" in (${labelIds.join(",")}) GROUP BY "docId" HAVING COUNT(*) = ${labelIds.length} `;
-            query.id = { $in: [literal(labelsQuery)] }
+            query.id = { [Op.in]: [literal(labelsQuery)] }
         }
     }
 
