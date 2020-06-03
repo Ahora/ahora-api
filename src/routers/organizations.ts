@@ -43,10 +43,7 @@ const getAdditionalParams = async (req: Request): Promise<any> => {
             where: { userId: req.user!.id }
         });
         return {
-            [Op.or]: [
-                { id: currentUserPermissions.map(per => per.organizationId) },
-                { orgType: OrganizationType.Public }
-            ]
+            id: currentUserPermissions.map(per => per.organizationId)
         }
     }
     else {
