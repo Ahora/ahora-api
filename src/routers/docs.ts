@@ -79,6 +79,7 @@ const afterGet = async (doc: any, req: Request): Promise<any> => {
         milestone: doc.milestone,
         organizationId: doc.organizationId,
         statusId: doc.statusId,
+        milestoneId: doc.milestoneId,
         updatedAt: doc.updatedAt,
         closedAt: doc.closedAt,
         commentsNumber: doc.commentsNumber,
