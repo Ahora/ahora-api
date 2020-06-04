@@ -1,23 +1,30 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import Doc from "../../models/docs";
 import DocLabel from "../../models/docLabel";
-import marked from "marked";
-
+import remark from "remark";
+import DocSource from "../../models/docSource";
+const github = require("remark-github");
+const html = require('remark-html')
 
 const router = express.Router();
 
 const generateDocHTML = async (doc: Doc): Promise<Doc> => {
-    return new Promise<Doc>((resolve, reject) => {
+
+    return new Promise<Doc>(async (resolve, reject) => {
+
         if (doc.description) {
-            marked(doc.description, (error: any, parsedResult: string) => {
-                if (error) {
-                    reject(error);
-                }
-                else {
-                    doc.htmlDescription = parsedResult;
-                    resolve(doc);
-                }
+
+            const docSource = await DocSource.findOne({
+                where: { id: doc.docSourceId }
             });
+            remark().
+                use(github, {
+                    repository: `${docSource!.organization}/${docSource!.repo}`
+                }).
+                use(html).process(doc.description as any, (error, file) => {
+                    doc.htmlDescription = String(file);
+                });
+            resolve(doc);
         }
         else {
             resolve(doc);

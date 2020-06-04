@@ -12,7 +12,7 @@ sgMail.setApiKey(SEND_GRID_SECRET);
 interface NotificationUser {
     id: number,
     userId: number,
-    user: {
+    watcher: {
         username: string,
         displayName: string,
         email: string
@@ -27,7 +27,7 @@ export const notifyComment = async (user: User, doc: Doc, comment: Comment, orga
                 watcherType: DocWatcherType.Watcher //return only watchers!
             },
             attributes: ["id", "userId"],
-            include: [{ model: User, attributes: ["displayName", "username", "email"] }]
+            include: [{ model: User, attributes: ["displayName", "username", "email"], as: "watcher" }]
         }) as any;
 
         // Remove current user email address

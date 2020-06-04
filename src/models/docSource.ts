@@ -5,7 +5,7 @@ import docsourcelabel from '../routers/docsourcelabel';
 import DocSourceLabel from './docsourcelabel';
 import Doc from './docs';
 
-class DocSource extends Model {
+export class DocSource extends Model {
     public id!: number;
     public organizationId!: number;
     public organization!: string;

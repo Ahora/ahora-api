@@ -70,7 +70,7 @@ export const initAssociationComments = () => {
     Comment.belongsTo(Doc, { foreignKey: "docId", onDelete: 'CASCADE' });
     Comment.belongsTo(Comment, { foreignKey: "parentId", onDelete: 'CASCADE' });
     Comment.hasMany(Comment, { foreignKey: "parentId", onDelete: 'CASCADE' });
-    Comment.belongsTo(User, { foreignKey: "authorUserId", onDelete: 'CASCADE', as: "user" });
+    Comment.belongsTo(User, { foreignKey: "authorUserId", onDelete: 'CASCADE', as: "author" });
 }
 export const FK = () => {
 

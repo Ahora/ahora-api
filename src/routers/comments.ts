@@ -81,7 +81,7 @@ const afterPost = async (comment: Comment, req: Request): Promise<Comment> => {
     };
 
     if (req.user) {
-        returnValue.user = {
+        returnValue.author = {
             displayName: req.user.displayName,
             username: req.user.username
         };
@@ -106,7 +106,7 @@ export default (path: string) => {
             get: {
                 getAdditionalParams: generateQuery,
                 order: [["updatedAt", "DESC"]],
-                include: [{ model: User, as: "user", attributes: ["displayName", "username"] }]
+                include: [{ model: User, as: "author", attributes: ["displayName", "username"] }]
             },
             post: { before: beforePost, after: afterPost },
             put: { before: beforePut, after: afterPut },
