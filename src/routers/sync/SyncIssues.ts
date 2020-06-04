@@ -24,8 +24,8 @@ const generateDocHTML = async (doc: Doc): Promise<Doc> => {
                 use(html).process(doc.description as any, (error, file) => {
                     doc.htmlDescription = String(file);
                     doc.htmlDescription = doc.htmlDescription.replace(/\n/g, "<br />");
+                    resolve(doc);
                 });
-            resolve(doc);
         }
         else {
             resolve(doc);
