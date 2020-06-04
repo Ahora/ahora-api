@@ -90,19 +90,33 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
                 }
 
-                const result = await model.findAndCountAll({
-                    where: generatedQuery,
-                    attributes,
-                    group,
-                    include,
-                    raw,
-                    order,
-                    limit,
-                    offset
-                });
+                let entities: TInstance[] = [];
+                if (group) {
+                    entities = await model.findAll({
+                        where: generatedQuery,
+                        attributes,
+                        include,
+                        group,
+                        raw,
+                        order,
+                        limit,
+                        offset
+                    });
+                }
+                else {
+                    const result = await model.findAndCountAll({
+                        where: generatedQuery,
+                        attributes,
+                        include,
+                        raw,
+                        order,
+                        limit,
+                        offset
+                    });
+                    entities = result.rows;
+                    res.setHeader("X-Total-Count", result.count);
+                }
 
-                const entities = result.rows;
-                res.setHeader("X-Total-Count", result.count);
 
                 const newentities: TInstance[] = [];
                 for (let index = 0; index < entities.length; index++) {
@@ -118,6 +132,8 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
                 res.send(newentities);
             } catch (error) {
+                console.log("-------------------------error------------------------");
+                console.log(error);
                 next(error);
             }
         });
