@@ -34,7 +34,7 @@ export const notifyComment = async (user: User, doc: Doc, comment: Comment, orga
         watchers = watchers.filter((watcher) => watcher.userId !== user.id && user.email);
 
         if (watchers.length > 0) {
-            const emails = watchers.map((watcher) => watcher.user.email);
+            const emails = watchers.map((watcher) => watcher.watcher.email);
             const msg = {
                 from: `${user.displayName || user.username} (Ahora) <${doc.id}-${comment.id}-comment@${EMAIL_DOMAIN}>`,
                 to: emails,
