@@ -2,6 +2,7 @@ import { Model, DataTypes } from 'sequelize';
 import db from '.';
 import Organization from './organization';
 import User from './users';
+import { SearchCriterias } from '../helpers/docs/db';
 
 enum NotificationTrigger {
     OnCreate = 1,
@@ -18,7 +19,7 @@ class OrganizationNotification extends Model {
     public userId!: number;
     public title!: string;
     public description!: string | null;
-    public searchCriteria!: string;
+    public searchCriteria!: SearchCriterias;
     public trigger!: NotificationTrigger;
 
 

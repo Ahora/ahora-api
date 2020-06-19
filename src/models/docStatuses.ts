@@ -9,6 +9,7 @@ class OrganizationStatus extends Model {
     color!: string | null;
     description!: string | null;
     organizationId!: number | null;
+    updateCloseTime!: boolean;
 
     // timestamps!
     public readonly createdAt!: Date;
@@ -28,6 +29,11 @@ OrganizationStatus.init({
     color: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    updateCloseTime: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
     },
     organizationId: {
         type: DataTypes.INTEGER,

@@ -4,19 +4,20 @@ import { initAssociationDocLabel } from "./docLabel";
 import { initAssociationDocSource } from "./docSource";
 import { initAssociationDocSourceLabel } from "./docsourcelabel";
 import { initAssociationDocSourceMilestone } from "./docsourcemilestone";
-import { initAssociationDocType } from "./docType";
+import DocType, { initAssociationDocType } from "./docType";
 import { initAssociationDocUserView } from "./docUserView";
 import { initAssociationDocWatcher } from "./docWatcher";
 import { initAssociationDocs } from "./docs";
 import { initAssociationLabel } from "./labels";
-import { initAssociationOrganization } from "./organization";
+import Organization, { initAssociationOrganization } from "./organization";
 import { initAssociationOrganizationDashboard } from "./organizationDashboards";
 import { initAssociationOrganizationMilestone } from "./milestones";
-import { initAssociationOrganizationStatus } from "./docStatuses";
+import OrganizationStatus, { initAssociationOrganizationStatus } from "./docStatuses";
 import { initAssociationOrganizationTeams } from "./organizationTeams";
 import { initAssociationOrganizationTeamsUsers } from "./organizationTeamsUsers";
 import { initAssociationUser } from "./users";
 import { initAssociationOrganizationNotification } from "./OrganizationNotifications";
+import db from ".";
 
 export default () => {
     initAssociationAttachments();
@@ -34,9 +35,49 @@ export default () => {
     initAssociationOrganizationNotification()
     initAssociationOrganizationDashboard();
     initAssociationOrganizationMilestone();
-    initAssociationOrganization
     initAssociationOrganizationStatus();
     initAssociationOrganizationTeams();
     initAssociationOrganizationTeamsUsers();
     initAssociationUser();
+
+    //forceInit();
+}
+
+export const forceInit = async () => {
+    await db.sequelize.sync({ force: true });
+
+    await DocType.bulkCreate([
+        {
+            name: "Issue",
+            code: "issue"
+        },
+        {
+            name: "PullRequest",
+            code: "pr"
+        },
+        {
+            name: "Discussion",
+            code: "discussion"
+        },
+        {
+            name: "Meeting Summary",
+            code: "meetingsummary"
+        },
+        {
+            name: "Wiki",
+            code: "wiki"
+        }
+    ]);
+    console.log("doc types created");
+
+    await OrganizationStatus.bulkCreate([
+        {
+            name: "open"
+        },
+        {
+            name: "closed",
+            updateCloseTime: true
+        },
+    ]);
+    console.log("organization status created");
 }

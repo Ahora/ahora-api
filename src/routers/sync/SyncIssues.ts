@@ -80,7 +80,6 @@ router.post("/docsources/:docSourceId/issues", async (req: Request, res: Respons
                     await DocLabel.bulkCreate(itemsToAdd);
 
                 } catch (error) {
-                    console.log("errrrrrrrrrrrrrrrrrrrrr", docFromDB!.id);
                     console.log(error, itemsToAdd);
                 }
             }
