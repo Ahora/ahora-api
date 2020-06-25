@@ -3,7 +3,10 @@ import db from '.';
 import Doc from './docs';
 import User from './users';
 
-class Comment extends Model {
+import { SourceableModel } from "./../routers/sync/BaseSync";
+import DocSource from './docSource';
+
+class Comment extends SourceableModel {
     public id!: number;
     public comment!: string;
     public commentId!: number | null;
@@ -48,6 +51,14 @@ Comment.init({
         type: DataTypes.INTEGER,
         allowNull: true
     },
+    docSourceId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    sourceId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
     pinned: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
@@ -71,9 +82,7 @@ export const initAssociationComments = () => {
     Comment.belongsTo(Comment, { foreignKey: "parentId", onDelete: 'CASCADE' });
     Comment.hasMany(Comment, { foreignKey: "parentId", onDelete: 'CASCADE' });
     Comment.belongsTo(User, { foreignKey: "authorUserId", onDelete: 'CASCADE', as: "author" });
-}
-export const FK = () => {
-
+    Comment.belongsTo(DocSource, { foreignKey: "docSourceId", onDelete: 'CASCADE' });
 }
 
 export default Comment;

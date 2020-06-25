@@ -8,6 +8,7 @@ import Comment from "../models/comments";
 import { addUserToWatchersList } from "../helpers/docWatchers";
 import { notifyComment } from "../helpers/notifier";
 import User from "../models/users";
+import { RestCollectorClient, RestCollectorRequest } from "rest-collector";
 
 const generateQuery = async (req: Request): Promise<any> => {
     return {
@@ -27,7 +28,29 @@ const beforePut = async (comment: Comment, req: Request): Promise<Comment> => {
     return await generateDocHTML(comment, req);
 }
 
+const githubCommentClient = new RestCollectorClient("https://api.github.com/repos/{organizationId}/{repository}/issues/{issueId}/comments", {
+    decorateRequest: (req: RestCollectorRequest, bag: Request) => {
+        req.headers.Authorization = `token ${bag.user!.accessToken}`;
+    }
+});
+
 const generateDocHTML = async (comment: Comment, req: Request): Promise<Comment> => {
+
+    const result = await githubCommentClient.post({
+        bag: req,
+        params: {
+            organizationId: "Ahora",
+            repository: "ahora-api",
+            issueId: 12
+        },
+        data: {
+            body: comment.comment
+        }
+    });
+
+    console.log(result);
+
+
     return new Promise<Comment>((resolve, reject) => {
         if (comment.comment) {
             marked(comment.comment, (error: any, parsedResult: string) => {

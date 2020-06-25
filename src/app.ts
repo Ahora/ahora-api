@@ -11,6 +11,7 @@ import RouteTeamUsersCreate from "./routers/teamsusers";
 import organizationChildCreate from "./routers/organizationChildBase";
 import routeCommentCreate from "./routers/comments";
 import routeDocSourceLabelCreate from "./routers/sync/SyncLabels";
+import smartSyncRoute from "./routers/sync/SmartSyncRoute";
 import routeDocSourceMilestoneCreate from "./routers/sync/SyncMilestone";
 import routeSyncIssues from "./routers/sync/SyncIssues";
 import routeOrganizationDashboardCreate from "./routers/organizationDashboards";
@@ -52,7 +53,8 @@ app.use(passport.session());
 app.use(bodyParser({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use("/api/public/email", publicemailRouter)
+app.use("/api/public/email", publicemailRouter);
+app.use("/internal/sync", smartSyncRoute);
 
 app.use(bodyParser.json());
 

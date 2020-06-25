@@ -1,6 +1,7 @@
 import Organization from "./models/organization";
 import OrganizationTeamUser from "./models/organizationTeamsUsers";
 import { default as AhoraUser } from "./models/users";
+import Doc from "./models/docs";
 
 declare global {
   export namespace Express {
@@ -11,6 +12,7 @@ declare global {
     export interface Request {
       org?: Organization;
       orgPermission?: OrganizationTeamUser;
+      doc?: Doc
     }
   }
 }

@@ -1,7 +1,7 @@
 import { Model, DataTypes } from 'sequelize';
 import db from '.';
 import Organization from './organization';
-import docsourcelabel from '../routers/docsourcelabel';
+import Comment from './comments';
 import DocSourceLabel from './docsourcelabel';
 import Doc from './docs';
 
@@ -66,7 +66,7 @@ export const initAssociationDocSource = () => {
     DocSource.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE', as: "organizationFK" });
     DocSource.hasMany(DocSourceLabel, { foreignKey: "docSourceId", onDelete: 'CASCADE' });
     DocSource.hasMany(Doc, { foreignKey: "docSourceId", onDelete: 'CASCADE', as: "source" });
-
+    DocSource.hasMany(Comment, { foreignKey: "docSourceId", onDelete: 'CASCADE' });
 }
 
 export default DocSource;

@@ -30,7 +30,7 @@ passport.use(new GitHubStrategy({
     clientSecret: GIT_HUB_CLIENT_SECRET,
     callbackURL: GIT_HUB_CALLBACK_URL,
     authorizationURL: GIT_HUB_AUTH_URL,
-    scope: ['user:email']
+    scope: ['user:email', "public_repo"]
 },
     async (accessToken: string, refreshToken: string, profile: any, cb: any) => {
         try {

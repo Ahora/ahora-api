@@ -454,7 +454,18 @@ export default (path: string) => {
         }
     });
 
-    router.post(`${path} /:id/assignee`, async (req: Request, res: Response, next: NextFunction) => {
+    router.use(`${path}/:id`, async (req: Request, res: Response, next: NextFunction) => {
+        const currentDoc: Doc | null = await Doc.findByPk(req.params.id);
+        if (currentDoc) {
+            req.doc = currentDoc;
+            next();
+        }
+        else {
+            res.status(404).send();
+        }
+    })
+
+    router.post(`${path}/:id/assignee`, async (req: Request, res: Response, next: NextFunction) => {
         try {
             const username: string = req.body.username;
             const user: User | null = await getUserFromGithubAlias(username);
@@ -471,7 +482,7 @@ export default (path: string) => {
         }
     });
 
-    router.post(`${path} /:id/watch`, async (req: Request, res: Response, next: NextFunction) => {
+    router.post(`${path}/:id/watch`, async (req: Request, res: Response, next: NextFunction) => {
         try {
             if (req.user) {
                 const watcher = await addUserToWatchersList(parseInt(req.params.id), req.user.id);
@@ -484,7 +495,7 @@ export default (path: string) => {
         }
     });
 
-    router.post(`${path} /:id/unwatch`, async (req: Request, res: Response, next: NextFunction) => {
+    router.post(`${path}/:id/unwatch`, async (req: Request, res: Response, next: NextFunction) => {
         try {
             if (req.user) {
                 const watcher = await unWatch(parseInt(req.params.id), req.user.id)

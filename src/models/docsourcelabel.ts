@@ -32,7 +32,7 @@ DocSourceLabel.init({
         allowNull: false
     },
     sourceId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.BIGINT,
         allowNull: false
     },
     name: {
