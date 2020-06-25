@@ -9,6 +9,8 @@ import { addUserToWatchersList } from "../helpers/docWatchers";
 import { notifyComment } from "../helpers/notifier";
 import User from "../models/users";
 import { RestCollectorClient, RestCollectorRequest } from "rest-collector";
+import GithubCommentsProvider from "../providers/github/GithubCommentsProvider";
+import { markdownToHTML } from "../helpers/markdown";
 
 const generateQuery = async (req: Request): Promise<any> => {
     return {
@@ -17,56 +19,44 @@ const generateQuery = async (req: Request): Promise<any> => {
 }
 
 const beforePost = async (comment: Comment, req: Request): Promise<Comment> => {
-    if (req.user) {
-        comment.authorUserId = comment.authorUserId || req.user.id;
+
+    comment.htmlComment = await markdownToHTML(comment.comment, req.docSource);
+    comment.authorUserId = req.user!.id;
+
+    //update comment on Github! so cool
+    if (req.docSource && req.doc && req.user) {
+        const sourceId = await githubCommentsProvider.addComment({
+            comment: comment,
+            doc: req.doc,
+            docSource: req.docSource,
+            user: req.user
+        });
+
+        comment.docSourceId = req.docSource.id;
+        comment.sourceId = sourceId;
+
     }
     comment.docId = parseInt(req.params.docId);
-    return await generateDocHTML(comment, req);
+    return comment;
 }
 
 const beforePut = async (comment: Comment, req: Request): Promise<Comment> => {
-    return await generateDocHTML(comment, req);
-}
+    comment.htmlComment = await markdownToHTML(comment.comment, req.docSource);
 
-const githubCommentClient = new RestCollectorClient("https://api.github.com/repos/{organizationId}/{repository}/issues/{issueId}/comments", {
-    decorateRequest: (req: RestCollectorRequest, bag: Request) => {
-        req.headers.Authorization = `token ${bag.user!.accessToken}`;
+    //update comment on Github! so cool
+    if (req.docSource && req.doc && req.user) {
+        await githubCommentsProvider.putComment({
+            comment: comment,
+            doc: req.doc,
+            docSource: req.docSource,
+            user: req.user
+        });
     }
-});
 
-const generateDocHTML = async (comment: Comment, req: Request): Promise<Comment> => {
-
-    const result = await githubCommentClient.post({
-        bag: req,
-        params: {
-            organizationId: "Ahora",
-            repository: "ahora-api",
-            issueId: 12
-        },
-        data: {
-            body: comment.comment
-        }
-    });
-
-    console.log(result);
-
-
-    return new Promise<Comment>((resolve, reject) => {
-        if (comment.comment) {
-            marked(comment.comment, (error: any, parsedResult: string) => {
-                if (error) {
-                    reject(error);
-                }
-                else {
-                    comment.htmlComment = parsedResult;
-                    resolve(comment);
-                }
-            });
-        } else {
-            resolve(comment);
-        }
-    });
+    return comment;
 }
+
+const githubCommentsProvider = new GithubCommentsProvider();
 
 const updateCommentsNumberAndTime = async (docId: number, updateTime: Date): Promise<void> => {
     const count = await Comment.count({
@@ -88,6 +78,16 @@ const afterPut = async (comment: Comment, req: Request): Promise<Comment> => {
 
 const afterDelete = async (comment: Comment, req: Request): Promise<Comment> => {
     await updateCommentsNumberAndTime(comment.docId, comment.updatedAt);
+
+    //update comment on Github! so cool
+    if (req.docSource && req.doc && req.user) {
+        await githubCommentsProvider.deleteComment({
+            comment: comment,
+            doc: req.doc,
+            docSource: req.docSource,
+            user: req.user
+        })
+    }
     return comment;
 }
 
@@ -98,6 +98,8 @@ const afterPost = async (comment: Comment, req: Request): Promise<Comment> => {
         comment: comment.comment,
         updatedAt: comment.updatedAt,
         createdAt: comment.createdAt,
+        docSourceId: comment.docSourceId,
+        sourceId: comment.sourceId,
         htmlComment: comment.htmlComment,
         pinned: comment.pinned,
         docId: comment.docId

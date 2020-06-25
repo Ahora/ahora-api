@@ -203,16 +203,19 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
         router.put(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
-                const hooks = hooksDelegate && hooksDelegate(req); ``
-                if (hooks && hooks.put && hooks.put.before) {
-                    req.body = await hooks.put.before(req.body, req);
+                const hooks = hooksDelegate && hooksDelegate(req);
+                let beforeUpdateInstance: any | null = await model.findOne({ where: ({ [primaryField]: req.params[primaryField] }) as any });
+
+                for (const key in req.body) {
+                    beforeUpdateInstance[key] = req.body[key];
+
                 }
-                await model.update(req.body, {
-                    where: { [primaryField]: req.params[primaryField] }
-                });
 
+                if (beforeUpdateInstance && hooks && hooks.put && hooks.put.before) {
+                    beforeUpdateInstance = await hooks.put.before(beforeUpdateInstance, req);
+                }
+                await beforeUpdateInstance.save()
                 let result: TInstance | null = await model.findOne({ where: ({ [primaryField]: req.params[primaryField] }) as any });
-
                 if (result && hooks && hooks.put && hooks.put.after) {
                     result = await hooks.put.after(result, req);
                 }

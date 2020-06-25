@@ -458,6 +458,13 @@ export default (path: string) => {
         const currentDoc: Doc | null = await Doc.findByPk(req.params.id);
         if (currentDoc) {
             req.doc = currentDoc;
+
+            if (currentDoc.docSourceId) {
+                const currentDocSource: DocSource | null = await DocSource.findByPk(currentDoc.docSourceId);
+                if (currentDocSource) {
+                    req.docSource = currentDocSource;
+                }
+            }
             next();
         }
         else {
