@@ -130,6 +130,13 @@ const afterGetSingle = async (doc: Doc, req: Request): Promise<any> => {
     return returnedDoc;
 }
 
+const beforePut = async (doc: Doc, req: Request): Promise<Doc> => {
+    const updatedDoc = await generateDocHTML(doc, req);
+    return updatedDoc;
+
+}
+
+
 
 const beforePost = async (doc: Doc, req: Request): Promise<Doc> => {
     const updatedDoc = await generateDocHTML(doc, req);
@@ -450,7 +457,7 @@ export default (path: string) => {
                 include: includes
             },
             post: { before: beforePost, after: afterPostOrPut },
-            put: { before: generateDocHTML, after: afterPostOrPut }
+            put: { before: beforePut, after: afterPostOrPut }
         }
     });
 
@@ -478,11 +485,33 @@ export default (path: string) => {
             const user: User | null = await getUserFromGithubAlias(username);
             if (user) {
                 await Doc.update({
-                    assigneeUserId: user.id
+                    assigneeUserId: user.id,
+                    updatedAt: new Date()
                 }, { where: { id: req.params.id } });
                 res.send(user);
             } else {
                 res.status(400).send();
+            }
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    router.post(`${path}/:id/status`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const statusId: string = req.body;
+            const status: OrganizationStatus | null = await OrganizationStatus.findByPk(statusId);
+
+            if (status) {
+                const updateParams: any = { statusId: status.id }
+                if (status.updateCloseTime) {
+                    updateParams.closedAt = new Date();
+                    updateParams.updatedAt = new Date();
+                }
+                await Doc.update(updateParams, { where: { id: req.params.id } });
+            }
+            else {
+                next()
             }
         } catch (error) {
             next(error);

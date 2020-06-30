@@ -14,9 +14,8 @@ router.get("/internal/docsources", async (req: Request, res: Response, next: Nex
                 [Op.or]: [
                     { lastUpdated: { [Op.lte]: since } },
                     { lastUpdated: null }
-                ],
+                ]
             },
-
             include: [
                 { model: Organization, as: "organizationFK", attributes: ["login"] }
             ],

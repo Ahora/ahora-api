@@ -74,6 +74,7 @@ Comment.init({
     }
 }, {
     sequelize: db.sequelize,
+    timestamps: false,
     tableName: "comments",
 });
 

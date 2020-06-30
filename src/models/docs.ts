@@ -112,6 +112,7 @@ Doc.init({
     }
 }, {
     sequelize: db.sequelize,
+    timestamps: false,
     tableName: "docs",
 });
 
