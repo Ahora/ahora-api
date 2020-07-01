@@ -415,7 +415,7 @@ export default (path: string) => {
             order = [["count", "DESC"]]
 
             if (req) {
-                order = req.query.sort ? [req.query.sort] : order;
+                order = req.query.sort ? [literal(`"${req.query.sort}"`)] : order;
             }
         }
         else {
