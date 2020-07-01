@@ -375,6 +375,7 @@ groupByManager.registerGroup("repo", new DocRepoGroupHandler());
 groupByManager.registerGroup("milestone", new DocMilestoneGroupHandler());
 groupByManager.registerGroup("doctype", new DocDocTypeGroupHandler());
 groupByManager.registerGroup("createdAt", new DateGroupHandler("createdAt"));
+groupByManager.registerGroup("closedAt", new DateGroupHandler("closedAt"));
 groupByManager.registerGroup("updatedAt", new DateGroupHandler("updatedAt"));
 
 

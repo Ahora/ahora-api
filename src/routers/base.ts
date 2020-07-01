@@ -87,7 +87,6 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
                 if (group && group.length == 0) {
                     group = undefined;
-
                 }
 
                 let entities: TInstance[] = [];
@@ -110,8 +109,8 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                         include,
                         raw,
                         order,
-                        limit,
-                        offset
+                        limit: limit || 30,
+                        offset: offset || 0
                     });
                     entities = result.rows;
                     res.setHeader("X-Total-Count", result.count);
