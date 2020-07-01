@@ -138,5 +138,28 @@ export default (path: string) => {
             delete: { after: afterDelete }
         }
     });
+
+    router.post("/docs/:docId/comments/:id/pin", async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            await Comment.update({
+                pinned: true
+            }, { where: { id: req.params.id } });
+            res.send();
+
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    router.post("/docs/:docId/comments/:id/unpin", async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            await Comment.update({
+                pinned: false
+            }, { where: { id: req.params.id } });
+            res.send();
+        } catch (error) {
+            next(error);
+        }
+    });
     return router;
 };
