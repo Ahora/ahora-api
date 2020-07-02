@@ -1,6 +1,5 @@
 import { IGroupHandler, IGroupParameters, GroupInfo } from "../IGroupHandler";
 import { fn, col } from "sequelize";
-import db from "../../../models";
 
 export default class DateGroupHandler implements IGroupHandler {
     public readonly groupable: boolean;
@@ -11,14 +10,14 @@ export default class DateGroupHandler implements IGroupHandler {
 
     public handleGroup(): IGroupParameters {
         return {
-            attributes: [[fn('date_trunc', 'week', col(`${this.group}`)), this.group]],
-            group: [fn('date_trunc', 'week', col(`${this.group}`)) as any]
+            attributes: [[fn('date_trunc', 'day', col(`${this.group}`)), this.group]],
+            group: [fn('date_trunc', 'day', col(`${this.group}`)) as any]
         }
     }
 
     public changeData(row: any): GroupInfo {
         return {
-            criteria: row[this.group]
+            criteria: row[this.group] ? row[this.group].getTime() : null
         }
     }
 }

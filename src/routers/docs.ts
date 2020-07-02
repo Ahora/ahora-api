@@ -399,7 +399,7 @@ export default (path: string) => {
 
                 const groupHandler: IGroupHandler | undefined = groupByManager.getGroup(currentGroup);
                 if (groupHandler) {
-                    const groupParameters: IGroupParameters = groupHandler.handleGroup(currentGroup);
+                    const groupParameters: IGroupParameters = groupHandler.handleGroup(currentGroup, req);
 
                     if (groupParameters.attributes) {
                         attributes = [...attributes, ...groupParameters.attributes];

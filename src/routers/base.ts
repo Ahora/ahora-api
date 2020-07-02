@@ -1,7 +1,5 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import { Model, IncludeOptions, FindAttributeOptions } from "sequelize";
-import marked from "marked";
-import Organization from "../models/organization";
 
 export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
     put?: MethodHook<TAttributes, TInstance>;

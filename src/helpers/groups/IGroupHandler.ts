@@ -1,3 +1,5 @@
+import { Request } from "express";
+
 export interface IGroupParameters {
     includes?: any[];
     group: string[],
@@ -10,6 +12,6 @@ export interface GroupInfo {
 
 export interface IGroupHandler {
     readonly groupable: boolean;
-    handleGroup: (group: string) => IGroupParameters;
+    handleGroup: (group: string, req: Request) => IGroupParameters;
     changeData: (row: any) => GroupInfo;
 }
