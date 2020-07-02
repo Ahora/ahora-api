@@ -27,6 +27,7 @@ import DocType from "../models/docType";
 import OrganizationMilestone from "../models/milestones";
 import DocSource from "../models/docSource";
 import DocUserView from "../models/docUserView";
+import DocTeamGroupHandler from "../helpers/groups/docs/DocTeamGroupHandler";
 
 const afterPostOrPut = async (doc: Doc, req: Request): Promise<Doc> => {
     //Update labels!
@@ -377,6 +378,7 @@ groupByManager.registerGroup("doctype", new DocDocTypeGroupHandler());
 groupByManager.registerGroup("createdAt", new DateGroupHandler("createdAt"));
 groupByManager.registerGroup("closedAt", new DateGroupHandler("closedAt"));
 groupByManager.registerGroup("updatedAt", new DateGroupHandler("updatedAt"));
+groupByManager.registerGroup("team", new DocTeamGroupHandler());
 
 
 export default (path: string) => {
