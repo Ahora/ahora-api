@@ -28,7 +28,7 @@ const afterPost = async (team: OrganizationTeamUser, req: Request): Promise<Orga
 
     const user: User | null = await User.findOne({ where: { id: team.userId } });
     if (user) {
-        returnValue.user = {
+        returnValue.User = {
             displayName: user.displayName,
             username: user.username
         };

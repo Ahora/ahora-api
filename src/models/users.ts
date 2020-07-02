@@ -1,5 +1,5 @@
 
-import { Model, DataTypes } from 'sequelize';
+import { Model, DataTypes, fn, col } from 'sequelize';
 import db from '.';
 import OrganizationDashboard from './organizationDashboards';
 import OrganizationTeamUser from './organizationTeamsUsers';
@@ -52,6 +52,13 @@ User.init({
 }, {
     sequelize: db.sequelize,
     tableName: "users",
+    indexes: [
+        {
+            unique: true,
+            name: 'unique_username',
+            fields: ["username"]
+        }
+    ]
 });
 
 export const initAssociationUser = () => {
