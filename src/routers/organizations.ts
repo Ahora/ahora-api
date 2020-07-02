@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import routeCreate from "./base";
 import Organization, { OrganizationType } from "../models/organization";
-import { Op } from "sequelize";
 import OrganizationTeamUser, { TeamUserType } from "../models/organizationTeamsUsers";
 import OrganizationTeam from "../models/organizationTeams";
 
@@ -61,6 +60,16 @@ export default (path: string) => {
             }
         }
     });
+
+    router.get(`/api/availableorg/:login`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const org = await Organization.findOne({ where: { login: req.params.login } });
+            res.send(org === null);
+
+        } catch (error) {
+            next(error);
+        }
+    })
 
     router.use(routeCreate(`${path}/teams`, OrganizationTeam));
     return router;

@@ -224,7 +224,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
         });
     }
 
-    if (!(hooksDef && hooksDef.get && hooksDef.get.disable)) {
+    if (!(hooksDef && hooksDef.getSingle && hooksDef.getSingle.disable)) {
         router.get(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
                 const hooks = hooksDelegate && hooksDelegate(req);
@@ -252,7 +252,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     res.send(entity);
                 }
                 else {
-                    res.status(404);
+                    res.status(404).send();
                 }
             } catch (error) {
                 next(error);
