@@ -28,6 +28,8 @@ import OrganizationMilestone from "../models/milestones";
 import DocSource from "../models/docSource";
 import DocUserView from "../models/docUserView";
 import DocTeamGroupHandler from "../helpers/groups/docs/DocTeamGroupHandler";
+import OrganizationTeam from "../models/organizationTeams";
+import OrganizationTeamUser from "../models/organizationTeamsUsers";
 
 const afterPostOrPut = async (doc: Doc, req: Request): Promise<Doc> => {
     //Update labels!
@@ -134,10 +136,7 @@ const afterGetSingle = async (doc: Doc, req: Request): Promise<any> => {
 const beforePut = async (doc: Doc, req: Request): Promise<Doc> => {
     const updatedDoc = await generateDocHTML(doc, req);
     return updatedDoc;
-
 }
-
-
 
 const beforePost = async (doc: Doc, req: Request): Promise<Doc> => {
     const updatedDoc = await generateDocHTML(doc, req);
@@ -216,6 +215,28 @@ const generateQuery = async (req: Request): Promise<any> => {
         if (labelIds.length > 0) {
             const labelsQuery = `SELECT "docId" FROM doclabels as "docquery" WHERE "labelId" in (${labelIds.join(",")}) GROUP BY "docId" HAVING COUNT(*) = ${labelIds.length} `;
             query.id = { [Op.in]: [literal(labelsQuery)] }
+        }
+    }
+
+    //--------------team-------------------------------------------------
+    if (req.query.team || req.query.team === null) {
+        req.query.team = [req.query.team];
+    }
+
+    if (isArray(req.query.team)) {
+
+        const nullIndex: number = (req.query.team).indexOf(null);
+        const teams: OrganizationTeam[] = await OrganizationTeam.findAll({ where: { organizationId: currentOrg.id, name: req.query.team } });
+        const teamIds: (number | string)[] = teams.map((team) => team.id);
+
+        if (nullIndex > -1) {
+            teamIds.push("null");
+        }
+
+        if (teamIds.length > 0) {
+
+            const labelsQuery = `SELECT "userId" FROM ${OrganizationTeamUser.tableName} WHERE "teamId" in (${teamIds.join(",")})`;
+            query.reporterUserId = { [Op.in]: [literal(labelsQuery)] }
         }
     }
 
