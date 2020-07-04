@@ -233,10 +233,13 @@ const generateQuery = async (req: Request): Promise<any> => {
             teamIds.push("null");
         }
 
-        if (teamIds.length > 0) {
-
+        if (teamIds.length > 0 && nullIndex === -1) {
             const labelsQuery = `SELECT "userId" FROM ${OrganizationTeamUser.tableName} WHERE "teamId" in (${teamIds.join(",")})`;
             query.reporterUserId = { [Op.in]: [literal(labelsQuery)] }
+        }
+        else if (teamIds.length === 1 && nullIndex > -1) {
+            const labelsQuery = `SELECT "userId" FROM ${OrganizationTeamUser.tableName} WHERE "organizationId"=${currentOrg.id} and "teamId" is not null`;
+            query.reporterUserId = { [Op.notIn]: [literal(labelsQuery)] }
         }
     }
 

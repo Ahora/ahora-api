@@ -36,8 +36,9 @@ export default class DocTeamGroupHandler implements IGroupHandler {
     }
 
     public changeData(row: any): GroupInfo {
+        const val = row["reporter.OrganizationTeamUsers.OrganizationTeam.name"];
         return {
-            criteria: row["reporter.OrganizationTeamUsers.OrganizationTeam.name"]
+            criteria: (val === null) ? "null" : val
         }
     }
 }
