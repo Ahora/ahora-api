@@ -281,6 +281,29 @@ const generateQuery = async (req: Request): Promise<any> => {
 
         query.assigneeUserId = userIds;
     }
+    //--------------Dates---------------------------------------------------
+    if (req.query.createdAt) {
+        const createdAtDate = new Date(parseInt(req.query.createdAt));
+        const plusday = new Date(parseInt(req.query.createdAt));
+        plusday.setDate(plusday.getDate() + 1);
+
+        query.createdAt = {
+            [Op.lte]: plusday,
+            [Op.gte]: createdAtDate
+        };
+    }
+
+    if (req.query.closedAt) {
+        const createdAtDate = new Date(parseInt(req.query.closedAt));
+        const plusday = new Date(parseInt(req.query.closedAt));
+        plusday.setDate(plusday.getDate() + 1);
+
+        query.closedAt = {
+            [Op.lte]: plusday,
+            [Op.gte]: createdAtDate
+        };
+    }
+
 
     //--------------reporter-------------------------------------------------
 

@@ -10,8 +10,8 @@ export default class DateGroupHandler implements IGroupHandler {
 
     public handleGroup(): IGroupParameters {
         return {
-            attributes: [[fn('date_trunc', 'day', col(`${this.group}`)), this.group]],
-            group: [fn('date_trunc', 'day', col(`${this.group}`)) as any]
+            attributes: [[fn('date_trunc', 'day', col(`Doc.${this.group}`)), this.group]],
+            group: [fn('date_trunc', 'day', col(`Doc.${this.group}`)) as any]
         }
     }
 
