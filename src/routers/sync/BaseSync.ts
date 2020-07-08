@@ -20,7 +20,7 @@ export default abstract class BaseSync<M extends SourceableModel> {
     protected async abstract convertDataToModelInstance(body: any, req: Request, docSource: DocSource): Promise<M>;
     protected afterSave(entity: SourceableModel, req: Request): Promise<void> { return Promise.resolve(); };
 
-    public async do(req: Request, docSource: DocSource): Promise<void> {
+    public async do(req: Request, docSource: DocSource): Promise<SourceableModel> {
         const instance: M = await this.convertDataToModelInstance(req.body, req, docSource);
         instance.sourceId = req.body.sourceId;
         instance.docSourceId = docSource.id;
@@ -34,5 +34,6 @@ export default abstract class BaseSync<M extends SourceableModel> {
         }
 
         await this.afterSave(instanceFromDB, req);
+        return instanceFromDB;
     }
 }

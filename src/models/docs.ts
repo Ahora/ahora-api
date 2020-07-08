@@ -10,10 +10,10 @@ import DocUserView from './docUserView';
 import DocLabel from './docLabel';
 import DocSource from './docSource';
 import OrganizationMilestone from './milestones';
+import { SourceableModel } from '../routers/sync/BaseSync';
 
-class Doc extends Model {
+class Doc extends SourceableModel {
     public id!: number;
-    public sourceId!: number | null;
     public subject!: string;
     public description!: string | null;
     public htmlDescription!: string | null;
@@ -23,7 +23,6 @@ class Doc extends Model {
     public metadata!: any | null;
     public commentsNumber!: number;
     public views!: number;
-    public docSourceId!: number | null;
     public milestoneId!: number | null;
     public organizationId!: number;
     public statusId!: number | null;

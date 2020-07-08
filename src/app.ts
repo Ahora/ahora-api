@@ -13,7 +13,6 @@ import routeCommentCreate from "./routers/comments";
 import routeDocSourceLabelCreate from "./routers/sync/SyncLabels";
 import smartSyncRoute from "./routers/sync/SmartSyncRoute";
 import routeDocSourceMilestoneCreate from "./routers/sync/SyncMilestone";
-import routeSyncIssues from "./routers/sync/SyncIssues";
 import routeOrganizationDashboardCreate from "./routers/organizationDashboards";
 import routeAttachmentstCreate from "./routers/attachments";
 import routeDocWatchersCreate from "./routers/docWatchers";
@@ -121,7 +120,6 @@ app.use(organizationChildCreate("/api/organizations/:login/statuses", Organizati
 app.use(organizationChildCreate("/api/organizations/:login/doctypes", DocType));
 app.use(organizationChildCreate("/api/organizations/:login/teams", OrganizationTeam));
 app.use("/api/organizations/:login", RouteTeamUsersCreate("/teams/:teamId/users"));
-app.use("/api/organizations/:login", routeSyncIssues);
 app.use("/api/organizations/:login", routeDocSourceLabelCreate);
 app.use("/api/organizations/:login", routeDocSourceMilestoneCreate);
 app.use(routeDocCreate("/api/organizations/:login/docs"));
