@@ -9,7 +9,7 @@ class Label extends Model {
     public name!: string;
     public color!: string | null; // for nullable fields
     public description!: string | null; // for nullable fields
-    public organizationId!: number | null; // for nullable fields
+    public organizationId!: number; // for nullable fields
 
     // timestamps!
     public readonly createdAt!: Date;
@@ -24,6 +24,10 @@ Label.init({
     },
     name: {
         type: DataTypes.STRING,
+        allowNull: false
+    },
+    organizationId: {
+        type: DataTypes.INTEGER,
         allowNull: false
     },
     color: {

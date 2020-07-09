@@ -286,7 +286,6 @@ const generateQuery = async (req: Request): Promise<any> => {
     if (req.query.createdAt) {
         if (!Array.isArray(req.query.createdAt)) {
             const possibleNumber = parseInt(req.query.createdAt);
-            console.log(possibleNumber);
             if (possibleNumber < 0) {
                 query.createdAt = {
                     [Op.gt]: moment().subtract(possibleNumber * -1, 'd').startOf('day').toDate()
@@ -308,7 +307,6 @@ const generateQuery = async (req: Request): Promise<any> => {
     if (req.query.closedAt) {
         if (!Array.isArray(req.query.closedAt)) {
             const possibleNumber = parseInt(req.query.closedAt);
-            console.log(possibleNumber);
             if (possibleNumber < 0) {
                 query.closedAt = {
                     [Op.gt]: moment().subtract(possibleNumber * -1, 'd').startOf('day').toDate()

@@ -9,6 +9,7 @@ class DocSourceMilestone extends Model {
     public docSourceId!: number;
     public milestoneId!: number;
     public sourceId!: number;
+    public organizationId!: number;
     public title!: string;
     public description!: string | null;
     public closedAt!: Date | null;
@@ -25,6 +26,10 @@ DocSourceMilestone.init({
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true
+    },
+    organizationId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
     },
     docSourceId: {
         type: DataTypes.INTEGER,

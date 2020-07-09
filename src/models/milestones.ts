@@ -56,6 +56,13 @@ OrganizationMilestone.init({
 }, {
     sequelize: db.sequelize,
     tableName: "organizationmilestones",
+    indexes: [
+        {
+            unique: true,
+            name: 'milestones_organizationId_Name',
+            fields: ["organizationId", "title"]
+        }
+    ]
 });
 
 export const initAssociationOrganizationMilestone = () => {

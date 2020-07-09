@@ -19,21 +19,26 @@ export default abstract class BaseSync<M extends SourceableModel> {
 
     protected async abstract convertDataToModelInstance(body: any, req: Request, docSource: DocSource): Promise<M>;
     protected afterSave(entity: SourceableModel, req: Request): Promise<void> { return Promise.resolve(); };
+    protected beforeSave(entity: SourceableModel, req: Request): Promise<SourceableModel> { return Promise.resolve(entity); };
 
     public async do(req: Request, docSource: DocSource): Promise<SourceableModel> {
-        const instance: M = await this.convertDataToModelInstance(req.body, req, docSource);
+        let instance: SourceableModel = await this.convertDataToModelInstance(req.body, req, docSource);
         instance.sourceId = req.body.sourceId;
         instance.docSourceId = docSource.id;
+
+        instance = await this.beforeSave(instance, req);
 
         let instanceFromDB = await this.model.findOne<SourceableModel>({ where: { docSourceId: docSource.id, sourceId: req.body.sourceId } });
         if (instanceFromDB) {
             await this.model.update(instance, { where: { id: instanceFromDB.id! } });
         }
         else {
-            instanceFromDB = await this.model.create(req.body);
+            instanceFromDB = await instance.save();
         }
 
-        await this.afterSave(instanceFromDB, req);
+        this.afterSave(instanceFromDB, req);
+
         return instanceFromDB;
+
     }
 }

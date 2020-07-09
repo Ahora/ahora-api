@@ -2,15 +2,15 @@ import db from '.';
 import { Model, DataTypes } from 'sequelize';
 import Label from './labels';
 import DocSource from './docSource';
+import { SourceableModel } from '../routers/sync/BaseSync';
 
-class DocSourceLabel extends Model {
+class DocSourceLabel extends SourceableModel {
     public id!: number;
-    public docSourceId!: number;
     public labelId!: number;
-    public sourceId!: number;
     public name!: string;
     public color!: string | null;
     public description!: string | null;
+    public organizationId!: number;
 
     // timestamps!
     public readonly createdAt!: Date;
@@ -24,6 +24,10 @@ DocSourceLabel.init({
         primaryKey: true
     },
     docSourceId: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    organizationId: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
@@ -65,5 +69,4 @@ export const initAssociationDocSourceLabel = () => {
     DocSourceLabel.belongsTo(Label, { foreignKey: "labelId", onDelete: 'CASCADE' });
     DocSourceLabel.belongsTo(DocSource, { foreignKey: "docSourceId", onDelete: 'CASCADE' });
 }
-
 export default DocSourceLabel;
