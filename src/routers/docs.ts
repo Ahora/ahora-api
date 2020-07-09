@@ -573,16 +573,20 @@ export default (path: string) => {
 
     router.post(`${path}/:id/status`, async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const statusId: string = req.body;
+            const statusId: number = req.body.statusId;
             const status: OrganizationStatus | null = await OrganizationStatus.findByPk(statusId);
 
             if (status) {
                 const updateParams: any = { statusId: status.id }
                 if (status.updateCloseTime) {
                     updateParams.closedAt = new Date();
-                };
+                }
+                else {
+                    updateParams.closedAt = null;
+                }
                 updateParams.updatedAt = new Date();
                 await Doc.update(updateParams, { where: { id: req.params.id } });
+                res.send();
             }
             else {
                 next()
