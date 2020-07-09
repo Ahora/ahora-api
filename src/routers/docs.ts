@@ -30,6 +30,7 @@ import DocUserView from "../models/docUserView";
 import DocTeamGroupHandler from "../helpers/groups/docs/DocTeamGroupHandler";
 import OrganizationTeam from "../models/organizationTeams";
 import OrganizationTeamUser from "../models/organizationTeamsUsers";
+import moment from "moment";
 
 const afterPostOrPut = async (doc: Doc, req: Request): Promise<Doc> => {
     //Update labels!
@@ -278,30 +279,53 @@ const generateQuery = async (req: Request): Promise<any> => {
         if (usersWithoutNull.length !== req.query.assignee.length) {
             userIds.push(null);
         }
-
+        moment().subtract(10, 'days').calendar();
         query.assigneeUserId = userIds;
     }
     //--------------Dates---------------------------------------------------
     if (req.query.createdAt) {
-        const createdAtDate = new Date(parseInt(req.query.createdAt));
-        const plusday = new Date(parseInt(req.query.createdAt));
-        plusday.setDate(plusday.getDate() + 1);
+        if (!Array.isArray(req.query.createdAt)) {
+            const possibleNumber = parseInt(req.query.createdAt);
+            console.log(possibleNumber);
+            if (possibleNumber < 0) {
+                query.createdAt = {
+                    [Op.gt]: moment().subtract(possibleNumber * -1, 'd').startOf('day').toDate()
+                };
+            }
+            else {
+                const createdAtDate = new Date(parseInt(req.query.createdAt));
+                const plusday = new Date(parseInt(req.query.createdAt));
+                plusday.setDate(plusday.getDate() + 1);
 
-        query.createdAt = {
-            [Op.lte]: plusday,
-            [Op.gte]: createdAtDate
-        };
+                query.createdAt = {
+                    [Op.lte]: plusday,
+                    [Op.gte]: createdAtDate
+                };
+            }
+
+        }
     }
-
     if (req.query.closedAt) {
-        const createdAtDate = new Date(parseInt(req.query.closedAt));
-        const plusday = new Date(parseInt(req.query.closedAt));
-        plusday.setDate(plusday.getDate() + 1);
+        if (!Array.isArray(req.query.closedAt)) {
+            const possibleNumber = parseInt(req.query.closedAt);
+            console.log(possibleNumber);
+            if (possibleNumber < 0) {
+                query.closedAt = {
+                    [Op.gt]: moment().subtract(possibleNumber * -1, 'd').startOf('day').toDate()
+                };
+            }
+            else {
+                const createdAtDate = new Date(parseInt(req.query.closedAt));
+                const plusday = new Date(parseInt(req.query.closedAt));
+                plusday.setDate(plusday.getDate() + 1);
 
-        query.closedAt = {
-            [Op.lte]: plusday,
-            [Op.gte]: createdAtDate
-        };
+                query.closedAt = {
+                    [Op.lte]: plusday,
+                    [Op.gte]: createdAtDate
+                };
+            }
+
+        }
     }
 
 
@@ -556,8 +580,8 @@ export default (path: string) => {
                 const updateParams: any = { statusId: status.id }
                 if (status.updateCloseTime) {
                     updateParams.closedAt = new Date();
-                    updateParams.updatedAt = new Date();
-                }
+                };
+                updateParams.updatedAt = new Date();
                 await Doc.update(updateParams, { where: { id: req.params.id } });
             }
             else {
