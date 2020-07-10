@@ -31,7 +31,7 @@ export default class DocSourceMilestoneSync extends BaseSync<DocSourceMilestone>
 
 
     protected async convertDataToModelInstance(body: any, req: Request, docSource: DocSource): Promise<DocSourceMilestone> {
-        return new DocSourceMilestone(body);
+        return body;
     }
 
 } 

@@ -13,7 +13,6 @@ export default class IssuesSync extends BaseSync<Doc> {
     protected async afterSave(entity: Doc, req: Request): Promise<void> {
 
         const labelIds: number[] | undefined = req.body.labels;
-        console.log(labelIds);
         if (labelIds) {
             const itemsToAdd: any[] = labelIds.map((id: number) => {
                 return {

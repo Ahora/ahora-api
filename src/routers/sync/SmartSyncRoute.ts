@@ -16,16 +16,21 @@ entitySyncMap.set("labels", new DocSourceLabelSync());
 entitySyncMap.set("milestones", new DocSourceMilestoneSync());
 
 router.post("/docsources/:docSourceId/:entity", async (req: Request, res: Response, next: NextFunction) => {
-    const syncProvider = entitySyncMap.get(req.params.entity.toLowerCase());
-    const docSourceId = parseInt(req.params.docSourceId);
-    const docSource = await DocSource.findOne({ where: { id: docSourceId } });
-    if (syncProvider && docSource) {
-        const entity = await syncProvider.do(req, docSource);
-        res.send(entity);
+    try {
+        const syncProvider = entitySyncMap.get(req.params.entity.toLowerCase());
+        const docSourceId = parseInt(req.params.docSourceId);
+        const docSource = await DocSource.findOne({ where: { id: docSourceId } });
+        if (syncProvider && docSource) {
+            const entity = await syncProvider.do(req, docSource);
+            res.send(entity);
+        }
+        else {
+            next();
+        }
+    } catch (error) {
+        next(error);
     }
-    else {
-        next();
-    }
+
 });
 
 export default router;

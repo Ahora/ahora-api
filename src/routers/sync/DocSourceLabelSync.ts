@@ -52,7 +52,7 @@ export default class DocSourceLabelSync extends BaseSync<DocSourceLabel> {
 
 
     protected async convertDataToModelInstance(body: any, req: Request, docSource: DocSource): Promise<DocSourceLabel> {
-        return new DocSourceLabel(body);
+        return body;
     }
 
 } 
