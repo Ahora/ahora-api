@@ -9,3 +9,5 @@ export const COOKIE_SECRET: string = process.env.COOKIE_SECRET as string || "def
 export const STORAGE_BUCKET_NAME: string = process.env.STORAGE_BUCKET_NAME as string || "ahorafiles";
 export const EMAIL_DOMAIN: string = process.env.EMAIL_DOMAIN as string;
 export const URL: string = process.env.URL as string;
+export const BLUE_SNAP_SECRET: string = process.env.BLUE_SNAP_SECRET as string;
+

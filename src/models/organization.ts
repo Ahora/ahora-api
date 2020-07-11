@@ -14,6 +14,18 @@ export enum OrganizationType {
     Public = 0,
     Private = 1
 }
+export interface PaymentData {
+    cardHolder: string;
+    token: string;
+    binCategory: string
+    ccBin: string
+    cardSubType: string
+    ccType: string;
+    isRegulatedCard: string;
+    issuingCountry: string;
+    last4Digits: string;
+    exp: string;
+}
 
 class Organization extends Model {
     public id!: number;
@@ -22,7 +34,9 @@ class Organization extends Model {
     public node_id!: string | null; // for nullable fields
     public description!: string | null; // for nullable fields
     public defaultStatus!: number | null; // for nullable fields
+    public paymentInfo!: PaymentData | null; // for nullable fields
     public orgType!: OrganizationType;
+
 
     // timestamps!
     public readonly createdAt!: Date;
@@ -43,6 +57,10 @@ Organization.init({
     displayName: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    paymentInfo: {
+        type: DataTypes.JSON,
+        allowNull: true
     },
     node_id: {
         type: DataTypes.STRING,

@@ -16,6 +16,7 @@ import routeDocSourceMilestoneCreate from "./routers/sync/SyncMilestone";
 import routeOrganizationDashboardCreate from "./routers/organizationDashboards";
 import routeAttachmentstCreate from "./routers/attachments";
 import routeDocWatchersCreate from "./routers/docWatchers";
+import paymentsRoute from "./routers/payments/payments";
 import organizationNotificationRoute from "./routers/organizationNotification";
 import { COOKIE_SECRET, DB_CONNECTION_STRING } from "./config";
 import pgSession from "connect-pg-simple";
@@ -107,10 +108,12 @@ app.get("/api/organizations/:login", async (req: Request, res: Response) => {
       id: req.org.id,
       orgType: req.org.orgType,
       permission: req.orgPermission,
-      defaultStatus: req.org.defaultStatus
+      defaultStatus: req.org.defaultStatus,
+      hasPayment: !!req.org.paymentInfo
     });
   }
 });
+app.use("/api/payments", paymentsRoute);
 
 
 app.use(organizationChildCreate("/api/organizations/:login/labels", Label));

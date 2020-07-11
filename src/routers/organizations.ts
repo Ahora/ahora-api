@@ -61,6 +61,34 @@ export default (path: string) => {
         }
     });
 
+    router.get(`/api/organizations/:login/payment`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            if (req.org && req.orgPermission && req.orgPermission.permissionType == TeamUserType.Owner) {
+                const organization = await Organization.findOne({ where: { id: req.org.id } });
+                res.send(organization!.paymentInfo);
+            }
+            else {
+                next();
+            }
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    router.post(`/api/organizations/:login/payment`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            if (req.org && req.orgPermission && req.orgPermission.permissionType == TeamUserType.Owner) {
+                Organization.update({ paymentInfo: req.body }, { where: { id: req.org.id } });
+                res.send();
+            }
+            else {
+                next();
+            }
+        } catch (error) {
+            next(error);
+        }
+    });
+
     router.get(`/api/availableorg/:login`, async (req: Request, res: Response, next: NextFunction) => {
         try {
             const org = await Organization.findOne({ where: { login: req.params.login } });

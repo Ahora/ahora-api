@@ -2,7 +2,12 @@
   "compilerOptions": {
     "target": "es2018",
     "module": "commonjs",
-    "lib": ["es2017", "es7", "es6", "dom"],
+    "lib": [
+      "es2017",
+      "es7",
+      "es6",
+      "dom"
+    ],
     "declaration": true,
     "sourceMap": true,
     "outDir": "dist",
@@ -12,6 +17,6 @@
     "moduleResolution": "node"
   },
   "include": [
-    "src", 
+    "src",
   ]
 }
