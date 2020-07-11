@@ -27,25 +27,17 @@ export default abstract class BaseSync<M extends SourceableModel> {
         instance.docSourceId = docSource.id;
         let instanceFromDB: any;
         instance = await this.beforeSave(instance, req);
-        try {
 
-            instanceFromDB = await this.model.findOne<SourceableModel>({ where: { docSourceId: docSource.id, sourceId: req.body.sourceId } });
-            if (instanceFromDB) {
-                await this.model.update(instance, { where: { id: instanceFromDB.id! } });
-            }
-            else {
-                instanceFromDB = await this.model.create(instance);
-            }
-
-            this.afterSave(instanceFromDB!, req);
-
-            return instanceFromDB!;
-        } catch (error) {
-            console.log(instanceFromDB);
-            console.log(instance);
-            console.log(error);
-            throw error;
+        instanceFromDB = await this.model.findOne<SourceableModel>({ where: { docSourceId: docSource.id, sourceId: req.body.sourceId } });
+        if (instanceFromDB) {
+            await this.model.update(instance, { where: { id: instanceFromDB.id! } });
+        }
+        else {
+            instanceFromDB = await this.model.create(instance);
         }
 
+        this.afterSave(instanceFromDB!, req);
+
+        return instanceFromDB!;
     }
 }
