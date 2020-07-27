@@ -29,8 +29,8 @@ class Doc extends SourceableModel {
     public closedAt!: Date[] | null;
 
     // timestamps!
-    public readonly createdAt!: Date;
-    public readonly updatedAt!: Date;
+    public createdAt!: Date;
+    public updatedAt!: Date;
 }
 
 Doc.init({

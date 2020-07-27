@@ -136,6 +136,8 @@ const afterGetSingle = async (doc: Doc, req: Request): Promise<any> => {
 
 const beforePut = async (doc: Doc, req: Request): Promise<Doc> => {
     const updatedDoc = await generateDocHTML(doc, req);
+    updatedDoc.updatedAt = new Date();
+
     return updatedDoc;
 }
 
@@ -150,6 +152,8 @@ const beforePost = async (doc: Doc, req: Request): Promise<Doc> => {
         doc.assigneeUserId = req.user.id;
         doc.reporterUserId = req.user.id;
     }
+
+    updatedDoc.createdAt = new Date();
 
     return doc;
 };
@@ -528,8 +532,8 @@ export default (path: string) => {
                 after: afterGetSingle,
                 include: includes
             },
-            post: { before: beforePost, after: afterPostOrPut },
-            put: { before: beforePut, after: afterPostOrPut }
+            post: { before: beforePost, after: afterGet, afterCreateOrUpdate: afterPostOrPut, include: includes },
+            put: { before: beforePut, after: afterGet, afterCreateOrUpdate: afterPostOrPut, include: includes }
         }
     });
 

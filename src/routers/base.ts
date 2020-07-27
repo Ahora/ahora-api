@@ -2,10 +2,10 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import { Model, IncludeOptions, FindAttributeOptions } from "sequelize";
 
 export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
-    put?: MethodHook<TAttributes, TInstance>;
+    put?: PostMethodHook<TAttributes, TInstance>;
     get?: GetMethodHook<TAttributes, TInstance>;
     getSingle?: GetMethodHook<TAttributes, TInstance>;
-    post?: MethodHook<TAttributes, TInstance>;
+    post?: PostMethodHook<TAttributes, TInstance>;
     delete?: MethodHook<TAttributes, TInstance>;
     primaryField?: string;
 }
@@ -17,6 +17,11 @@ export interface GetMethodHook<TAttributes, TInstance extends TAttributes> exten
     attributes?: FindAttributeOptions;
     group?: string | string[];
     order?: any;
+}
+
+export interface PostMethodHook<TAttributes, TInstance extends TAttributes> extends MethodHook<TAttributes, TInstance> {
+    afterCreateOrUpdate?(entity: TInstance, req?: Request): Promise<TInstance>;
+
 }
 
 export interface MethodHook<TAttributes, TInstance extends TAttributes> {
@@ -150,7 +155,23 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     body = await hooks.post.before(body, req);
                 }
 
+                let include;
+                if (hooks && hooks.getSingle && hooks.getSingle) {
+                    include = hooks.getSingle.include;
+                }
+
                 let entity: TInstance = await model.create(body);
+
+                if (hooks && hooks.post && hooks.post.afterCreateOrUpdate) {
+                    entity = await hooks.post.afterCreateOrUpdate(entity, req);
+                }
+
+                entity = await model.findOne({
+                    where: {
+                        id: (entity as any).id,
+                    },
+                    include
+                });
 
                 if (hooks && hooks.post && hooks.post.after) {
                     entity = await hooks.post.after(entity, req);
@@ -205,14 +226,24 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
                 for (const key in req.body) {
                     beforeUpdateInstance[key] = req.body[key];
+                }
 
+                let include;
+                if (hooks && hooks.getSingle && hooks.getSingle) {
+                    include = hooks.getSingle.include;
                 }
 
                 if (beforeUpdateInstance && hooks && hooks.put && hooks.put.before) {
                     beforeUpdateInstance = await hooks.put.before(beforeUpdateInstance, req);
                 }
-                await beforeUpdateInstance.save()
-                let result: TInstance | null = await model.findOne({ where: ({ [primaryField]: req.params[primaryField] }) as any });
+                await beforeUpdateInstance.save();
+
+                if (beforeUpdateInstance && hooks && hooks.put && hooks.put.afterCreateOrUpdate) {
+                    beforeUpdateInstance = await hooks.put.afterCreateOrUpdate(beforeUpdateInstance, req);
+                }
+
+                let result: TInstance | null = await model.findOne({ include, where: ({ [primaryField]: req.params[primaryField] }) as any });
+
                 if (result && hooks && hooks.put && hooks.put.after) {
                     result = await hooks.put.after(result, req);
                 }

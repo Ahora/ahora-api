@@ -66,6 +66,10 @@ export const forceInit = async () => {
         {
             name: "Wiki",
             code: "wiki"
+        },
+        {
+            name: "Demo",
+            code: "demo"
         }
     ]);
     console.log("doc types created");
