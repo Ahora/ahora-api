@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Doc from "../models/docs";
 import routeCreate from "./base";
-import db from "./../models/index";
 import { literal, fn } from "sequelize";
-import marked from "marked";
 import Organization from "../models/organization";
 import { isArray } from "util";
 import User from "../models/users";
@@ -31,6 +29,7 @@ import DocTeamGroupHandler from "../helpers/groups/docs/DocTeamGroupHandler";
 import OrganizationTeam from "../models/organizationTeams";
 import OrganizationTeamUser from "../models/organizationTeamsUsers";
 import moment from "moment";
+import { markdownToHTML } from "../helpers/markdown";
 
 const afterPostOrPut = async (doc: Doc, req: Request): Promise<Doc> => {
     //Update labels!
@@ -115,25 +114,6 @@ const afterGroupByGet = async (item: any, req: Request): Promise<any> => {
     return returnValue;
 }
 
-const afterGetSingle = async (doc: Doc, req: Request): Promise<any> => {
-    const returnedDoc: Doc = await afterGet(doc, req);
-
-    if (req.user) {
-        var promiseUpSert = DocUserView.upsert({
-            userId: req.user.id,
-            docId: doc.id
-        });
-
-        var PromiseIncrement = doc.increment({
-            'views': 1
-        });
-
-        await Promise.all([promiseUpSert, PromiseIncrement]);
-    }
-
-    return returnedDoc;
-}
-
 const beforePut = async (doc: Doc, req: Request): Promise<Doc> => {
     const updatedDoc = await generateDocHTML(doc, req);
     updatedDoc.updatedAt = new Date();
@@ -154,6 +134,7 @@ const beforePost = async (doc: Doc, req: Request): Promise<Doc> => {
     }
 
     updatedDoc.createdAt = new Date();
+    updatedDoc.updatedAt = new Date();
 
     return doc;
 };
@@ -422,22 +403,10 @@ const generateQuery = async (req: Request): Promise<any> => {
 
 
 const generateDocHTML = async (doc: Doc, req: Request): Promise<Doc> => {
-    return new Promise<Doc>((resolve, reject) => {
-        if (doc.description) {
-            marked(doc.description, (error: any, parsedResult: string) => {
-                if (error) {
-                    reject(error);
-                }
-                else {
-                    doc.htmlDescription = parsedResult;
-                    resolve(doc);
-                }
-            });
-        }
-        else {
-            resolve(doc);
-        }
-    });
+    if (doc.description) {
+        doc.htmlDescription = await markdownToHTML(doc.description)
+    }
+    return doc
 }
 
 const groupByManager = new GroupByManager();
@@ -529,7 +498,6 @@ export default (path: string) => {
             getSingle: {
                 getAdditionalParams: generateQuery,
                 useOnlyAdditionalParams: true,
-                after: afterGetSingle,
                 include: includes
             },
             post: { before: beforePost, after: afterGet, afterCreateOrUpdate: afterPostOrPut, include: includes },
@@ -619,6 +587,41 @@ export default (path: string) => {
             } else {
                 res.status(400).send();
             }
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    var emptyPixel = new Buffer([
+        71, 73, 70, 56, 57, 97, 1, 0, 1, 0,
+        128, 0, 0, 0, 0, 0, 0, 0, 0, 33,
+        249, 4, 1, 0, 0, 0, 0, 44, 0, 0,
+        0, 0, 1, 0, 1, 0, 0, 2, 2, 68,
+        1, 0, 59]);
+
+    router.get(`${path}/:id/view`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const promises: Promise<any>[] = [];
+            if (req.user && req.doc) {
+
+                var promiseUpSert = DocUserView.upsert({
+                    userId: req.user.id,
+                    updatedAt: new Date(),
+                    docId: req.doc.id
+                });
+                promises.push(promiseUpSert);
+
+            }
+
+            if (req.doc) {
+                var PromiseIncrement = req.doc.increment({ 'views': 1 });
+                promises.push(PromiseIncrement);
+            }
+
+            if (promises.length > 0) {
+                await Promise.all(promises);
+            }
+            res.status(200).contentType('image/gif').send(emptyPixel);
         } catch (error) {
             next(error);
         }

@@ -256,7 +256,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
     }
 
     if (!(hooksDef && hooksDef.getSingle && hooksDef.getSingle.disable)) {
-        router.get(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        router.get(path + "/:" + primaryField + "/", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
                 const hooks = hooksDelegate && hooksDelegate(req);
                 let include;
