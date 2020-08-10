@@ -13,18 +13,19 @@ export const markdownToHTML = async (markdown: string, docSource?: DocSource): P
             remarkInstance = remarkInstance.use(github, {
                 repository: `${docSource!.organization}/${docSource!.repo}`
             });
-        } else {
-            const mentionedResult = await handleMentions(markdown);
-            markdown = mentionedResult.markdown;
         }
-
         remarkInstance.use(html).process(markdown, (error: any, file: any) => {
-            resolve(String(file));
+            if (error) {
+                reject(error);
+            }
+            else {
+                resolve(String(file));
+            }
         });
     });
 }
 
-export const extractMentionsFromMarkdown = (markdown: string): string[] => {
+export const extractMentionsFromMarkdown = async (markdown: string): Promise<User[]> => {
     const mentions: string[] = [];
 
     var myRegexp = /@(\w+)/;
@@ -33,7 +34,10 @@ export const extractMentionsFromMarkdown = (markdown: string): string[] => {
     while (match = re.exec(markdown)) {
         mentions.push(match[1]);
     }
-    return mentions;
+
+    const usersFromDB = await User.findAll({ where: { username: mentions }, attributes: ["id", "username"] });
+
+    return usersFromDB;
 }
 
 export const replaceMentions = (markdown: string, mentions: string[]): string => {
@@ -45,10 +49,11 @@ export const replaceMentions = (markdown: string, mentions: string[]): string =>
     return markdown;
 }
 
-export const handleMentions = async (markdown: string): Promise<{ markdown: string, mentions: User[] }> => {
-    const mentions: string[] = extractMentionsFromMarkdown(markdown);
-    const usersFromDB = await User.findAll({ where: { username: mentions }, attributes: ["id", "username"] });
-    const realDBUsers = usersFromDB.map((user) => user.username);
+export const handleMentions = async (markdown: string, mentions: User[] | undefined = undefined): Promise<{ markdown: string, mentions: User[] }> => {
+    if (!mentions) {
+        mentions = await extractMentionsFromMarkdown(markdown);
+    }
+    const realDBUsers = mentions.map((user) => user.username);
     const replacesString: string = replaceMentions(markdown, realDBUsers);
-    return { markdown: replacesString, mentions: usersFromDB };
+    return { markdown: replacesString, mentions: mentions };
 }

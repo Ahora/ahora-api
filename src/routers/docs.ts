@@ -29,9 +29,58 @@ import DocTeamGroupHandler from "../helpers/groups/docs/DocTeamGroupHandler";
 import OrganizationTeam from "../models/organizationTeams";
 import OrganizationTeamUser from "../models/organizationTeamsUsers";
 import moment from "moment";
-import { markdownToHTML } from "../helpers/markdown";
+import { markdownToHTML, handleMentions, extractMentionsFromMarkdown } from "../helpers/markdown";
+import { updateMentions } from "../helpers/mention";
 
-const afterPostOrPut = async (doc: Doc, req: Request): Promise<Doc> => {
+const afterPost = async (doc: Doc, req: Request): Promise<Doc> => {
+    await updateLabels(doc, req);
+    let watchers: number[] = [];
+
+    if (req.user) {
+        watchers.push(req.user.id);
+    }
+    if (doc.description) {
+        const mentionUsers = await extractMentionsFromMarkdown(doc.description);
+        const mentionedUserIds = mentionUsers.map((user) => user.id);
+        await updateMentions(mentionedUserIds, doc.id);
+
+        watchers = [...watchers, ...mentionedUserIds];
+
+    }
+
+    for (let index = 0; index < watchers.length; index++) {
+        await addUserToWatchersList(doc.id, watchers[index]);
+    }
+
+    return doc;
+}
+
+const afterPut = async (doc: Doc, req: Request): Promise<Doc> => {
+    await updateLabels(doc, req);
+
+    let watchers: number[] = [];
+
+    if (req.user) {
+        watchers.push(req.user.id);
+    }
+
+    if (doc.description) {
+        const mentionUsers = await extractMentionsFromMarkdown(doc.description);
+        const mentionedUserIds = mentionUsers.map((user) => user.id);
+
+        watchers = [...watchers, ...mentionedUserIds];
+
+        await updateMentions(mentionedUserIds, doc.id);
+    }
+
+    for (let index = 0; index < watchers.length; index++) {
+        await addUserToWatchersList(doc.id, watchers[index]);
+    }
+
+
+    return doc;
+}
+const updateLabels = async (doc: Doc, req: Request): Promise<void> => {
     //Update labels!
     const labelIds: number[] | undefined = req.body.labels;
     if (labelIds) {
@@ -47,12 +96,6 @@ const afterPostOrPut = async (doc: Doc, req: Request): Promise<Doc> => {
         });
         await DocLabel.bulkCreate(itemsToAdd);
     }
-
-    if (req.user) {
-        await addUserToWatchersList(doc.id, req.user!.id);
-    }
-
-    return doc;
 }
 
 const afterGet = async (doc: any, req: Request): Promise<any> => {
@@ -115,17 +158,25 @@ const afterGroupByGet = async (item: any, req: Request): Promise<any> => {
 }
 
 const beforePut = async (doc: Doc, req: Request): Promise<Doc> => {
-    const updatedDoc = await generateDocHTML(doc, req);
-    updatedDoc.updatedAt = new Date();
+    if (doc.description) {
+        const result = await handleMentions(doc.description);
+        await updateMentions(result.mentions.map((user) => user.id), doc.id);
+        doc.htmlDescription = await markdownToHTML(result.markdown);
+    }
 
-    return updatedDoc;
+    doc.updatedAt = new Date();
+
+    return doc;
 }
 
 const beforePost = async (doc: Doc, req: Request): Promise<Doc> => {
-    const updatedDoc = await generateDocHTML(doc, req);
+    if (doc.description) {
+        doc.htmlDescription = await markdownToHTML(doc.description);
+    }
+
     if (req && req.org) {
-        updatedDoc.statusId = doc.statusId || req.org.defaultStatus;
-        updatedDoc.organizationId = req.org.id;
+        doc.statusId = doc.statusId || req.org.defaultStatus;
+        doc.organizationId = req.org.id;
     }
 
     if (req.user) {
@@ -133,8 +184,8 @@ const beforePost = async (doc: Doc, req: Request): Promise<Doc> => {
         doc.reporterUserId = req.user.id;
     }
 
-    updatedDoc.createdAt = new Date();
-    updatedDoc.updatedAt = new Date();
+    doc.createdAt = new Date();
+    doc.updatedAt = new Date();
 
     return doc;
 };
@@ -402,13 +453,6 @@ const generateQuery = async (req: Request): Promise<any> => {
 }
 
 
-const generateDocHTML = async (doc: Doc, req: Request): Promise<Doc> => {
-    if (doc.description) {
-        doc.htmlDescription = await markdownToHTML(doc.description)
-    }
-    return doc
-}
-
 const groupByManager = new GroupByManager();
 groupByManager.registerGroup("reporter", new DocRepoterGroupHandler());
 groupByManager.registerGroup("assignee", new DocAssigneeGroupHandler());
@@ -500,8 +544,8 @@ export default (path: string) => {
                 useOnlyAdditionalParams: true,
                 include: includes
             },
-            post: { before: beforePost, after: afterGet, afterCreateOrUpdate: afterPostOrPut, include: includes },
-            put: { before: beforePut, after: afterGet, afterCreateOrUpdate: afterPostOrPut, include: includes }
+            post: { before: beforePost, after: afterGet, afterCreateOrUpdate: afterPost, include: includes },
+            put: { before: beforePut, after: afterGet, afterCreateOrUpdate: afterPut, include: includes }
         }
     });
 
