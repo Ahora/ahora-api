@@ -171,7 +171,8 @@ const beforePut = async (doc: Doc, req: Request): Promise<Doc> => {
 
 const beforePost = async (doc: Doc, req: Request): Promise<Doc> => {
     if (doc.description) {
-        doc.htmlDescription = await markdownToHTML(doc.description);
+        const result = await handleMentions(doc.description);
+        doc.htmlDescription = await markdownToHTML(result.markdown);
     }
 
     if (req && req.org) {
@@ -636,12 +637,13 @@ export default (path: string) => {
         }
     });
 
-    var emptyPixel = new Buffer([
+    const bytes = [
         71, 73, 70, 56, 57, 97, 1, 0, 1, 0,
         128, 0, 0, 0, 0, 0, 0, 0, 0, 33,
         249, 4, 1, 0, 0, 0, 0, 44, 0, 0,
         0, 0, 1, 0, 1, 0, 0, 2, 2, 68,
-        1, 0, 59]);
+        1, 0, 59];
+    var emptyPixel = Buffer.from(bytes);
 
     router.get(`${path}/:id/view`, async (req: Request, res: Response, next: NextFunction) => {
         try {
