@@ -10,7 +10,8 @@ import { notifyComment } from "../helpers/notifier";
 import User from "../models/users";
 import { RestCollectorClient, RestCollectorRequest } from "rest-collector";
 import GithubCommentsProvider from "../providers/github/GithubCommentsProvider";
-import { markdownToHTML } from "../helpers/markdown";
+import { markdownToHTML, handleMentions, extractMentionsFromMarkdown } from "../helpers/markdown";
+import { updateMentions } from "../helpers/mention";
 
 const generateQuery = async (req: Request): Promise<any> => {
     return {
@@ -20,7 +21,11 @@ const generateQuery = async (req: Request): Promise<any> => {
 
 const beforePost = async (comment: Comment, req: Request): Promise<Comment> => {
 
-    comment.htmlComment = await markdownToHTML(comment.comment, req.docSource);
+    if (comment.comment) {
+        const result = await handleMentions(comment.comment);
+        comment.htmlComment = await markdownToHTML(result.markdown, req.docSource);
+    }
+
     comment.authorUserId = req.user!.id;
 
     //update comment on Github! so cool
@@ -41,7 +46,11 @@ const beforePost = async (comment: Comment, req: Request): Promise<Comment> => {
 }
 
 const beforePut = async (comment: Comment, req: Request): Promise<Comment> => {
-    comment.htmlComment = await markdownToHTML(comment.comment, req.docSource);
+    if (comment.comment) {
+        const result = await handleMentions(comment.comment);
+        await updateMentions(result.mentions.map((user) => user.id), parseInt(req.params.docId), parseInt(req.params.id));
+        comment.htmlComment = await markdownToHTML(result.markdown, req.docSource);
+    }
 
     //update comment on Github! so cool
     if (req.docSource && req.doc && req.user) {
@@ -73,6 +82,25 @@ const updateCommentsNumberAndTime = async (docId: number, updateTime: Date): Pro
 
 const afterPut = async (comment: Comment, req: Request): Promise<Comment> => {
     await updateCommentsNumberAndTime(comment.docId, comment.updatedAt);
+
+    let watchers: number[] = [];
+
+    if (req.user) {
+        watchers.push(req.user.id);
+    }
+
+    if (comment.comment) {
+        const mentionUsers = await extractMentionsFromMarkdown(comment.comment);
+        const mentionedUserIds = mentionUsers.map((user) => user.id);
+
+        watchers = [...watchers, ...mentionedUserIds];
+
+        await updateMentions(mentionedUserIds, comment.docId, comment.id);
+    }
+
+    for (let index = 0; index < watchers.length; index++) {
+        await addUserToWatchersList(comment.docId, watchers[index]);
+    }
     return comment;
 }
 
@@ -114,6 +142,23 @@ const afterPost = async (comment: Comment, req: Request): Promise<Comment> => {
 
     await updateCommentsNumberAndTime(comment.docId, comment.createdAt);
     await addUserToWatchersList(comment.docId, comment.authorUserId);
+
+    let watchers: number[] = [];
+
+    if (req.user) {
+        watchers.push(req.user.id);
+    }
+    if (comment.comment) {
+        const mentionUsers = await extractMentionsFromMarkdown(comment.comment);
+        const mentionedUserIds = mentionUsers.map((user) => user.id);
+        await updateMentions(mentionedUserIds, comment.docId, comment.id);
+
+        watchers = [...watchers, ...mentionedUserIds];
+    }
+
+    for (let index = 0; index < watchers.length; index++) {
+        await addUserToWatchersList(comment.docId, watchers[index]);
+    }
 
 
     const currentDoc: Doc | null = await Doc.findOne({ where: { id: comment.docId } });

@@ -30,6 +30,7 @@ import DocType from "./models/docType";
 import OrganizationTeam from "./models/organizationTeams";
 import initAssociation from "./models/Association";
 import internalDocSourceRoute from "./routers/internal/docSources";
+import githubRouter from "./routers/github";
 
 initAssociation();
 
@@ -132,6 +133,8 @@ app.use("/api/organizations/:login", routeAttachmentstCreate("/attachments"));
 app.use("/api/organizations/:login", organizationNotificationRoute("/notifications"));
 app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watchers"));
 app.use(routeOrgCreate("/api/organizations"));
+
+app.use("/api/github", githubRouter);
 app.use(usersCreate("/api/users"));
 app.use("/auth", authRouter)
 

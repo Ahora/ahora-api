@@ -172,7 +172,7 @@ const beforePut = async (doc: Doc, req: Request): Promise<Doc> => {
 const beforePost = async (doc: Doc, req: Request): Promise<Doc> => {
     if (doc.description) {
         const result = await handleMentions(doc.description);
-        doc.htmlDescription = await markdownToHTML(result.markdown);
+        doc.htmlDescription = await markdownToHTML(result.markdown, req.docSource);
     }
 
     if (req && req.org) {
