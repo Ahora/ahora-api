@@ -284,6 +284,53 @@ const generateQuery = async (req: Request): Promise<any> => {
         }
     }
 
+    //--------------Relevant To-------------------------------------------------
+
+    if (req.query.mention) {
+        if (typeof (req.query.mention) === "string") {
+            req.query.mention = [req.query.mention];
+        }
+    }
+
+    if (req.query.mention) {
+        req.query.mention = req.query.mention.map((username: string) => {
+            switch (username) {
+                case "me":
+                    if (req.user) {
+                        return req.user.username;
+                    } else {
+                        return undefined
+                    }
+                default:
+                    return username;
+            }
+        });
+
+        const usersWithoutNull: string[] = req.query.mention.filter((username: string) => username !== null);
+
+        const users: User[] = await User.findAll({
+            where: { username: usersWithoutNull },
+            attributes: ["id"]
+        });
+
+        const userIds = users.map((user: any) => user.id);
+        if (usersWithoutNull.length !== req.query.mention.length) {
+            userIds.push(null);
+        }
+        if (userIds.length > 0) {
+            const userIdsString = userIds.join(",");
+
+            const mentionsQuery = `SELECT DISTINCT "docId" FROM mentions WHERE "userId" in (${userIdsString})`;
+            const watchersQuery = `SELECT DISTINCT "docId" FROM docwatchers WHERE "userId" in (${userIdsString})`;
+            query[Op.and] = {
+                [Op.or]: [
+                    { id: { [Op.in]: [literal(mentionsQuery)] } },
+                    { id: { [Op.in]: [literal(watchersQuery)] } }
+                ]
+            };
+        }
+    }
+
     //--------------Assignee-------------------------------------------------
 
     if (req.query.assignee) {
@@ -319,7 +366,6 @@ const generateQuery = async (req: Request): Promise<any> => {
         if (usersWithoutNull.length !== req.query.assignee.length) {
             userIds.push(null);
         }
-        moment().subtract(10, 'days').calendar();
         query.assigneeUserId = userIds;
     }
     //--------------Dates---------------------------------------------------
