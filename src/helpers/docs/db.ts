@@ -1,9 +1,10 @@
 import Label from "../../models/labels"
 import OrganizationStatus from "../../models/docStatuses";
-import { Op } from "sequelize/types";
+import { Op } from "sequelize";
 import DocType from "../../models/docType";
 import OrganizationMilestone from "../../models/milestones";
 import User from "../../models/users";
+import DocUserView from "../../models/docUserView";
 
 export interface SearchCriterias {
     assignee?: string[];
@@ -119,4 +120,12 @@ export const getUsersFromStrings = async (usernames?: string[]): Promise<number[
 
         return userIds;
     }
+}
+
+export const updateLastView = async (docId: number, userId: number): Promise<void> => {
+    await DocUserView.upsert({
+        userId,
+        updatedAt: new Date(),
+        docId
+    });
 }

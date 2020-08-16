@@ -12,6 +12,7 @@ import { RestCollectorClient, RestCollectorRequest } from "rest-collector";
 import GithubCommentsProvider from "../providers/github/GithubCommentsProvider";
 import { markdownToHTML, handleMentions, extractMentionsFromMarkdown } from "../helpers/markdown";
 import { updateMentions } from "../helpers/mention";
+import { updateLastView } from "../helpers/docs/db";
 
 const generateQuery = async (req: Request): Promise<any> => {
     return {
@@ -82,6 +83,7 @@ const updateCommentsNumberAndTime = async (docId: number, updateTime: Date): Pro
 
 const afterPut = async (comment: Comment, req: Request): Promise<Comment> => {
     await updateCommentsNumberAndTime(comment.docId, comment.updatedAt);
+    await updateLastView(comment.docId, comment.authorUserId);
 
     let watchers: number[] = [];
 
@@ -141,9 +143,9 @@ const afterPost = async (comment: Comment, req: Request): Promise<Comment> => {
     }
 
     await updateCommentsNumberAndTime(comment.docId, comment.createdAt);
-    await addUserToWatchersList(comment.docId, comment.authorUserId);
+    await updateLastView(comment.docId, comment.authorUserId);
 
-    let watchers: number[] = [];
+    let watchers: number[] = [comment.authorUserId];
 
     if (req.user) {
         watchers.push(req.user.id);

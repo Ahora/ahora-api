@@ -31,12 +31,14 @@ import OrganizationTeamUser from "../models/organizationTeamsUsers";
 import moment from "moment";
 import { markdownToHTML, handleMentions, extractMentionsFromMarkdown } from "../helpers/markdown";
 import { updateMentions } from "../helpers/mention";
+import { updateLastView } from "../helpers/docs/db";
 
 const afterPost = async (doc: Doc, req: Request): Promise<Doc> => {
     await updateLabels(doc, req);
     let watchers: number[] = [];
 
     if (req.user) {
+        await updateLastView(doc.id, req.user.id);
         watchers.push(req.user.id);
     }
     if (doc.description) {
@@ -61,6 +63,7 @@ const afterPut = async (doc: Doc, req: Request): Promise<Doc> => {
     let watchers: number[] = [];
 
     if (req.user) {
+        await updateLastView(doc.id, req.user.id)
         watchers.push(req.user.id);
     }
 
@@ -571,12 +574,18 @@ export default (path: string) => {
     router.post(`${path}/:id/assignee`, async (req: Request, res: Response, next: NextFunction) => {
         try {
             const username: string = req.body.username;
+            const docId = parseInt(req.params.id);
             const user: User | null = await getUserFromGithubAlias(username);
             if (user) {
                 await Doc.update({
                     assigneeUserId: user.id,
                     updatedAt: new Date()
                 }, { where: { id: req.params.id } });
+                await addUserToWatchersList(docId, user.id);
+
+                if (req.user) {
+                    await updateLastView(docId, req.user.id)
+                }
                 res.send(user);
             } else {
                 res.status(400).send();
@@ -590,6 +599,7 @@ export default (path: string) => {
         try {
             const statusId: number = req.body.statusId;
             const status: OrganizationStatus | null = await OrganizationStatus.findByPk(statusId);
+            const docId = parseInt(req.params.id);
 
             if (status) {
                 const updateParams: any = { statusId: status.id }
@@ -600,7 +610,12 @@ export default (path: string) => {
                     updateParams.closedAt = null;
                 }
                 updateParams.updatedAt = new Date();
-                await Doc.update(updateParams, { where: { id: req.params.id } });
+                await Doc.update(updateParams, { where: { id: docId } });
+
+                if (req.user) {
+                    await updateLastView(docId, req.user.id)
+                    await addUserToWatchersList(docId, req.user.id);
+                }
                 res.send();
             }
             else {
@@ -650,11 +665,7 @@ export default (path: string) => {
             const promises: Promise<any>[] = [];
             if (req.user && req.doc) {
 
-                var promiseUpSert = DocUserView.upsert({
-                    userId: req.user.id,
-                    updatedAt: new Date(),
-                    docId: req.doc.id
-                });
+                var promiseUpSert = updateLastView(req.doc.id, req.user.id);
                 promises.push(promiseUpSert);
 
             }
