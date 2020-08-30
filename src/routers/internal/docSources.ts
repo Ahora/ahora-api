@@ -3,6 +3,8 @@ import DocSource from "../../models/docSource";
 import { Op } from "sequelize";
 import Organization from "../../models/organization";
 import db from "../../models";
+import OrganizationTeamUser from "../../models/organizationTeamsUsers";
+import User from "../../models/users";
 
 const router: Router = express.Router();
 
@@ -18,7 +20,15 @@ router.get("/internal/docsources", async (req: Request, res: Response, next: Nex
                 ]
             },
             include: [
-                { model: Organization, as: "organizationFK", attributes: ["login"] }
+                {
+                    model: Organization, as: "organizationFK", include: [
+                        {
+                            model: OrganizationTeamUser, required: false, attributes: ["User.accessToken"], include: [
+                                { model: User }
+                            ]
+                        }
+                    ]
+                }
             ],
             order: ["organizationId"]
         });
