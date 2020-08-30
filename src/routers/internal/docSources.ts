@@ -20,15 +20,7 @@ router.get("/internal/docsources", async (req: Request, res: Response, next: Nex
                 ]
             },
             include: [
-                {
-                    model: Organization, as: "organizationFK", include: [
-                        {
-                            model: OrganizationTeamUser, required: false, attributes: ["User.accessToken"], include: [
-                                { model: User }
-                            ]
-                        }
-                    ]
-                }
+                { model: Organization, as: "organizationFK", attributes: ["login"] }
             ],
             order: ["organizationId"]
         });
