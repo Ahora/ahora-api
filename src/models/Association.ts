@@ -87,6 +87,9 @@ export const forceInit = async () => {
         {
             name: "merged",
             updateCloseTime: true
+        },
+        {
+            name: "draft"
         }
     ]);
     console.log("organization status created");
