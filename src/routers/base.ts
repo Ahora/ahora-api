@@ -199,7 +199,8 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                         await hooks.delete.before(result, req);
                     }
                     await model.destroy({
-                        where: { [primaryField]: req.params[primaryField] }
+                        where: { [primaryField]: req.params[primaryField] },
+                        individualHooks: true
                     });
 
                     if (hooks && hooks.delete && hooks.delete.after) {
@@ -236,7 +237,9 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 if (beforeUpdateInstance && hooks && hooks.put && hooks.put.before) {
                     beforeUpdateInstance = await hooks.put.before(beforeUpdateInstance, req);
                 }
-                await beforeUpdateInstance.save();
+                await beforeUpdateInstance.save({
+                    individualHooks: true
+                });
 
                 if (beforeUpdateInstance && hooks && hooks.put && hooks.put.afterCreateOrUpdate) {
                     beforeUpdateInstance = await hooks.put.afterCreateOrUpdate(beforeUpdateInstance, req);

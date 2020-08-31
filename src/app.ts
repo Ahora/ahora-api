@@ -136,6 +136,6 @@ app.use(routeOrgCreate("/api/organizations"));
 
 app.use("/api/github", githubRouter);
 app.use(usersCreate("/api/users"));
-app.use("/auth", authRouter)
+app.use("/auth", authRouter);
 
 export default app;

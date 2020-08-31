@@ -1,16 +1,20 @@
-import { Model, DataTypes } from 'sequelize';
+import { DataTypes } from 'sequelize';
 import db from '.';
 import Doc from './docs';
 import User from './users';
-
 import { SourceableModel } from "./../routers/sync/BaseSync";
 import DocSource from './docSource';
+import { extractMentionsFromMarkdown, markdownToHTML, handleMentions } from '../helpers/markdown';
+import { updateMentions } from '../helpers/mention';
+import { addUserToWatchersList } from '../helpers/docWatchers';
+import { updateLastView } from '../helpers/docs/db';
+import { updateCommentsNumberAndTime } from '../helpers/comments';
 
 class Comment extends SourceableModel {
     public id!: number;
     public comment!: string;
     public commentId!: number | null;
-    public htmlComment!: string;
+    public htmlComment!: string | null;
     public pinned!: boolean;
     public parentId!: number | null;
     public docId!: number;
@@ -33,7 +37,7 @@ Comment.init({
     },
     htmlComment: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
     },
     docId: {
         type: DataTypes.INTEGER,
@@ -74,8 +78,39 @@ Comment.init({
     }
 }, {
     sequelize: db.sequelize,
-    timestamps: false,
+    timestamps: true,
     tableName: "comments",
+});
+
+Comment.beforeSave(async (instance) => {
+    if (instance.comment) {
+        const result = await handleMentions(instance.comment);
+        instance.htmlComment = await markdownToHTML(result.markdown);
+    }
+});
+
+Comment.afterDestroy(async (instance) => {
+    await updateCommentsNumberAndTime(instance.docId, new Date());
+})
+
+Comment.afterSave(async (instance) => {
+
+    await updateLastView(instance.docId, instance.authorUserId);
+
+    let watchers: number[] = [instance.authorUserId];
+    if (instance.comment) {
+        const mentionUsers = await extractMentionsFromMarkdown(instance.comment);
+        const mentionedUserIds = mentionUsers.map((user) => user.id);
+        await updateMentions(mentionedUserIds, instance.docId, instance.id);
+
+        watchers = [...watchers, ...mentionedUserIds];
+    }
+
+    await updateCommentsNumberAndTime(instance.docId, instance.updatedAt);
+
+    for (let index = 0; index < watchers.length; index++) {
+        await addUserToWatchersList(instance.docId, watchers[index]);
+    }
 });
 
 export const initAssociationComments = () => {

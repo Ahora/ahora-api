@@ -35,25 +35,6 @@ import { updateLastView } from "../helpers/docs/db";
 
 const afterPost = async (doc: Doc, req: Request): Promise<Doc> => {
     await updateLabels(doc, req);
-    let watchers: number[] = [];
-
-    if (req.user) {
-        await updateLastView(doc.id, req.user.id);
-        watchers.push(req.user.id);
-    }
-    if (doc.description) {
-        const mentionUsers = await extractMentionsFromMarkdown(doc.description);
-        const mentionedUserIds = mentionUsers.map((user) => user.id);
-        await updateMentions(mentionedUserIds, doc.id);
-
-        watchers = [...watchers, ...mentionedUserIds];
-
-    }
-
-    for (let index = 0; index < watchers.length; index++) {
-        await addUserToWatchersList(doc.id, watchers[index]);
-    }
-
     return doc;
 }
 
@@ -65,15 +46,6 @@ const afterPut = async (doc: Doc, req: Request): Promise<Doc> => {
     if (req.user) {
         await updateLastView(doc.id, req.user.id)
         watchers.push(req.user.id);
-    }
-
-    if (doc.description) {
-        const mentionUsers = await extractMentionsFromMarkdown(doc.description);
-        const mentionedUserIds = mentionUsers.map((user) => user.id);
-
-        watchers = [...watchers, ...mentionedUserIds];
-
-        await updateMentions(mentionedUserIds, doc.id);
     }
 
     for (let index = 0; index < watchers.length; index++) {
@@ -161,23 +133,12 @@ const afterGroupByGet = async (item: any, req: Request): Promise<any> => {
 }
 
 const beforePut = async (doc: Doc, req: Request): Promise<Doc> => {
-    if (doc.description) {
-        const result = await handleMentions(doc.description);
-        await updateMentions(result.mentions.map((user) => user.id), doc.id);
-        doc.htmlDescription = await markdownToHTML(result.markdown);
-    }
-
     doc.updatedAt = new Date();
 
     return doc;
 }
 
 const beforePost = async (doc: Doc, req: Request): Promise<Doc> => {
-    if (doc.description) {
-        const result = await handleMentions(doc.description);
-        doc.htmlDescription = await markdownToHTML(result.markdown, req.docSource);
-    }
-
     if (req && req.org) {
         doc.statusId = doc.statusId || req.org.defaultStatus;
         doc.organizationId = req.org.id;
@@ -648,15 +609,16 @@ export default (path: string) => {
             const docId = parseInt(req.params.id);
 
             if (status) {
-                const updateParams: any = { statusId: status.id }
+                const updateParams: any = { statusId: status.id, updatedByUserId: req.user && req.user.id }
                 if (status.updateCloseTime) {
                     updateParams.closedAt = new Date();
                 }
                 else {
                     updateParams.closedAt = null;
                 }
-                updateParams.updatedAt = new Date();
-                await Doc.update(updateParams, { where: { id: docId } });
+                updateParams.
+                    updateParams.updatedAt = new Date();
+                await Doc.update(updateParams, { individualHooks: true, where: { id: docId } });
 
                 if (req.user) {
                     await updateLastView(docId, req.user.id)

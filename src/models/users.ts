@@ -67,6 +67,7 @@ export const initAssociationUser = () => {
     User.hasMany(OrganizationTeamUser, { foreignKey: "userId", onDelete: 'CASCADE' });
     User.hasMany(Doc, { foreignKey: "assigneeUserId", onDelete: 'CASCADE', as: "assignee" });
     User.hasMany(Doc, { foreignKey: "reporterUserId", onDelete: 'CASCADE', as: "reporter" });
+    User.hasMany(Doc, { foreignKey: "updatedByUserId", onDelete: 'CASCADE', as: "updatedBy" });
     User.hasMany(DocWatcher, { foreignKey: "userId", onDelete: 'CASCADE', as: "watcher" });
     User.hasMany(DocUserView, { foreignKey: "userId", onDelete: 'CASCADE' });
     User.hasMany(Comment, { foreignKey: "authorUserId", onDelete: 'CASCADE', as: "author", });

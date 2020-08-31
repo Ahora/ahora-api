@@ -49,6 +49,4 @@ export const initAssociationMentions = () => {
     Mention.belongsTo(Comment, { foreignKey: "commentId", onDelete: 'CASCADE' });
 }
 
-Mention.sync();
-
 export default Mention;

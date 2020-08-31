@@ -8,15 +8,21 @@ import DocType from './docType';
 import DocWatcher from './docWatcher';
 import DocUserView from './docUserView';
 import DocLabel from './docLabel';
+import Comment from './comments';
 import DocSource from './docSource';
 import OrganizationMilestone from './milestones';
 import { SourceableModel } from '../routers/sync/BaseSync';
+import { markdownToHTML, extractMentionsFromMarkdown, handleMentions } from '../helpers/markdown';
+import { updateMentions } from '../helpers/mention';
+import { addUserToWatchersList } from '../helpers/docWatchers';
+import { updateLastView } from '../helpers/docs/db';
 
 class Doc extends SourceableModel {
     public id!: number;
     public subject!: string;
     public description!: string | null;
     public htmlDescription!: string | null;
+    public updatedByUserId!: number | null;
     public assigneeUserId!: number | null;
     public reporterUserId!: number | null;
     public docTypeId!: number;
@@ -87,6 +93,10 @@ Doc.init({
         type: DataTypes.INTEGER,
         allowNull: true
     },
+    updatedByUserId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
     createdAt: {
         type: DataTypes.DATE,
         allowNull: true
@@ -115,11 +125,53 @@ Doc.init({
     tableName: "docs",
 });
 
+Doc.beforeSave(async (instance) => {
+    if (instance.description) {
+        const result = await handleMentions(instance.description);
+        instance.htmlDescription = await markdownToHTML(result.markdown);
+
+    }
+});
+
+Doc.afterCreate(async (instance) => {
+    if (instance.reporterUserId) {
+        await Promise.all([
+            addUserToWatchersList(instance.id, instance.reporterUserId),
+            updateLastView(instance.id, instance.reporterUserId)
+        ]);
+    }
+});
+
+Doc.afterUpdate(async (instance) => {
+    if (instance.updatedByUserId) {
+        await Promise.all([
+            addUserToWatchersList(instance.id, instance.updatedByUserId),
+            updateLastView(instance.id, instance.updatedByUserId)
+        ]);
+    }
+});
+
+Doc.afterSave(async (instance) => {
+    let watchers: number[] = [];
+    if (instance.description) {
+        const mentionUsers = await extractMentionsFromMarkdown(instance.description);
+        const mentionedUserIds = mentionUsers.map((user) => user.id);
+        await updateMentions(mentionedUserIds, instance.id);
+
+        watchers = [...watchers, ...mentionedUserIds];
+    }
+
+    for (let index = 0; index < watchers.length; index++) {
+        await addUserToWatchersList(instance.id, watchers[index]);
+    }
+});
+
 export const initAssociationDocs = () => {
     Doc.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
     Doc.belongsTo(OrganizationStatus, { foreignKey: "statusId", onDelete: 'CASCADE', as: "status" });
     Doc.belongsTo(DocSource, { foreignKey: "docSourceId", onDelete: 'CASCADE', as: "source" });
     Doc.belongsTo(User, { foreignKey: "assigneeUserId", onDelete: 'CASCADE', as: "assignee" });
+    Doc.belongsTo(User, { foreignKey: "updatedByUserId", onDelete: 'CASCADE', as: "updatedBy" });
     Doc.belongsTo(User, { foreignKey: "reporterUserId", onDelete: 'CASCADE', as: "reporter" });
     Doc.belongsTo(DocType, { foreignKey: "docTypeId", onDelete: 'CASCADE', as: "docType" });
     Doc.belongsTo(OrganizationMilestone, { foreignKey: "milestoneId", onDelete: 'SET NULL', as: "milestone" });
