@@ -616,8 +616,7 @@ export default (path: string) => {
                 else {
                     updateParams.closedAt = null;
                 }
-                updateParams.
-                    updateParams.updatedAt = new Date();
+                updateParams.updatedAt = new Date();
                 await Doc.update(updateParams, { individualHooks: true, where: { id: docId } });
 
                 if (req.user) {
