@@ -216,7 +216,7 @@ const generateQuery = async (req: Request): Promise<any> => {
 
         if (labelIds.length > 0) {
             const labelsQuery = `SELECT "docId" FROM doclabels as "docquery" WHERE "labelId" in (${labelIds.join(",")}) GROUP BY "docId" HAVING COUNT(*) = ${labelIds.length} `;
-            query.id = { [Op.in]: [literal(labelsQuery)] }
+            query.id = [{ [Op.in]: [literal(labelsQuery)] }]
         }
     }
 
@@ -460,9 +460,20 @@ const generateQuery = async (req: Request): Promise<any> => {
         query.docId = req.query.docId;
     }
 
+    if (req.query.unread && req.user) {
+        const unreadQuery = `select "docId" from docsuserview where "docsuserview"."updatedAt">"Doc"."updatedAt" and "userId"=${req.user.id}`;
+        // for supporting labels 
+        if (Array.isArray(query.id)) {
+            query.id.push({ [Op.in]: [literal(unreadQuery)] });
+
+        }
+        else {
+            query.id = { [Op.notIn]: [literal(unreadQuery)] }
+        }
+    }
+
     return query;
 }
-
 
 const groupByManager = new GroupByManager();
 groupByManager.registerGroup("reporter", new DocRepoterGroupHandler());
