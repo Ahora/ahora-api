@@ -15,7 +15,19 @@ const beforePost = async (entity: any, req: Request): Promise<any> => {
 const generateQuery = async (req: Request): Promise<any> => {
 
     const currentOrg: Organization = req.org!;
-    const query: any = { organizationId: currentOrg.id }
+    const query: any = { organizationId: currentOrg.id };
+
+    if (req.query.parentId) {
+        if (req.query.parentId === "null") {
+            query.parentId = null;
+        }
+        else {
+            const parentIdAsNumber = parseInt(req.query.parentId);
+            if (!isNaN(parentIdAsNumber)) {
+                query.parentId = parentIdAsNumber;
+            }
+        }
+    }
 
     if (req.query.q) {
         query[Op.or] = [
