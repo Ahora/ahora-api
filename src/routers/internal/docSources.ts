@@ -14,6 +14,12 @@ router.get("/internal/docsources", async (req: Request, res: Response, next: Nex
         var since = new Date();
         since.setMinutes(since.getMinutes() - 3);
         const docSources = await DocSource.findAll({
+            where: {
+                [Op.or]: [
+                    { lastUpdated: { [Op.lte]: since } },
+                    { lastUpdated: null }
+                ]
+            },
             include: [
                 { model: Organization, as: "organizationFK", attributes: ["login"] }
             ],
