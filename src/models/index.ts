@@ -7,7 +7,7 @@ export interface IDBInterface {
 }
 
 const sequelize: Sequelize = new Sequelize(DB_CONNECTION_STRING, {
-  logging: false,
+  logging: console.log,
   pool: {
     max: 5,
     min: 0,

@@ -502,7 +502,14 @@ export default (path: string) => {
             }
 
             after = afterGroupByGet;
-            attributes = [[fn('COUNT', '*'), 'count']];
+
+            switch (req.query.scalar) {
+                case "timetoclose":
+                    attributes = [[fn('AVG', fn("EXTRACT", fn("EPOCH FROM", literal('"Doc"."closedAt"-"Doc"."createdAt"')))), 'count']];
+                    break;
+                default:
+                    attributes = [[fn('COUNT', '*'), 'count']];
+            }
 
             raw = true;
             req.query.group.forEach((currentGroup: string) => {
