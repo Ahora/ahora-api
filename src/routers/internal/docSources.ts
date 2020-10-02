@@ -47,6 +47,7 @@ router.put("/internal/docsources/:docSourceId", async (req: Request, res: Respon
 
 router.get("/internal/organizations/:organizationId/accesstokens", async (req: Request, res: Response, next: NextFunction) => {
     try {
+
         const organizationId = parseInt(req.params.organizationId);
         const users = await User.findAll({
             attributes: ["accessToken"],

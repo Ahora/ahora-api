@@ -59,6 +59,7 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^4.3.0",
+    "@kubernetes/client-node": "^0.12.2",
     "@octokit/rest": "^16.34.1",
     "@sendgrid/mail": "^6.3.1",
     "@types/bluebird": "^3.5.32",

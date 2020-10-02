@@ -4,6 +4,7 @@ import Organization from './organization';
 import Comment from './comments';
 import DocSourceLabel from './docsourcelabel';
 import Doc from './docs';
+import { syncDocSource } from '../helpers/syncHelper';
 
 export class DocSource extends Model {
     public id!: number;
@@ -61,6 +62,9 @@ DocSource.init({
         }
     ]
 });
+
+
+DocSource.afterCreate(syncDocSource);
 
 export const initAssociationDocSource = () => {
     DocSource.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE', as: "organizationFK" });

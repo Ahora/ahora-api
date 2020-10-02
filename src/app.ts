@@ -9,8 +9,8 @@ import routeOrgCreate from "./routers/organizations";
 import usersCreate from "./routers/users";
 import RouteTeamUsersCreate from "./routers/teamsusers";
 import organizationChildCreate from "./routers/organizationChildBase";
+import docSourceRouteCreate from "./routers/docSource";
 import routeCommentCreate from "./routers/comments";
-import routeDocSourceLabelCreate from "./routers/sync/SyncLabels";
 import smartSyncRoute from "./routers/sync/SmartSyncRoute";
 import routeDocSourceMilestoneCreate from "./routers/sync/SyncMilestone";
 import routeOrganizationDashboardCreate from "./routers/organizationDashboards";
@@ -118,12 +118,11 @@ app.use("/api/payments", paymentsRoute);
 
 
 app.use(organizationChildCreate("/api/organizations/:login/labels", Label));
-app.use(organizationChildCreate("/api/organizations/:login/docsources", DocSource));
+app.use(docSourceRouteCreate("/api/organizations/:login/docsources"));
 app.use(organizationChildCreate("/api/organizations/:login/milestones", OrganizationMilestone));
 app.use(organizationChildCreate("/api/organizations/:login/statuses", OrganizationStatus));
 app.use(organizationChildCreate("/api/organizations/:login/doctypes", DocType));
 app.use("/api/organizations/:login", RouteTeamUsersCreate("/teams/:teamId/users"));
-app.use("/api/organizations/:login", routeDocSourceLabelCreate);
 app.use("/api/organizations/:login", routeDocSourceMilestoneCreate);
 app.use(routeDocCreate("/api/organizations/:login/docs"));
 app.use("/api/organizations/:login", routeOrganizationTeamsCreate("/teams"));
