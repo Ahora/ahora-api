@@ -1,7 +1,7 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import passport from "passport";
 import { Strategy as GitHubStrategy } from "passport-github2";
-import { GIT_HUB_CLIENT_ID, GIT_HUB_CLIENT_SECRET, GIT_HUB_CALLBACK_URL, GIT_HUB_AUTH_URL } from "../config";
+import { GIT_HUB_CLIENT_ID, GIT_HUB_CLIENT_SECRET, GIT_HUB_CALLBACK_URL } from "../config";
 import User from "../models/users";
 
 // Configure Passport authenticated session persistence.
@@ -29,7 +29,6 @@ passport.use(new GitHubStrategy({
     clientID: GIT_HUB_CLIENT_ID,
     clientSecret: GIT_HUB_CLIENT_SECRET,
     callbackURL: GIT_HUB_CALLBACK_URL,
-    authorizationURL: GIT_HUB_AUTH_URL,
     scope: ['user:email', "public_repo"]
 },
     async (accessToken: string, refreshToken: string, profile: any, cb: any) => {
