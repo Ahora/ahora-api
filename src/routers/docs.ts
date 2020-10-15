@@ -99,7 +99,6 @@ const afterGet = async (doc: any, req: Request): Promise<any> => {
         milestone: doc.milestone,
         organizationId: doc.organizationId,
         statusId: doc.statusId,
-        watchers: doc.watchers,
         milestoneId: doc.milestoneId,
         updatedAt: doc.updatedAt,
         closedAt: doc.closedAt,
@@ -107,6 +106,7 @@ const afterGet = async (doc: any, req: Request): Promise<any> => {
         views: doc.views,
         createdAt: doc.createdAt,
         lastView: (doc.lastView && doc.lastView.length) > 0 ? doc.lastView[0] : null,
+        watchers: doc.watchers && doc.watchers.map((watcher: any) => watcher.userId),
         labels: labels && labels.map((label: any) => label.labelId)
     };
 }

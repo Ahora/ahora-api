@@ -276,6 +276,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                         ...req.query,
                         id: req.params[primaryField],
                     },
+                    attributes: hooks && hooks.getSingle && hooks.getSingle.attributes,
                     include
                 });
 

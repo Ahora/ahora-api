@@ -39,6 +39,7 @@ export default (path: string) => {
     const router = routeCreate(path, User, (req) => {
         return {
             post: { handleError: handlePostError },
+            getSingle: { attributes: ["id", "username", "displayName"] },
             get: { getAdditionalParams: getAdditionalParams, useOnlyAdditionalParams: true, attributes: ["id", "username", "displayName"] },
             put: { disable: true },
             delete: { disable: true }
