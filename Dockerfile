@@ -1,4 +1,4 @@
-FROM node:10.14.2
+FROM node:12.18.3
 # Create app directory
 RUN mkdir -p /app
 WORKDIR /app

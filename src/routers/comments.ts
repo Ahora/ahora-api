@@ -89,7 +89,7 @@ export default (path: string) => {
         return {
             get: {
                 getAdditionalParams: generateQuery,
-                order: [["updatedAt", "DESC"]],
+                order: [["createdAt", "ASC"]],
                 include: [{ model: User, as: "author", attributes: ["displayName", "username"] }]
             },
             post: { before: beforePost, after: afterPost },
