@@ -51,7 +51,7 @@ DocWatcher.init({
 });
 
 export const initAssociationDocWatcher = () => {
-    DocWatcher.belongsTo(Doc, { foreignKey: "docId", onDelete: 'CASCADE' });
+    DocWatcher.belongsTo(Doc, { foreignKey: "docId", onDelete: 'CASCADE', as: 'watchers' });
     DocWatcher.belongsTo(User, { foreignKey: "userId", onDelete: 'CASCADE', as: "watcher" });
 }
 

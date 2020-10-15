@@ -3,7 +3,6 @@ import Doc from "../models/docs";
 import routeCreate from "./base";
 import { literal, fn } from "sequelize";
 import Organization from "../models/organization";
-import { isArray } from "util";
 import User from "../models/users";
 import DocLabel from "../models/docLabel";
 import Label from "../models/labels";
@@ -32,6 +31,7 @@ import moment from "moment";
 import { markdownToHTML, handleMentions, extractMentionsFromMarkdown } from "../helpers/markdown";
 import { updateMentions } from "../helpers/mention";
 import { updateLastView } from "../helpers/docs/db";
+import DocWatcher, { DocWatcherType } from "../models/docWatcher";
 
 const afterPost = async (doc: Doc, req: Request): Promise<Doc> => {
     await updateLabels(doc, req);
@@ -91,15 +91,15 @@ const afterGet = async (doc: any, req: Request): Promise<any> => {
         subject: doc.subject,
         description: doc.description,
         htmlDescription: doc.htmlDescription,
+        reporterUserId: doc.reporterUserId,
         assigneeUserId: doc.assigneeUserId,
-        assignee: doc.assignee,
-        reporter: doc.reporter,
         docTypeId: doc.docTypeId,
         metadata: doc.metadata,
         source: newSource,
         milestone: doc.milestone,
         organizationId: doc.organizationId,
         statusId: doc.statusId,
+        watchers: doc.watchers,
         milestoneId: doc.milestoneId,
         updatedAt: doc.updatedAt,
         closedAt: doc.closedAt,
@@ -107,7 +107,6 @@ const afterGet = async (doc: any, req: Request): Promise<any> => {
         views: doc.views,
         createdAt: doc.createdAt,
         lastView: (doc.lastView && doc.lastView.length) > 0 ? doc.lastView[0] : null,
-        reporterUserId: doc.reporterUserId,
         labels: labels && labels.map((label: any) => label.labelId)
     };
 }
@@ -160,6 +159,14 @@ const generateQuery = async (req: Request): Promise<any> => {
     const currentOrg: Organization = req.org!;
     const query: any = { organizationId: currentOrg.id };
 
+    if (req.user) {
+        const docWatchersQuery = `SELECT "docId" FROM docwatchers as "docwatchers" WHERE "watcherType"=${DocWatcherType.Watcher} and "userId"=${req.user.id} `;
+        query[Op.or] = {
+            isPrivate: false,
+            [Op.and]: { isPrivate: true, id: { [Op.in]: [literal(docWatchersQuery)] } }
+        }
+    }
+
     //--------------Status-------------------------------------------------
     const statuses: OrganizationStatus[] = await OrganizationStatus.findAll({
         where: {
@@ -181,7 +188,7 @@ const generateQuery = async (req: Request): Promise<any> => {
         }
     }
 
-    if (isArray(req.query.status)) {
+    if (Array.isArray(req.query.status)) {
         const statusIds: number[] = [];
         req.query.status.forEach((statusName: string) => {
             const value: OrganizationStatus | undefined = Statusmap.get(statusName.toLowerCase());
@@ -205,7 +212,7 @@ const generateQuery = async (req: Request): Promise<any> => {
         }
     }
 
-    if (isArray(req.query.label)) {
+    if (Array.isArray(req.query.label)) {
         const labelIds: number[] = [];
         req.query.label.forEach((labelName: string) => {
             const value: Label | undefined = labelMap.get(labelName.toLowerCase());
@@ -225,7 +232,7 @@ const generateQuery = async (req: Request): Promise<any> => {
         req.query.team = [req.query.team];
     }
 
-    if (isArray(req.query.team)) {
+    if (Array.isArray(req.query.team)) {
 
         const nullIndex: number = (req.query.team).indexOf(null);
         const teams: OrganizationTeam[] = await OrganizationTeam.findAll({ where: { organizationId: currentOrg.id, name: req.query.team } });
@@ -282,13 +289,7 @@ const generateQuery = async (req: Request): Promise<any> => {
             const userIdsString = userIds.join(",");
 
             const mentionsQuery = `SELECT DISTINCT "docId" FROM mentions WHERE "userId" in (${userIdsString})`;
-            const watchersQuery = `SELECT DISTINCT "docId" FROM docwatchers WHERE "userId" in (${userIdsString})`;
-            query[Op.and] = {
-                [Op.or]: [
-                    { id: { [Op.in]: [literal(mentionsQuery)] } },
-                    { id: { [Op.in]: [literal(watchersQuery)] } }
-                ]
-            };
+            query[Op.and] = { id: { [Op.in]: [literal(mentionsQuery)] } };
         }
     }
 
@@ -538,10 +539,9 @@ export default (path: string) => {
         else {
 
             includes = [
-                { as: "assignee", model: User, attributes: ["displayName", "username"] },
-                { as: "reporter", model: User, attributes: ["displayName", "username"] },
                 { as: "milestone", model: OrganizationMilestone, attributes: ["title"] },
                 { as: "source", model: DocSource, attributes: ["repo", "organization"], where: (req && req.query && req.query.repo) && { repo: req.query.repo } },
+                { as: "watchers", model: DocWatcher, separate: true, attributes: ["id", "userId"] },
                 { as: "labels", separate: true, model: DocLabel, attributes: ["labelId"] }
             ];
 

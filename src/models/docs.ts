@@ -32,6 +32,7 @@ class Doc extends SourceableModel {
     public milestoneId!: number | null;
     public organizationId!: number;
     public statusId!: number | null;
+    public isPrivate!: boolean | null;
     public closedAt!: Date[] | null;
 
     // timestamps!
@@ -118,6 +119,11 @@ Doc.init({
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0
+    },
+    isPrivate: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
     }
 }, {
     sequelize: db.sequelize,
@@ -175,7 +181,7 @@ export const initAssociationDocs = () => {
     Doc.belongsTo(User, { foreignKey: "reporterUserId", onDelete: 'CASCADE', as: "reporter" });
     Doc.belongsTo(DocType, { foreignKey: "docTypeId", onDelete: 'CASCADE', as: "docType" });
     Doc.belongsTo(OrganizationMilestone, { foreignKey: "milestoneId", onDelete: 'SET NULL', as: "milestone" });
-    Doc.hasMany(DocWatcher, { foreignKey: "docId", onDelete: 'CASCADE' });
+    Doc.hasMany(DocWatcher, { foreignKey: "docId", onDelete: 'CASCADE', as: 'watchers' });
     Doc.hasMany(DocUserView, { foreignKey: "docId", onDelete: 'CASCADE', as: "lastView" });
     Doc.hasMany(DocLabel, { foreignKey: "docId", onDelete: 'CASCADE', as: "labels" });
 }
