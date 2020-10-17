@@ -91,7 +91,7 @@ Comment.beforeSave(async (instance) => {
 
 Comment.afterDestroy(async (instance) => {
     await updateCommentsNumberAndTime(instance.docId, new Date());
-})
+});
 
 Comment.afterSave(async (instance) => {
 
@@ -111,6 +111,7 @@ Comment.afterSave(async (instance) => {
     for (let index = 0; index < watchers.length; index++) {
         await addUserToWatchersList(instance.docId, watchers[index]);
     }
+
 });
 
 export const initAssociationComments = () => {

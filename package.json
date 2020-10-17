@@ -79,6 +79,7 @@
     "passport": "^0.4.0",
     "passport-github2": "^0.1.11",
     "pg": "^7.7.1",
+    "pusher": "^3.0.1",
     "remark": "^12.0.0",
     "remark-github": "^9.0.0",
     "remark-html": "^11.0.2",

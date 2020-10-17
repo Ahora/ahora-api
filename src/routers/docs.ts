@@ -289,7 +289,13 @@ const generateQuery = async (req: Request): Promise<any> => {
             const userIdsString = userIds.join(",");
 
             const mentionsQuery = `SELECT DISTINCT "docId" FROM mentions WHERE "userId" in (${userIdsString})`;
-            query[Op.and] = { id: { [Op.in]: [literal(mentionsQuery)] } };
+            const watchersQuery = `SELECT DISTINCT "docId" FROM docwatchers WHERE "userId" in (${userIdsString})`;
+            query[Op.and] = {
+                [Op.or]: [
+                    { id: { [Op.in]: [literal(mentionsQuery)] } },
+                    { id: { [Op.in]: [literal(watchersQuery)] } }
+                ]
+            };
         }
     }
 
@@ -461,16 +467,22 @@ const generateQuery = async (req: Request): Promise<any> => {
         query.docId = req.query.docId;
     }
 
-    if (req.query.unread && req.user) {
-        const unreadQuery = `select "docId" from docsuserview where "docsuserview"."updatedAt">"Doc"."updatedAt" and "userId"=${req.user.id}`;
-        // for supporting labels 
-        if (Array.isArray(query.id)) {
-            query.id.push({ [Op.in]: [literal(unreadQuery)] });
+    if (req.query.unread) {
+        if (req.user) {
+            const unreadQuery = `select "docId" from docsuserview where "docsuserview"."updatedAt">"Doc"."updatedAt" and "userId"=${req.user.id}`;
+            // for supporting labels 
+            if (Array.isArray(query.id)) {
+                query.id.push({ [Op.in]: [literal(unreadQuery)] });
 
+            }
+            else {
+                query.id = { [Op.notIn]: [literal(unreadQuery)] }
+            }
         }
         else {
-            query.id = { [Op.notIn]: [literal(unreadQuery)] }
+            query.id = -1
         }
+
     }
 
     return query;
@@ -570,6 +582,7 @@ export default (path: string) => {
             },
             getSingle: {
                 getAdditionalParams: generateQuery,
+                after: afterGet,
                 useOnlyAdditionalParams: true,
                 include: includes
             },

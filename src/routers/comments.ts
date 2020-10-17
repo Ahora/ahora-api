@@ -96,7 +96,7 @@ export default (path: string) => {
             put: { before: beforePut },
             delete: { after: afterDelete }
         }
-    });
+    }, "comment");
 
     router.post("/docs/:docId/comments/:id/pin", async (req: Request, res: Response, next: NextFunction) => {
         try {

@@ -1,5 +1,6 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import { Model, IncludeOptions, FindAttributeOptions } from "sequelize";
+import pusher from "../helpers/pusher";
 
 export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
     put?: PostMethodHook<TAttributes, TInstance>;
@@ -33,7 +34,7 @@ export interface MethodHook<TAttributes, TInstance extends TAttributes> {
     disable?: boolean
 }
 
-export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: any, hooksDelegate: ((req: Request | null) => RouterHooks<TAttributes, TInstance>) | null = null) => {
+export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: any, hooksDelegate: ((req: Request | null) => RouterHooks<TAttributes, TInstance>) | null = null, websockerNotification?: string) => {
     const router: Router = express.Router();
 
     const primaryField: string = (hooksDelegate && hooksDelegate(null).primaryField) || "id";
@@ -177,6 +178,9 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     entity = await hooks.post.after(entity, req);
                 }
 
+                if (websockerNotification) {
+                    pusher.trigger("my-channel", `${websockerNotification}-post`, entity, (req.headers as any).socketid);
+                }
                 res.send(entity);
             } catch (error) {
                 if (hooks && hooks.post && hooks.post.handleError) {
@@ -205,6 +209,10 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
                     if (hooks && hooks.delete && hooks.delete.after) {
                         await hooks.delete.after(result, req);
+                    }
+
+                    if (websockerNotification) {
+                        pusher.trigger("my-channel", `${websockerNotification}-delete`, result, (req.headers as any).socketid);
                     }
                     res.send();
                 }
@@ -249,6 +257,10 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
 
                 if (result && hooks && hooks.put && hooks.put.after) {
                     result = await hooks.put.after(result, req);
+                }
+
+                if (websockerNotification) {
+                    pusher.trigger("my-channel", `${websockerNotification}-put`, result, (req.headers as any).socketid);
                 }
 
                 res.send(result);
