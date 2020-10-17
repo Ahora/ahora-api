@@ -91,6 +91,23 @@ Organization.init({
     ]
 });
 
+Organization.afterCreate(async (instance) => {
+
+    await Label.bulkCreate([
+        {
+            "name": "enhancement",
+            "organizationId": instance.id,
+            "color": "0366d6",
+            "description": "New feature or request",
+        },
+        {
+            "name": "bug",
+            "organizationId": instance.id,
+            "color": "d73a4a",
+            "description": "Something isn't working"
+        }]);
+})
+
 export const initAssociationOrganization = () => {
     Organization.hasMany(Label, { foreignKey: "organizationId", onDelete: 'CASCADE' });
     Organization.hasMany(OrganizationDashboard, { foreignKey: "organizationId", onDelete: 'CASCADE' });
