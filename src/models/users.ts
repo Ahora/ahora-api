@@ -8,6 +8,7 @@ import Comment from './comments';
 import DocWatcher from './docWatcher';
 import DocUserView from './docUserView';
 import OrganizationNotification from './OrganizationNotifications';
+import OrganizationShortcut from './OrganizationShortcut';
 
 class User extends Model {
     public id!: number;
@@ -64,6 +65,7 @@ User.init({
 export const initAssociationUser = () => {
     User.hasMany(OrganizationDashboard, { foreignKey: "userId", onDelete: 'CASCADE', as: "user" });
     User.hasMany(OrganizationNotification, { foreignKey: "userId", onDelete: 'CASCADE', as: "owner" });
+    User.hasMany(OrganizationShortcut, { foreignKey: "userId", onDelete: 'CASCADE' });
     User.hasMany(OrganizationTeamUser, { foreignKey: "userId", onDelete: 'CASCADE' });
     User.hasMany(Doc, { foreignKey: "assigneeUserId", onDelete: 'CASCADE', as: "assignee" });
     User.hasMany(Doc, { foreignKey: "reporterUserId", onDelete: 'CASCADE', as: "reporter" });

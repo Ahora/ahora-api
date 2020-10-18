@@ -19,6 +19,7 @@ import { initAssociationUser } from "./users";
 import { initAssociationOrganizationNotification } from "./OrganizationNotifications";
 import db from ".";
 import { initAssociationMentions } from "./mention";
+import { initAssociationOrganizationShortcut } from "./OrganizationShortcut";
 
 export default () => {
     initAssociationAttachments();
@@ -41,6 +42,7 @@ export default () => {
     initAssociationOrganizationTeamsUsers();
     initAssociationUser();
     initAssociationMentions();
+    initAssociationOrganizationShortcut();
 
     //forceInit();
 }

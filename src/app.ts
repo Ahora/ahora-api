@@ -19,6 +19,7 @@ import routeAttachmentstCreate from "./routers/attachments";
 import routeDocWatchersCreate from "./routers/docWatchers";
 import paymentsRoute from "./routers/payments/payments";
 import organizationNotificationRoute from "./routers/organizationNotification";
+import organizationShortcutRoute from "./routers/organizationShortcut";
 import { COOKIE_SECRET, DB_CONNECTION_STRING } from "./config";
 import pgSession from "connect-pg-simple";
 import Organization, { OrganizationType } from "./models/organization";
@@ -130,6 +131,8 @@ app.use("/api/organizations/:login", routeOrganizationDashboardCreate("/dashboar
 app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments"));
 app.use("/api/organizations/:login", routeAttachmentstCreate("/attachments"));
 app.use("/api/organizations/:login", organizationNotificationRoute("/notifications"));
+app.use("/api/organizations/:login", organizationShortcutRoute("/shortcuts"));
+
 app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watchers"));
 app.use(routeOrgCreate("/api/organizations"));
 
