@@ -223,7 +223,7 @@ const generateQuery = async (req: Request): Promise<any> => {
 
         if (labelIds.length > 0) {
             const labelsQuery = `SELECT "docId" FROM doclabels as "docquery" WHERE "labelId" in (${labelIds.join(",")}) GROUP BY "docId" HAVING COUNT(*) = ${labelIds.length} `;
-            query.id = [{ [Op.in]: [literal(labelsQuery)] }]
+            query.id = { [Op.and]: [{ [Op.in]: [literal(labelsQuery)] }] }
         }
     }
 

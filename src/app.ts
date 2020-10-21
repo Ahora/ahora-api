@@ -10,6 +10,7 @@ import usersCreate from "./routers/users";
 import RouteTeamUsersCreate from "./routers/teamsusers";
 import organizationChildCreate from "./routers/organizationChildBase";
 import docSourceRouteCreate from "./routers/docSource";
+import labelRouteCreate from "./routers/label";
 import routeCommentCreate from "./routers/comments";
 import smartSyncRoute from "./routers/sync/SmartSyncRoute";
 import routeDocSourceMilestoneCreate from "./routers/sync/SyncMilestone";
@@ -24,8 +25,6 @@ import { COOKIE_SECRET, DB_CONNECTION_STRING } from "./config";
 import pgSession from "connect-pg-simple";
 import Organization, { OrganizationType } from "./models/organization";
 import OrganizationTeamUser from "./models/organizationTeamsUsers";
-import Label from "./models/labels";
-import DocSource from "./models/docSource";
 import OrganizationMilestone from "./models/milestones";
 import OrganizationStatus from "./models/docStatuses";
 import DocType from "./models/docType";
@@ -117,9 +116,8 @@ app.get("/api/organizations/:login", async (req: Request, res: Response) => {
 });
 app.use("/api/payments", paymentsRoute);
 
-
-app.use(organizationChildCreate("/api/organizations/:login/labels", Label));
 app.use(docSourceRouteCreate("/api/organizations/:login/docsources"));
+app.use(labelRouteCreate("/api/organizations/:login/labels"));
 app.use(organizationChildCreate("/api/organizations/:login/milestones", OrganizationMilestone));
 app.use(organizationChildCreate("/api/organizations/:login/statuses", OrganizationStatus));
 app.use(organizationChildCreate("/api/organizations/:login/doctypes", DocType));
