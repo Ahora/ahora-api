@@ -1,6 +1,6 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import { Model, IncludeOptions, FindAttributeOptions } from "sequelize";
-import pusher from "../helpers/pusher";
+import { emitSockerMessage } from "../sockets";
 
 export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
     put?: PostMethodHook<TAttributes, TInstance>;
@@ -179,7 +179,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 }
 
                 if (websockerNotification) {
-                    pusher.trigger("my-channel", `${websockerNotification}-post`, entity, (req.headers as any).socketid);
+                    emitSockerMessage(`${websockerNotification}-post`, entity);
                 }
                 res.send(entity);
             } catch (error) {
@@ -212,7 +212,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     }
 
                     if (websockerNotification) {
-                        pusher.trigger("my-channel", `${websockerNotification}-delete`, result, (req.headers as any).socketid);
+                        emitSockerMessage(`${websockerNotification}-delete`, result);
                     }
                     res.send();
                 }
@@ -260,7 +260,7 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                 }
 
                 if (websockerNotification) {
-                    pusher.trigger("my-channel", `${websockerNotification}-put`, result, (req.headers as any).socketid);
+                    emitSockerMessage(`${websockerNotification}-put`, result);
                 }
 
                 res.send(result);
