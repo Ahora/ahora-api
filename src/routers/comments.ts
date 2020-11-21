@@ -3,11 +3,17 @@ import routeCreate, { RouterHooks } from "./base";
 import Comment from "../models/comments";
 import User from "../models/users";
 import GithubCommentsProvider from "../providers/github/GithubCommentsProvider";
+import { Op } from "sequelize";
 
 const generateQuery = async (req: Request): Promise<any> => {
-    return {
+    const query: any = {
         docId: parseInt(req.params.docId)
     }
+
+    if (req.query.createdAt) {
+        query.createdAt = { [Op.lt]: req.query.createdAt };
+    }
+    return query;
 }
 
 const beforePost = async (comment: Comment, req: Request): Promise<Comment> => {
@@ -59,40 +65,16 @@ const afterDelete = async (comment: Comment, req: Request): Promise<Comment> => 
     return comment;
 }
 
-const afterPost = async (comment: Comment, req: Request): Promise<Comment> => {
-    const returnValue: any = {
-        authorUserId: comment.authorUserId,
-        id: comment.id,
-        comment: comment.comment,
-        updatedAt: comment.updatedAt,
-        createdAt: comment.createdAt,
-        docSourceId: comment.docSourceId,
-        sourceId: comment.sourceId,
-        htmlComment: comment.htmlComment,
-        pinned: comment.pinned,
-        docId: comment.docId
-    };
-
-    if (req.user) {
-        returnValue.author = {
-            displayName: req.user.displayName,
-            username: req.user.username
-        };
-    }
-
-    return returnValue;
-}
-
 export default (path: string) => {
 
     const router = routeCreate(path, Comment, (req) => {
         return {
             get: {
                 getAdditionalParams: generateQuery,
-                order: [["createdAt", "ASC"]],
-                include: [{ model: User, as: "author", attributes: ["displayName", "username"] }]
+                useOnlyAdditionalParams: true,
+                order: [["createdAt", "ASC"]]
             },
-            post: { before: beforePost, after: afterPost },
+            post: { before: beforePost },
             put: { before: beforePut },
             delete: { after: afterDelete }
         }
