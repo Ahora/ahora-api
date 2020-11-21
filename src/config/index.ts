@@ -9,4 +9,6 @@ export const STORAGE_BUCKET_NAME: string = process.env.STORAGE_BUCKET_NAME as st
 export const EMAIL_DOMAIN: string = process.env.EMAIL_DOMAIN as string;
 export const URL: string = process.env.URL as string;
 export const BLUE_SNAP_SECRET: string = process.env.BLUE_SNAP_SECRET as string;
+export const WEBSOCKET_CACHE_ADDRESS: string = process.env.WEBSOCKET_CACHE_ADDRESS as string;
+export const WEBSOCKET_CACHE_PASSWORD: string = process.env.WEBSOCKET_CACHE_PASSWORD as string;
 

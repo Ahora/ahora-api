@@ -24,12 +24,8 @@ app.set('port', port);
  */
 export const expressApp = app;
 export const server = http.createServer(app);
-export let socket: any;
 
-socketInit(server).then((socket1) => {
-    socket = socket1
-});
-
+socketInit(server);
 /**
  * Listen on provided port, on all network interfaces.
  */

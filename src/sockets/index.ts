@@ -1,22 +1,25 @@
-import socketinfra from "socket.io";
+import { Server } from "socket.io";
+import { createAdapter } from 'socket.io-redis';
+import { RedisClient } from 'redis';
+import { WEBSOCKET_CACHE_ADDRESS, WEBSOCKET_CACHE_PASSWORD } from "../config";
 
-
-let socketInstance1: socketinfra.Socket;
+let socketInstance1: any;
 export default (async (http: any) => {
-    return new Promise((resolve) => {
-        var io = socketinfra(http);
-        io.on('connection', (socket) => {
-            socketInstance1 = socket;
-            resolve(socket);
-        });
+    const io = new Server(http, {
+
     });
-})
+    if (WEBSOCKET_CACHE_ADDRESS) {
+        const pubClient = new RedisClient({ host: WEBSOCKET_CACHE_ADDRESS, port: 6379, password: WEBSOCKET_CACHE_PASSWORD });
+        const subClient = pubClient.duplicate();
+
+        const adapter = createAdapter({ pubClient, subClient });
+        io.adapter(adapter);
+    }
+    socketInstance1 = io;
+});
+
 
 export const emitSockerMessage = (event: string, data: any, room?: string) => {
-    let sockerInstance: socketinfra.Socket = socketInstance1;
-    if (room) {
-        sockerInstance = sockerInstance.to(room);
-    }
-
-    sockerInstance.broadcast.emit(event, data);
+    socketInstance1.emit(event, data);
 }
+

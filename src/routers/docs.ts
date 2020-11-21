@@ -589,7 +589,7 @@ export default (path: string) => {
             post: { before: beforePost, after: afterGet, afterCreateOrUpdate: afterPost, include: includes },
             put: { before: beforePut, after: afterGet, afterCreateOrUpdate: afterPut, include: includes }
         }
-    });
+    }, "docs");
 
     router.use(`${path}/:id`, async (req: Request, res: Response, next: NextFunction) => {
         const currentDoc: Doc | null = await Doc.findByPk(req.params.id);
