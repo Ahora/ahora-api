@@ -690,14 +690,6 @@ export default (path: string) => {
         }
     });
 
-    const bytes = [
-        71, 73, 70, 56, 57, 97, 1, 0, 1, 0,
-        128, 0, 0, 0, 0, 0, 0, 0, 0, 33,
-        249, 4, 1, 0, 0, 0, 0, 44, 0, 0,
-        0, 0, 1, 0, 1, 0, 0, 2, 2, 68,
-        1, 0, 59];
-    var emptyPixel = Buffer.from(bytes);
-
     router.get(`${path}/:id/view`, async (req: Request, res: Response, next: NextFunction) => {
         try {
             const promises: Promise<any>[] = [];
@@ -716,7 +708,7 @@ export default (path: string) => {
             if (promises.length > 0) {
                 await Promise.all(promises);
             }
-            res.status(200).contentType('image/gif').send(emptyPixel);
+            res.send();
         } catch (error) {
             next(error);
         }

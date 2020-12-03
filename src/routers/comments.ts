@@ -13,7 +13,9 @@ const generateQuery = async (req: Request): Promise<any> => {
     if (req.query.createdAt) {
         query.createdAt = { [Op.lt]: req.query.createdAt };
     }
-    return query;
+    else if (req.query.fromCreatedAt) {
+        query.createdAt = { [Op.gt]: req.query.fromCreatedAt };
+    } return query;
 }
 
 const beforePost = async (comment: Comment, req: Request): Promise<Comment> => {
@@ -72,7 +74,7 @@ export default (path: string) => {
             get: {
                 getAdditionalParams: generateQuery,
                 useOnlyAdditionalParams: true,
-                order: [["createdAt", "ASC"]]
+                order: [["createdAt", "DESC"]]
             },
             post: { before: beforePost },
             put: { before: beforePut },

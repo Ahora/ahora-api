@@ -1,4 +1,4 @@
-import { Server } from "socket.io";
+import { Server } from "@ahora/socket.io";
 import { createAdapter } from 'socket.io-redis';
 import { RedisClient } from 'redis';
 import { WEBSOCKET_CACHE_ADDRESS, WEBSOCKET_CACHE_PASSWORD } from "../config";
@@ -15,11 +15,10 @@ export default (async (http: any) => {
         const adapter = createAdapter({ pubClient, subClient });
         io.adapter(adapter);
     }
+
     socketInstance1 = io;
 });
 
-
-export const emitSockerMessage = (event: string, data: any, room?: string) => {
-    socketInstance1.emit(event, data);
+export const emitSockerMessage = (event: string, data: any, excludeSocketId?: string) => {
+    socketInstance1.sockets.emitNG(event, excludeSocketId, data);
 }
-
