@@ -207,7 +207,6 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 
     if (Array.isArray(req.query.label)) {
-        console.log(req.query.label);
         const labelOrs = req.query.label.map((label: string) => {
             return {
                 name: {
@@ -228,7 +227,6 @@ const generateQuery = async (req: Request): Promise<any> => {
         const labelIds: number[] = labels.map((label) => label.id);
         if (labelIds.length > 0) {
             const labelsQuery = `SELECT "docId" FROM doclabels as "docquery" WHERE "labelId" in (${labelIds.join(",")}) GROUP BY "docId" HAVING COUNT(*) = ${labelIds.length} `;
-            console.log(labelsQuery);
             query.id = { [Op.and]: [{ [Op.in]: [literal(labelsQuery)] }] }
         }
         else {
