@@ -200,12 +200,6 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 
     //--------------Label-------------------------------------------------
-    const labels: Label[] = await Label.findAll({ where: { organizationId: currentOrg.id } });
-    const labelMap: Map<string, Label> = new Map();
-    labels.forEach(label => {
-        labelMap.set(label.name.toLowerCase(), label);
-    });
-
     if (req.query.label) {
         if (typeof (req.query.label) === "string") {
             req.query.label = [req.query.label];
@@ -213,17 +207,32 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 
     if (Array.isArray(req.query.label)) {
-        const labelIds: number[] = [];
-        req.query.label.forEach((labelName: string) => {
-            const value: Label | undefined = labelMap.get(labelName.toLowerCase());
-            if (value) {
-                labelIds.push(value.id);
+        console.log(req.query.label);
+        const labelOrs = req.query.label.map((label: string) => {
+            return {
+                name: {
+                    [Op.iLike]: label
+                }
             }
         });
 
+        const labels: Label[] = await Label.findAll({
+            attributes: ["id"],
+            where: {
+                organizationId: currentOrg.id,
+                [Op.or]: labelOrs
+            }
+        });
+
+
+        const labelIds: number[] = labels.map((label) => label.id);
         if (labelIds.length > 0) {
             const labelsQuery = `SELECT "docId" FROM doclabels as "docquery" WHERE "labelId" in (${labelIds.join(",")}) GROUP BY "docId" HAVING COUNT(*) = ${labelIds.length} `;
+            console.log(labelsQuery);
             query.id = { [Op.and]: [{ [Op.in]: [literal(labelsQuery)] }] }
+        }
+        else {
+            query.id = { [Op.and]: [-1] }
         }
     }
 
@@ -470,7 +479,6 @@ const generateQuery = async (req: Request): Promise<any> => {
     if (req.query.unread) {
         if (req.user) {
             const unreadQuery = `select "docId" from docsuserview where "docsuserview"."updatedAt">"Doc"."updatedAt" and "userId"=${req.user.id}`;
-            // for supporting labels 
             if (Array.isArray(query.id)) {
                 query.id.push({ [Op.in]: [literal(unreadQuery)] });
 
