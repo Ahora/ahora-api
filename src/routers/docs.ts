@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Doc from "../models/docs";
 import routeCreate from "./base";
-import { literal, fn } from "sequelize";
+import { literal, fn, Sequelize } from "sequelize";
 import Organization from "../models/organization";
 import User from "../models/users";
 import DocLabel from "../models/docLabel";
@@ -28,10 +28,9 @@ import DocTeamGroupHandler from "../helpers/groups/docs/DocTeamGroupHandler";
 import OrganizationTeam from "../models/organizationTeams";
 import OrganizationTeamUser from "../models/organizationTeamsUsers";
 import moment from "moment";
-import { markdownToHTML, handleMentions, extractMentionsFromMarkdown } from "../helpers/markdown";
-import { updateMentions } from "../helpers/mention";
 import { updateLastView } from "../helpers/docs/db";
 import DocWatcher, { DocWatcherType } from "../models/docWatcher";
+import Comment from "../models/comments";
 
 const afterPost = async (doc: Doc, req: Request): Promise<Doc> => {
     await updateLabels(doc, req);
@@ -715,6 +714,47 @@ export default (path: string) => {
                 await Promise.all(promises);
             }
             res.send();
+        } catch (error) {
+            next(error);
+        }
+    });
+
+
+    router.get(`${path}unread`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const tolat = literal(`"lastView"."updatedAt"`);
+            const query = await generateQuery(req);
+            const results: any[] = await Doc.findAll({
+                attributes: [[fn('COUNT', '*'), 'count']],
+                raw: true,
+                group: ["comments.docId"],
+                where: query,
+                include: [
+                    { required: false, as: "lastView", model: DocUserView, attributes: [], where: { userId: req.user!.id } },
+                    {
+                        attributes: ["docId"],
+                        model: Comment,
+                        where: {
+                            [Op.or]: [
+                                {
+                                    createdAt: {
+                                        [Op.gt]: literal(`"lastView"."updatedAt"`)
+                                    }
+                                },
+                                literal('"lastView"."updatedAt" is null')
+                            ]
+                        },
+                        as: "comments",
+                        required: true
+                    }
+                ]
+            });
+
+            const keyvalue: any = {};
+            results.forEach((item) => {
+                keyvalue[item["comments.docId"]] = parseInt(item.count);
+            })
+            res.send(keyvalue);
         } catch (error) {
             next(error);
         }
