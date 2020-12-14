@@ -364,6 +364,30 @@ const generateQuery = async (req: Request): Promise<any> => {
 
         }
     }
+
+    if (req.query.updatedAt) {
+        if (!Array.isArray(req.query.updatedAt)) {
+            const possibleNumber = parseInt(req.query.updatedAt);
+            if (possibleNumber < 0) {
+                query.updatedAt = {
+                    [Op.gt]: moment().subtract(possibleNumber * -1, 'd').startOf('day').toDate()
+                };
+            }
+            else {
+                const updatedAtDate = new Date(parseInt(req.query.updatedAt));
+                const plusday = new Date(parseInt(req.query.updatedAt));
+                plusday.setDate(plusday.getDate() + 1);
+
+                query.updatedAt = {
+                    [Op.lte]: plusday,
+                    [Op.gte]: updatedAtDate
+                };
+            }
+
+        }
+    }
+
+
     if (req.query.closedAt) {
         if (!Array.isArray(req.query.closedAt)) {
             const possibleNumber = parseInt(req.query.closedAt);
@@ -745,7 +769,7 @@ export default (path: string) => {
                             ]
                         },
                         as: "comments",
-                        required: true
+                        required: false
                     }
                 ]
             });
