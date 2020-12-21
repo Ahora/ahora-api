@@ -366,26 +366,24 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 
     if (req.query.updatedAt) {
-        if (!Array.isArray(req.query.updatedAt)) {
-            const possibleNumber = parseInt(req.query.updatedAt);
-            if (possibleNumber < 0) {
-                query.updatedAt = {
-                    [Op.gt]: moment().subtract(possibleNumber * -1, 'd').startOf('day').toDate()
-                };
-            }
-            else {
-                const updatedAtDate = new Date(parseInt(req.query.updatedAt));
-                const plusday = new Date(parseInt(req.query.updatedAt));
-                plusday.setDate(plusday.getDate() + 1);
+        if (Array.isArray(req.query.updatedAt)) {
+            const updatedAtDate = new Date(parseInt(req.query.updatedAt));
+            const plusday = new Date(parseInt(req.query.updatedAt));
+            plusday.setDate(plusday.getDate() + 1);
 
-                query.updatedAt = {
-                    [Op.lte]: plusday,
-                    [Op.gte]: updatedAtDate
-                };
-            }
-
+            query.updatedAt = {
+                [Op.lte]: plusday,
+                [Op.gte]: updatedAtDate
+            };
+        }
+        else {
+            query.updatedAt = {
+                [Op.gt]: req.query.updatedAt
+            };
         }
     }
+
+
 
 
     if (req.query.closedAt) {
@@ -749,14 +747,14 @@ export default (path: string) => {
             const tolat = literal(`"lastView"."updatedAt"`);
             const query = await generateQuery(req);
             const results: any[] = await Doc.findAll({
-                attributes: [[fn('COUNT', '*'), 'count']],
+                attributes: [[fn('COUNT', 'comments.id'), 'count'], "Doc.id"],
                 raw: true,
-                group: ["comments.docId"],
+                group: ["Doc.id"],
                 where: query,
                 include: [
                     { required: false, as: "lastView", model: DocUserView, attributes: [], where: { userId: req.user!.id } },
                     {
-                        attributes: ["docId"],
+                        attributes: [],
                         model: Comment,
                         where: {
                             [Op.or]: [
@@ -776,7 +774,7 @@ export default (path: string) => {
 
             const keyvalue: any = {};
             results.forEach((item) => {
-                keyvalue[item["comments.docId"]] = parseInt(item.count);
+                keyvalue[item["id"]] = parseInt(item.count);
             })
             res.send(keyvalue);
         } catch (error) {

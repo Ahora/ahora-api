@@ -9,6 +9,7 @@ import routeOrgCreate from "./routers/organizations";
 import usersCreate from "./routers/users";
 import RouteTeamUsersCreate from "./routers/teamsusers";
 import organizationChildCreate from "./routers/organizationChildBase";
+import reactionRouteCreate from "./routers/reactions";
 import docSourceRouteCreate from "./routers/docSource";
 import labelRouteCreate from "./routers/label";
 import routeCommentCreate from "./routers/comments";
@@ -40,6 +41,7 @@ app.use(session({
   store: new (pgSession(session))({
     conString: DB_CONNECTION_STRING
   }),
+
   secret: COOKIE_SECRET,
   resave: false,
   saveUninitialized: false,
@@ -117,6 +119,7 @@ app.get("/api/organizations/:login", async (req: Request, res: Response) => {
 app.use("/api/payments", paymentsRoute);
 
 app.use(docSourceRouteCreate("/api/organizations/:login/docsources"));
+app.use(reactionRouteCreate("/api/reactions"));
 app.use(labelRouteCreate("/api/organizations/:login/labels"));
 app.use(organizationChildCreate("/api/organizations/:login/milestones", OrganizationMilestone));
 app.use(organizationChildCreate("/api/organizations/:login/statuses", OrganizationStatus));
