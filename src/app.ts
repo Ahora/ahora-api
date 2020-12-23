@@ -69,7 +69,16 @@ app.get("/status", (req: Request, res: Response, next: NextFunction) => {
 app.use(internalDocSourceRoute);
 
 app.get("/api/me", (req: Request, res: Response, next: NextFunction) => {
-  res.send(req.user);
+  if (req.user) {
+    res.send({
+      username: req.user.username,
+      displayName: req.user.displayName,
+      email: req.user.email,
+      avatar: req.user.avatar,
+      id: req.user.id
+    });
+  }
+
 });
 
 app.use("/api/organizations/:login", async (req: Request, res: Response, next: NextFunction) => {
@@ -138,7 +147,7 @@ app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watche
 app.use(routeOrgCreate("/api/organizations"));
 
 app.use("/api/github", githubRouter);
-app.use(usersCreate("/api/users"));
+app.use("/api/organizations/:login", usersCreate("/users"));
 app.use("/auth", authRouter);
 
 export default app;
