@@ -263,6 +263,12 @@ const generateQuery = async (req: Request): Promise<any> => {
         }
     }
 
+    //--------------Is Private------------------------------------------------
+
+    if (req.query.private) {
+        query.isPrivate = req.query.private === "true"
+    }
+
     //--------------Relevant To-------------------------------------------------
 
     if (req.query.mention) {

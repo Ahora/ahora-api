@@ -103,10 +103,12 @@ Comment.afterSave(async (instance) => {
         const mentionedUserIds = mentionUsers.map((user) => user.id);
         await updateMentions(mentionedUserIds, instance.docId, instance.id);
 
+        //TODO: Don't add mentioned users if the doc is Private.
         watchers = [...watchers, ...mentionedUserIds];
     }
 
     await updateCommentsNumberAndTime(instance.docId, instance.updatedAt);
+
 
     for (let index = 0; index < watchers.length; index++) {
         await addUserToWatchersList(instance.docId, watchers[index]);
