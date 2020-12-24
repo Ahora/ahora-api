@@ -41,3 +41,19 @@ export const unWatch = async (docId: number, userId: number): Promise<void> => {
         });
     }
 }
+
+
+export const addUsersToWatcherList = async (docId: number, userIds: number[]): Promise<DocWatcher[]> => {
+    if (userIds.length === 0) {
+        return []
+    }
+
+    const itemsToAdd: any[] = userIds.map((id: number) => {
+        return {
+            docId,
+            watcherType: DocWatcherType.Watcher,
+            userId: id
+        }
+    });
+    return await DocWatcher.bulkCreate(itemsToAdd);
+}

@@ -7,7 +7,7 @@ import User from "../models/users";
 import DocLabel from "../models/docLabel";
 import Label from "../models/labels";
 import { getUserFromGithubAlias } from "../helpers/users";
-import { addUserToWatchersList, unWatch } from "../helpers/docWatchers";
+import { addUsersToWatcherList, addUserToWatchersList, unWatch } from "../helpers/docWatchers";
 import GroupByManager from "../helpers/groups/GroupByManager";
 import DocRepoterGroupHandler from "../helpers/groups/docs/DocRepoterGroupHandler";
 import DocAssigneeGroupHandler from "../helpers/groups/docs/DocAssigneeGroupHandler";
@@ -34,6 +34,10 @@ import Comment from "../models/comments";
 
 const afterPost = async (doc: Doc, req: Request): Promise<Doc> => {
     await updateLabels(doc, req);
+
+    if (Array.isArray(req.body.users)) {
+        await addUsersToWatcherList(doc.id, req.body.users.filter((userId: number) => userId !== req.user?.id))
+    }
     return doc;
 }
 
