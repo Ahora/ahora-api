@@ -12,6 +12,7 @@ class OrganizationShortcut extends Model {
     public searchCriteria!: SearchCriterias;
     public star!: boolean;
     public muted!: boolean;
+    public since!: boolean | null;
 
     // timestamps!
     public readonly createdAt!: Date;
@@ -53,12 +54,17 @@ OrganizationShortcut.init({
     userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+    },
+    since: {
+        type: DataTypes.DATE,
+        allowNull: true,
     }
 }, {
     sequelize: db.sequelize,
     tableName: "organizationshortcut",
 });
 
+OrganizationShortcut.sync();
 export const initAssociationOrganizationShortcut = () => {
     OrganizationShortcut.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
     OrganizationShortcut.belongsTo(User, { foreignKey: "userId", onDelete: 'CASCADE' });

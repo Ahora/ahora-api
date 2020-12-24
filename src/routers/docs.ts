@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Doc from "../models/docs";
 import routeCreate from "./base";
-import { literal, fn } from "sequelize";
+import { literal, fn, Sequelize } from "sequelize";
 import Organization from "../models/organization";
 import User from "../models/users";
 import DocLabel from "../models/docLabel";
@@ -28,10 +28,9 @@ import DocTeamGroupHandler from "../helpers/groups/docs/DocTeamGroupHandler";
 import OrganizationTeam from "../models/organizationTeams";
 import OrganizationTeamUser from "../models/organizationTeamsUsers";
 import moment from "moment";
-import { markdownToHTML, handleMentions, extractMentionsFromMarkdown } from "../helpers/markdown";
-import { updateMentions } from "../helpers/mention";
 import { updateLastView } from "../helpers/docs/db";
 import DocWatcher, { DocWatcherType } from "../models/docWatcher";
+import Comment from "../models/comments";
 
 const afterPost = async (doc: Doc, req: Request): Promise<Doc> => {
     await updateLabels(doc, req);
@@ -200,12 +199,6 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 
     //--------------Label-------------------------------------------------
-    const labels: Label[] = await Label.findAll({ where: { organizationId: currentOrg.id } });
-    const labelMap: Map<string, Label> = new Map();
-    labels.forEach(label => {
-        labelMap.set(label.name.toLowerCase(), label);
-    });
-
     if (req.query.label) {
         if (typeof (req.query.label) === "string") {
             req.query.label = [req.query.label];
@@ -213,17 +206,30 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 
     if (Array.isArray(req.query.label)) {
-        const labelIds: number[] = [];
-        req.query.label.forEach((labelName: string) => {
-            const value: Label | undefined = labelMap.get(labelName.toLowerCase());
-            if (value) {
-                labelIds.push(value.id);
+        const labelOrs = req.query.label.map((label: string) => {
+            return {
+                name: {
+                    [Op.iLike]: label
+                }
             }
         });
 
+        const labels: Label[] = await Label.findAll({
+            attributes: ["id"],
+            where: {
+                organizationId: currentOrg.id,
+                [Op.or]: labelOrs
+            }
+        });
+
+
+        const labelIds: number[] = labels.map((label) => label.id);
         if (labelIds.length > 0) {
             const labelsQuery = `SELECT "docId" FROM doclabels as "docquery" WHERE "labelId" in (${labelIds.join(",")}) GROUP BY "docId" HAVING COUNT(*) = ${labelIds.length} `;
             query.id = { [Op.and]: [{ [Op.in]: [literal(labelsQuery)] }] }
+        }
+        else {
+            query.id = { [Op.and]: [-1] }
         }
     }
 
@@ -358,6 +364,28 @@ const generateQuery = async (req: Request): Promise<any> => {
 
         }
     }
+
+    if (req.query.updatedAt) {
+        if (Array.isArray(req.query.updatedAt)) {
+            const updatedAtDate = new Date(parseInt(req.query.updatedAt));
+            const plusday = new Date(parseInt(req.query.updatedAt));
+            plusday.setDate(plusday.getDate() + 1);
+
+            query.updatedAt = {
+                [Op.lte]: plusday,
+                [Op.gte]: updatedAtDate
+            };
+        }
+        else {
+            query.updatedAt = {
+                [Op.gt]: req.query.updatedAt
+            };
+        }
+    }
+
+
+
+
     if (req.query.closedAt) {
         if (!Array.isArray(req.query.closedAt)) {
             const possibleNumber = parseInt(req.query.closedAt);
@@ -470,7 +498,6 @@ const generateQuery = async (req: Request): Promise<any> => {
     if (req.query.unread) {
         if (req.user) {
             const unreadQuery = `select "docId" from docsuserview where "docsuserview"."updatedAt">"Doc"."updatedAt" and "userId"=${req.user.id}`;
-            // for supporting labels 
             if (Array.isArray(query.id)) {
                 query.id.push({ [Op.in]: [literal(unreadQuery)] });
 
@@ -589,7 +616,7 @@ export default (path: string) => {
             post: { before: beforePost, after: afterGet, afterCreateOrUpdate: afterPost, include: includes },
             put: { before: beforePut, after: afterGet, afterCreateOrUpdate: afterPut, include: includes }
         }
-    });
+    }, "docs");
 
     router.use(`${path}/:id`, async (req: Request, res: Response, next: NextFunction) => {
         const currentDoc: Doc | null = await Doc.findByPk(req.params.id);
@@ -690,14 +717,6 @@ export default (path: string) => {
         }
     });
 
-    const bytes = [
-        71, 73, 70, 56, 57, 97, 1, 0, 1, 0,
-        128, 0, 0, 0, 0, 0, 0, 0, 0, 33,
-        249, 4, 1, 0, 0, 0, 0, 44, 0, 0,
-        0, 0, 1, 0, 1, 0, 0, 2, 2, 68,
-        1, 0, 59];
-    var emptyPixel = Buffer.from(bytes);
-
     router.get(`${path}/:id/view`, async (req: Request, res: Response, next: NextFunction) => {
         try {
             const promises: Promise<any>[] = [];
@@ -716,7 +735,48 @@ export default (path: string) => {
             if (promises.length > 0) {
                 await Promise.all(promises);
             }
-            res.status(200).contentType('image/gif').send(emptyPixel);
+            res.send();
+        } catch (error) {
+            next(error);
+        }
+    });
+
+
+    router.get(`${path}unread`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const tolat = literal(`"lastView"."updatedAt"`);
+            const query = await generateQuery(req);
+            const results: any[] = await Doc.findAll({
+                attributes: [[fn('COUNT', 'comments.id'), 'count'], "Doc.id"],
+                raw: true,
+                group: ["Doc.id"],
+                where: query,
+                include: [
+                    { required: false, as: "lastView", model: DocUserView, attributes: [], where: { userId: req.user!.id } },
+                    {
+                        attributes: [],
+                        model: Comment,
+                        where: {
+                            [Op.or]: [
+                                {
+                                    createdAt: {
+                                        [Op.gt]: literal(`"lastView"."updatedAt"`)
+                                    }
+                                },
+                                literal('"lastView"."updatedAt" is null')
+                            ]
+                        },
+                        as: "comments",
+                        required: false
+                    }
+                ]
+            });
+
+            const keyvalue: any = {};
+            results.forEach((item) => {
+                keyvalue[item["id"]] = parseInt(item.count);
+            })
+            res.send(keyvalue);
         } catch (error) {
             next(error);
         }

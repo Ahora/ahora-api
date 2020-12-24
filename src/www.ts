@@ -6,6 +6,7 @@
 
 
 import app from "./app";
+import socketInit from "./sockets"
 var debug = require('debug')('console:server');
 var http = require('http');
 
@@ -24,6 +25,7 @@ app.set('port', port);
 export const expressApp = app;
 export const server = http.createServer(app);
 
+socketInit(server);
 /**
  * Listen on provided port, on all network interfaces.
  */

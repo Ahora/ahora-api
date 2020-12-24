@@ -10,10 +10,16 @@ import DocUserView from './docUserView';
 import OrganizationNotification from './OrganizationNotifications';
 import OrganizationShortcut from './OrganizationShortcut';
 
+export enum UserAuthSource {
+    Github = 0,
+    Google = 1
+}
 class User extends Model {
     public id!: number;
     public displayName!: string | null;
     public username!: string;
+    public authSource!: UserAuthSource;
+    public avatar!: string | null;
     public gitHubId!: string | null;
     public email!: string | null;
     public accessToken!: string | null;
@@ -27,6 +33,15 @@ User.init({
         primaryKey: true
     },
     displayName: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    authSource: {
+        type: DataTypes.ENUM("Github", "Google"),
+        allowNull: false,
+        defaultValue: UserAuthSource.Github
+    },
+    avatar: {
         type: DataTypes.STRING,
         allowNull: true
     },

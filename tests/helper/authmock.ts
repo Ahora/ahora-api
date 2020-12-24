@@ -13,9 +13,6 @@ export default () => {
     })
 
     app.get('/login/oauth/authorize', (req, res) => {
-        console.log("---------------------------------------");
-        console.log(req.query);
-
         process.exit(1);
         res.send({
             "tolat": "meshi"

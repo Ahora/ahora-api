@@ -20,10 +20,14 @@ import { initAssociationOrganizationNotification } from "./OrganizationNotificat
 import db from ".";
 import { initAssociationMentions } from "./mention";
 import { initAssociationOrganizationShortcut } from "./OrganizationShortcut";
+import Reaction, { initAssociationReaction } from "./reactions";
+import { initAssociationCommentReactions } from "./commentReactions";
 
 export default () => {
+    initAssociationReaction()
     initAssociationAttachments();
     initAssociationComments();
+    initAssociationCommentReactions();
     initAssociationDocLabel();
     initAssociationDocSource();
     initAssociationDocSourceLabel();
@@ -43,6 +47,7 @@ export default () => {
     initAssociationUser();
     initAssociationMentions();
     initAssociationOrganizationShortcut();
+
 
     //forceInit();
 }
@@ -92,6 +97,33 @@ export const forceInit = async () => {
         },
         {
             name: "draft"
+        }
+    ]);
+
+    await Reaction.bulkCreate([
+        {
+            content: "+1",
+        },
+        {
+            content: "-1",
+        },
+        {
+            content: "laugh",
+        },
+        {
+            content: "confused"
+        },
+        {
+            content: "heart"
+        },
+        {
+            content: "hooray"
+        },
+        {
+            content: "rocket"
+        },
+        {
+            content: "eyes"
         }
     ]);
     console.log("organization status created");

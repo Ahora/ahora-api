@@ -9,6 +9,7 @@ import routeOrgCreate from "./routers/organizations";
 import usersCreate from "./routers/users";
 import RouteTeamUsersCreate from "./routers/teamsusers";
 import organizationChildCreate from "./routers/organizationChildBase";
+import reactionRouteCreate from "./routers/reactions";
 import docSourceRouteCreate from "./routers/docSource";
 import labelRouteCreate from "./routers/label";
 import routeCommentCreate from "./routers/comments";
@@ -40,6 +41,7 @@ app.use(session({
   store: new (pgSession(session))({
     conString: DB_CONNECTION_STRING
   }),
+
   secret: COOKIE_SECRET,
   resave: false,
   saveUninitialized: false,
@@ -67,7 +69,16 @@ app.get("/status", (req: Request, res: Response, next: NextFunction) => {
 app.use(internalDocSourceRoute);
 
 app.get("/api/me", (req: Request, res: Response, next: NextFunction) => {
-  res.send(req.user);
+  if (req.user) {
+    res.send({
+      username: req.user.username,
+      displayName: req.user.displayName,
+      email: req.user.email,
+      avatar: req.user.avatar,
+      id: req.user.id
+    });
+  }
+
 });
 
 app.use("/api/organizations/:login", async (req: Request, res: Response, next: NextFunction) => {
@@ -117,6 +128,7 @@ app.get("/api/organizations/:login", async (req: Request, res: Response) => {
 app.use("/api/payments", paymentsRoute);
 
 app.use(docSourceRouteCreate("/api/organizations/:login/docsources"));
+app.use(reactionRouteCreate("/api/reactions"));
 app.use(labelRouteCreate("/api/organizations/:login/labels"));
 app.use(organizationChildCreate("/api/organizations/:login/milestones", OrganizationMilestone));
 app.use(organizationChildCreate("/api/organizations/:login/statuses", OrganizationStatus));
@@ -135,7 +147,7 @@ app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watche
 app.use(routeOrgCreate("/api/organizations"));
 
 app.use("/api/github", githubRouter);
-app.use(usersCreate("/api/users"));
+app.use("/api/organizations/:login", usersCreate("/users"));
 app.use("/auth", authRouter);
 
 export default app;

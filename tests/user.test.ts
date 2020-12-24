@@ -5,7 +5,6 @@ import { assert } from 'chai';
 describe('User', () => {
     it('Get User from mock', async (done) => {
         request(app).get("/auth/github").expect(302).end((err, res) => {
-            console.log(res.header);
             if (err) {
                 done(err)
             }

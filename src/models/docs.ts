@@ -183,6 +183,7 @@ export const initAssociationDocs = () => {
     Doc.belongsTo(OrganizationMilestone, { foreignKey: "milestoneId", onDelete: 'SET NULL', as: "milestone" });
     Doc.hasMany(DocWatcher, { foreignKey: "docId", onDelete: 'CASCADE', as: 'watchers' });
     Doc.hasMany(DocUserView, { foreignKey: "docId", onDelete: 'CASCADE', as: "lastView" });
+    Doc.hasMany(Comment, { foreignKey: "docId", onDelete: 'CASCADE', as: "comments" });
     Doc.hasMany(DocLabel, { foreignKey: "docId", onDelete: 'CASCADE', as: "labels" });
 }
 
