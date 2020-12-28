@@ -4,6 +4,7 @@ import Comment from "../models/comments";
 import User from "../models/users";
 import GithubCommentsProvider from "../providers/github/GithubCommentsProvider";
 import { Op } from "sequelize";
+import { reportCommentToWS } from "../helpers/websockets/webSocketHelper";
 
 const generateQuery = async (req: Request): Promise<any> => {
     const query: any = {
@@ -76,11 +77,11 @@ export default (path: string) => {
                 useOnlyAdditionalParams: true,
                 order: [["createdAt", "DESC"]]
             },
-            post: { before: beforePost },
-            put: { before: beforePut },
-            delete: { after: afterDelete }
+            post: { before: beforePost, webhook: (comment: Comment, req, socketId) => { reportCommentToWS(req.org!.login, req.doc!.isPrivate, comment, "post", socketId) } },
+            put: { before: beforePut, webhook: (comment: Comment, req, socketId) => { reportCommentToWS(req.org!.login, req.doc!.isPrivate, comment, "put", socketId) } },
+            delete: { after: afterDelete, webhook: (comment: Comment, req, socketId) => { reportCommentToWS(req.org!.login, req.doc!.isPrivate, comment, "delete", socketId) } }
         }
-    }, "comment");
+    });
 
     router.post("/docs/:docId/comments/:id/pin", async (req: Request, res: Response, next: NextFunction) => {
         try {

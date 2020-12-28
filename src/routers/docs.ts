@@ -6,7 +6,7 @@ import Organization from "../models/organization";
 import User from "../models/users";
 import DocLabel from "../models/docLabel";
 import Label from "../models/labels";
-import { getUserFromGithubAlias } from "../helpers/users";
+import { getUserFromId } from "../helpers/users";
 import { addUsersToWatcherList, addUserToWatchersList, unWatch } from "../helpers/docWatchers";
 import GroupByManager from "../helpers/groups/GroupByManager";
 import DocRepoterGroupHandler from "../helpers/groups/docs/DocRepoterGroupHandler";
@@ -31,6 +31,8 @@ import moment from "moment";
 import { updateLastView } from "../helpers/docs/db";
 import DocWatcher, { DocWatcherType } from "../models/docWatcher";
 import Comment from "../models/comments";
+import { addAssigneeComment, addIsPrivateComment, addStatusComment } from "../helpers/comments";
+import { reportCommentToWS, reportDocToWS } from "../helpers/websockets/webSocketHelper";
 
 const afterPost = async (doc: Doc, req: Request): Promise<Doc> => {
     await updateLabels(doc, req);
@@ -624,10 +626,11 @@ export default (path: string) => {
                 useOnlyAdditionalParams: true,
                 include: includes
             },
-            post: { before: beforePost, after: afterGet, afterCreateOrUpdate: afterPost, include: includes },
-            put: { before: beforePut, after: afterGet, afterCreateOrUpdate: afterPut, include: includes }
+            post: { before: beforePost, after: afterGet, afterCreateOrUpdate: afterPost, include: includes, webhook: (doc: Doc, req, socketId) => { reportDocToWS(req.org!.login, doc, "post", socketId) } },
+            put: { before: beforePut, after: afterGet, afterCreateOrUpdate: afterPut, include: includes, webhook: (doc: Doc, req, socketId) => { reportDocToWS(req.org!.login, doc, "put", socketId) } },
+            delete: { webhook: (doc: Doc, req, socketId) => { reportDocToWS(req.org!.login, doc, "delete", socketId) } }
         }
-    }, "docs");
+    });
 
     router.use(`${path}/:id`, async (req: Request, res: Response, next: NextFunction) => {
         const currentDoc: Doc | null = await Doc.findByPk(req.params.id);
@@ -649,19 +652,28 @@ export default (path: string) => {
 
     router.post(`${path}/:id/assignee`, async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const username: string = req.body.username;
+            const toUserId: number = req.body.userId;
             const docId = parseInt(req.params.id);
-            const user: User | null = await getUserFromGithubAlias(username);
+            const user: User | null = await getUserFromId(toUserId);
+            let prevAssignee: User | null = null;
+            if (req.doc && req.doc.assigneeUserId) {
+                prevAssignee = await getUserFromId(req.doc.assigneeUserId);
+            }
+
             if (user) {
-                await Doc.update({
+                const [recordsUpdated, updatedDocs] = await Doc.update({
                     assigneeUserId: user.id,
                     updatedAt: new Date()
                 }, { where: { id: req.params.id } });
                 await addUserToWatchersList(docId, user.id);
-
                 if (req.user) {
-                    await updateLastView(docId, req.user.id)
+                    await updateLastView(docId, req.user.id);
+                    const comment = await addAssigneeComment(docId, prevAssignee, user, req.user);
+                    await reportCommentToWS(req.org!.login, req.doc!.isPrivate, comment, "docupdate");
                 }
+
+                if (updatedDocs.length > 0)
+                    reportDocToWS(req.org!.login, updatedDocs[0], "put");
                 res.send(user);
             } else {
                 res.status(400).send();
@@ -675,6 +687,10 @@ export default (path: string) => {
         try {
             const statusId: number = req.body.statusId;
             const status: OrganizationStatus | null = await OrganizationStatus.findByPk(statusId);
+            let prevStatus: OrganizationStatus | null = null;
+            if (req.doc?.statusId) {
+                prevStatus = await OrganizationStatus.findByPk(req.doc!.statusId);
+            }
             const docId = parseInt(req.params.id);
 
             if (status) {
@@ -686,17 +702,45 @@ export default (path: string) => {
                     updateParams.closedAt = null;
                 }
                 updateParams.updatedAt = new Date();
-                await Doc.update(updateParams, { individualHooks: true, where: { id: docId } });
+                const [recordsUpdated, updatedDocs] = await Doc.update(updateParams, { individualHooks: true, where: { id: docId } });
 
                 if (req.user) {
                     await updateLastView(docId, req.user.id)
                     await addUserToWatchersList(docId, req.user.id);
+                    const comment = await addStatusComment(docId, prevStatus, status, req.user);
+                    await reportCommentToWS(req.org!.login, req.doc!.isPrivate, comment, "docupdate");
+
                 }
+                if (updatedDocs.length > 0)
+                    reportDocToWS(req.org!.login, updatedDocs[0], "put");
                 res.send();
             }
             else {
                 next()
             }
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    router.post(`${path}/:id/isprivate`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const isPrivate: boolean = req.body.isPrivate;
+            const docId = parseInt(req.params.id);
+
+            const updateParams: any = { isPrivate, updatedAt: new Date() }
+            const [recordsUpdated, updatedDocs] = await Doc.update(updateParams, { individualHooks: true, where: { id: docId } });
+
+            if (req.user) {
+                await updateLastView(docId, req.user.id)
+                await addUserToWatchersList(docId, req.user.id);
+                const comment = await addIsPrivateComment(docId, isPrivate, req.user);
+                await reportCommentToWS(req.org!.login, isPrivate, comment, "docupdate");
+            }
+
+            if (updatedDocs.length > 0)
+                reportDocToWS(req.org!.login, updatedDocs[0], "put");
+            res.send();
         } catch (error) {
             next(error);
         }

@@ -43,6 +43,19 @@ export const unWatch = async (docId: number, userId: number): Promise<void> => {
 }
 
 
+export const getwatchersForDoc = async (docId: number): Promise<number[]> => {
+    let watchers: DocWatcher[] = await DocWatcher.findAll({
+        attributes: ["userId"],
+        where: {
+            docId,
+            watcherType: DocWatcherType.Watcher
+        }
+    });
+
+    return watchers.map((watcher) => watcher.userId)
+}
+
+
 export const addUsersToWatcherList = async (docId: number, userIds: number[]): Promise<DocWatcher[]> => {
     if (userIds.length === 0) {
         return []
