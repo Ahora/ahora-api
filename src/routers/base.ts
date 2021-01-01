@@ -204,8 +204,16 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     if (hooks && hooks.delete && hooks.delete.before) {
                         await hooks.delete.before(result, req);
                     }
+                    let additionalCondition: any = {};
+                    if (hooks && hooks.post && hooks.post.getAdditionalParams) {
+                        additionalCondition = await hooks.post.getAdditionalParams(req);
+                    }
+
                     await model.destroy({
-                        where: { [primaryField]: req.params[primaryField] },
+                        where: {
+                            ...additionalCondition,
+                            [primaryField]: req.params[primaryField]
+                        },
                         individualHooks: true
                     });
 
@@ -233,7 +241,17 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
         router.put(path + "/:" + primaryField, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
             try {
                 const hooks = hooksDelegate && hooksDelegate(req);
-                let beforeUpdateInstance: any | null = await model.findOne({ where: ({ [primaryField]: req.params[primaryField] }) as any });
+                let additionalCondition: any = {};
+                if (hooks && hooks.post && hooks.post.getAdditionalParams) {
+                    additionalCondition = await hooks.post.getAdditionalParams(req);
+                }
+
+                let beforeUpdateInstance: any | null = await model.findOne({
+                    where: {
+                        ...additionalCondition,
+                        [primaryField]: req.params[primaryField]
+                    }
+                });
 
                 for (const key in req.body) {
                     beforeUpdateInstance[key] = req.body[key];

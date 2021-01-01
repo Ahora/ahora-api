@@ -29,7 +29,10 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
     const router = routeCreate<TInstance, TAttributes, TCreationAttributes>(path, model, (req) => {
         return {
             get: { getAdditionalParams: generateQuery, order: [["updatedAt", "DESC"]] },
-            post: { before: beforePost }
+            put: { getAdditionalParams: (req) => ({ organizationId: req.org!.id }) },
+            post: { before: beforePost },
+            delete: { getAdditionalParams: (req) => ({ organizationId: req.org!.id }) }
+
         }
     });
     return router;
