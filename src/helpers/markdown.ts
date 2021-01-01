@@ -2,19 +2,20 @@ import remark from "remark";
 import DocSource from "../models/docSource";
 import User from "../models/users";
 const github = require("remark-github");
-const html = require('remark-html')
+const html = require('remark-html');
+import sanitize from "rehype-sanitize";
 
 export const markdownToHTML = async (markdown: string, docSource?: DocSource): Promise<string> => {
 
     return new Promise<string>(async (resolve, reject) => {
-        let remarkInstance: any = remark();
+        let remarkInstance: any = remark();//.use(sanitize);
 
         if (docSource) {
             remarkInstance = remarkInstance.use(github, {
                 repository: `${docSource!.organization}/${docSource!.repo}`
             });
         }
-        remarkInstance.use(html).process(markdown, (error: any, file: any) => {
+        remarkInstance.use(html, { sanitize: true }).process(markdown, (error: any, file: any) => {
             if (error) {
                 reject(error);
             }

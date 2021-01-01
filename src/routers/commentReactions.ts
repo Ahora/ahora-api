@@ -25,7 +25,7 @@ export default (path: string) => {
             },
             post: { before: beforePost }
         }
-    }, "comment-reaction");
+    });
 
 
     return router;

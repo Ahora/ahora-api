@@ -1,5 +1,6 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import { Model, IncludeOptions, FindAttributeOptions } from "sequelize";
+import { getwatchersForDoc } from "../helpers/docWatchers";
 import { emitSockerMessage } from "../sockets";
 
 export interface RouterHooks<TAttributes, TInstance extends TAttributes> {
@@ -30,11 +31,12 @@ export interface MethodHook<TAttributes, TInstance extends TAttributes> {
     getAdditionalParams?(req: Request): any;
     useOnlyAdditionalParams?: boolean;
     after?(entity: TInstance, req?: Request): Promise<TInstance>;
+    webhook?(entity: TInstance, req: Request, scoketId?: string): void;
     handleError?(error: any, req: Request, res: Response, next: NextFunction): void;
     disable?: boolean
 }
 
-export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: any, hooksDelegate: ((req: Request | null) => RouterHooks<TAttributes, TInstance>) | null = null, websockerNotification?: string) => {
+export default <TInstance extends TAttributes, TAttributes, TCreationAttributes = TAttributes>(path: string, model: any, hooksDelegate: ((req: Request | null) => RouterHooks<TAttributes, TInstance>) | null = null) => {
     const router: Router = express.Router();
 
     const primaryField: string = (hooksDelegate && hooksDelegate(null).primaryField) || "id";
@@ -178,8 +180,8 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     entity = await hooks.post.after(entity, req);
                 }
 
-                if (websockerNotification) {
-                    emitSockerMessage(`${websockerNotification}-post`, entity, (req.headers as any).socketid);
+                if (hooks && hooks.post && hooks.post.webhook) {
+                    hooks.post.webhook(entity, req, (req.headers as any).socketid);
                 }
                 res.send(entity);
             } catch (error) {
@@ -211,8 +213,8 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                         await hooks.delete.after(result, req);
                     }
 
-                    if (websockerNotification) {
-                        emitSockerMessage(`${websockerNotification}-delete`, result, (req.headers as any).socketid);
+                    if (hooks && hooks.delete && hooks.delete.webhook) {
+                        await hooks.delete.webhook(result, req, (req.headers as any).socketid);
                     }
                     res.send();
                 }
@@ -259,8 +261,8 @@ export default <TInstance extends TAttributes, TAttributes, TCreationAttributes 
                     result = await hooks.put.after(result, req);
                 }
 
-                if (websockerNotification) {
-                    emitSockerMessage(`${websockerNotification}-put`, result, (req.headers as any).socketid);
+                if (hooks && hooks.put && hooks.put.webhook && result) {
+                    await hooks.put.webhook(result, req, (req.headers as any).socketid);
                 }
 
                 res.send(result);

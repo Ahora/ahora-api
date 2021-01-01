@@ -9,9 +9,9 @@ import passport from "passport";
 import session from "express-session";
 import User from "../models/users";
 
-let socketInstance1: any;
+let socketInstance1: Server;
 export default (async (http: any) => {
-    const io = new Server(http);
+    const io: Server = new Server(http);
 
     io.use(authorize({
         secret: COOKIE_SECRET,
@@ -32,23 +32,28 @@ export default (async (http: any) => {
     }
 
     io.on("connection", (socket: Socket) => {
-
-        const user: User | undefined = (socket.request as any).user;
-        if (user) {
-            socket.join("user:" + user.id.toString());
-        }
-
         socket.on("joinroom", (organizationName: string) => {
             if (socket.rooms) {
                 socket.rooms.forEach((room) => { socket.leave(room) });
             }
+
+            const user: User | undefined = (socket.request as any).user;
+            if (user) {
+                socket.join(`user:${user.id}`);
+            }
+
             //TODO: Validate organization permission!
-            socket.join("org:" + organizationName);
+            socket.join(`org:${organizationName}`);
+
         });
     });
     socketInstance1 = io;
 });
 
-export const emitSockerMessage = (event: string, data: any, excludeSocketId?: string) => {
-    socketInstance1.sockets.emitNG(event, excludeSocketId, data);
+export const emitSockerMessage = (event: string, data: any, excludeSocketId?: string, rooms?: string[]) => {
+    let namespace = socketInstance1.sockets;
+    rooms?.forEach((room) => {
+        namespace = namespace.to(room);
+    });
+    namespace.emitNG(event, excludeSocketId, data);
 }

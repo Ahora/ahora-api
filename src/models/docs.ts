@@ -32,7 +32,7 @@ class Doc extends SourceableModel {
     public milestoneId!: number | null;
     public organizationId!: number;
     public statusId!: number | null;
-    public isPrivate!: boolean | null;
+    public isPrivate!: boolean;
     public closedAt!: Date[] | null;
 
     // timestamps!

@@ -29,3 +29,8 @@ export const getUserFromGithubAlias = async (username: string): Promise<User | n
 
     return user;
 }
+
+
+export const getUserFromId = async (id: number): Promise<User | null> => {
+    return await User.findOne({ where: { id } });
+}

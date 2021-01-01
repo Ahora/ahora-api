@@ -10,15 +10,26 @@ import { addUserToWatchersList } from '../helpers/docWatchers';
 import { updateLastView } from '../helpers/docs/db';
 import { updateCommentsNumberAndTime } from '../helpers/comments';
 
+export enum CommentType {
+    comment = 0,
+    statusChanged = 1,
+    isPrivateChanged = 2,
+    labelAdded = 3,
+    labelRemoved = 4,
+    assigneeChanged = 5
+}
+
 class Comment extends SourceableModel {
     public id!: number;
     public comment!: string;
-    public commentId!: number | null;
     public htmlComment!: string | null;
     public pinned!: boolean;
     public parentId!: number | null;
     public docId!: number;
     public authorUserId!: number;
+    public commentType!: CommentType;
+    public oldValue!: number | null;
+    public newValue!: number | null;
 
     // timestamps!
     public readonly createdAt!: Date;
@@ -43,7 +54,20 @@ Comment.init({
         type: DataTypes.INTEGER,
         allowNull: false
     },
+    commentType: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: CommentType.comment
+    },
     commentId: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    oldValue: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    newValue: {
         type: DataTypes.INTEGER,
         allowNull: true
     },
@@ -90,7 +114,10 @@ Comment.beforeSave(async (instance) => {
 });
 
 Comment.afterDestroy(async (instance) => {
-    await updateCommentsNumberAndTime(instance.docId, new Date());
+    await Promise.all([
+        updateCommentsNumberAndTime(instance.docId, new Date()),
+        updateLastView(instance.docId, instance.authorUserId)
+    ]);
 });
 
 Comment.afterSave(async (instance) => {
@@ -103,10 +130,15 @@ Comment.afterSave(async (instance) => {
         const mentionedUserIds = mentionUsers.map((user) => user.id);
         await updateMentions(mentionedUserIds, instance.docId, instance.id);
 
-        watchers = [...watchers, ...mentionedUserIds];
+        const doc = await Doc.findOne({ where: { id: instance.docId } });
+
+        if (!doc?.isPrivate) {
+            watchers = [...watchers, ...mentionedUserIds];
+        }
     }
 
     await updateCommentsNumberAndTime(instance.docId, instance.updatedAt);
+
 
     for (let index = 0; index < watchers.length; index++) {
         await addUserToWatchersList(instance.docId, watchers[index]);
