@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import routeCreate, { RouterHooks } from "./base";
 import Comment from "../models/comments";
-import User from "../models/users";
 import GithubCommentsProvider from "../providers/github/GithubCommentsProvider";
 import { Op } from "sequelize";
 import { reportCommentToWS } from "../helpers/websockets/webSocketHelper";
@@ -9,6 +8,11 @@ import { reportCommentToWS } from "../helpers/websockets/webSocketHelper";
 const generateQuery = async (req: Request): Promise<any> => {
     const query: any = {
         docId: parseInt(req.params.docId)
+    }
+
+    if (req.query.pinned) {
+        query.pinned = (req.query.pinned === "true");
+
     }
 
     if (req.query.createdAt) {

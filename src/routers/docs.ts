@@ -31,7 +31,7 @@ import moment from "moment";
 import { updateLastView } from "../helpers/docs/db";
 import DocWatcher, { DocWatcherType } from "../models/docWatcher";
 import Comment from "../models/comments";
-import { addAssigneeComment, addIsPrivateComment, addStatusComment } from "../helpers/comments";
+import { addAssigneeComment, addIsPrivateComment, addLabelAddedComment, addStatusComment } from "../helpers/comments";
 import { reportCommentToWS, reportDocToWS } from "../helpers/websockets/webSocketHelper";
 
 const afterPost = async (doc: Doc, req: Request): Promise<Doc> => {
@@ -672,7 +672,7 @@ export default (path: string) => {
                     await reportCommentToWS(req.org!.login, req.doc!.isPrivate, comment, "docupdate");
                 }
 
-                if (updatedDocs.length > 0)
+                if (updatedDocs && updatedDocs.length > 0)
                     reportDocToWS(req.org!.login, updatedDocs[0], "put");
                 res.send(user);
             } else {
@@ -681,6 +681,27 @@ export default (path: string) => {
         } catch (error) {
             next(error);
         }
+    });
+
+    router.post(`${path}/:id/labels`, async (req: Request, res: Response) => {
+        const docId = parseInt(req.params.id);
+        await DocLabel.create({
+            docId,
+            labelId: req.body.labelId
+        });
+    });
+
+    router.delete(`${path}/:id/labels/:labelId`, async (req: Request, res: Response) => {
+        const docId = parseInt(req.params.id);
+        const labelId = parseInt(req.params.labelId);
+
+        await DocLabel.destroy({
+            where: {
+                docId,
+                labelId
+            }
+        });
+        res.send();
     });
 
     router.post(`${path}/:id/status`, async (req: Request, res: Response, next: NextFunction) => {
