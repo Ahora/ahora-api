@@ -26,6 +26,10 @@ export const addUserToWatchersList = async (docId: number, userId: number): Prom
     return watcher;
 }
 
+export const deleteUserFromWatchers = async (docId: number, userId: number): Promise<void> => {
+    await DocWatcher.destroy({ where: { docId, userId } });
+}
+
 export const unWatch = async (docId: number, userId: number): Promise<void> => {
     const watcher: DocWatcher | null = await DocWatcher.findOne({
         where: { docId, userId }

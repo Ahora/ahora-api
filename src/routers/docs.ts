@@ -7,7 +7,7 @@ import User from "../models/users";
 import DocLabel from "../models/docLabel";
 import Label from "../models/labels";
 import { getUserFromId } from "../helpers/users";
-import { addUsersToWatcherList, addUserToWatchersList, unWatch } from "../helpers/docWatchers";
+import { addUsersToWatcherList, addUserToWatchersList, deleteUserFromWatchers, unWatch } from "../helpers/docWatchers";
 import GroupByManager from "../helpers/groups/GroupByManager";
 import DocRepoterGroupHandler from "../helpers/groups/docs/DocRepoterGroupHandler";
 import DocAssigneeGroupHandler from "../helpers/groups/docs/DocAssigneeGroupHandler";
@@ -775,6 +775,37 @@ export default (path: string) => {
             } else {
                 res.status(400).send();
             }
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    router.post(`${path}/:id/watchers/`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+
+            const watcher = await addUserToWatchersList(parseInt(req.params.id), req.body.userId);
+            res.send(watcher);
+
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    router.post(`${path}/:id/watchers/:userId`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const watcher = await addUserToWatchersList(parseInt(req.params.id), req.body.userId);
+            res.send(watcher);
+
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    router.delete(`${path}/:id/watchers/:userId`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            await deleteUserFromWatchers(parseInt(req.params.id), parseInt(req.params.userId));
+            res.send();
+
         } catch (error) {
             next(error);
         }
