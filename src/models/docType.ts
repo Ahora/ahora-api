@@ -12,6 +12,8 @@ class DocType extends Model {
     public description!: string | null;
     public organizationId!: number | null;
     public nextDocType?: number;
+    public hideFromSelection!: boolean;
+
 
     // timestamps!
     public readonly createdAt!: Date;
@@ -43,6 +45,11 @@ DocType.init({
     description: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    hideFromSelection: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
     }
 }, {
     sequelize: db.sequelize,

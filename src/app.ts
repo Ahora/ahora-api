@@ -31,6 +31,8 @@ import OrganizationStatus from "./models/docStatuses";
 import DocType from "./models/docType";
 import initAssociation from "./models/Association";
 import internalDocSourceRoute from "./routers/internal/docSources";
+import usersInternalRoute from "./routers/internal/users";
+
 import githubRouter from "./routers/github";
 
 initAssociation();
@@ -58,6 +60,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api/public/email", publicemailRouter);
 app.use("/internal/sync", smartSyncRoute);
+app.use("/internal", usersInternalRoute("/users"));
 
 app.use(bodyParser.json());
 

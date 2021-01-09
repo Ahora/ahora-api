@@ -9,6 +9,7 @@ class OrganizationStatus extends Model {
     color!: string | null;
     description!: string | null;
     organizationId!: number | null;
+    hideFromSelection!: boolean;
     updateCloseTime!: boolean;
 
     // timestamps!
@@ -42,6 +43,11 @@ OrganizationStatus.init({
     description: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    hideFromSelection: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
     }
 }, {
     sequelize: db.sequelize,
