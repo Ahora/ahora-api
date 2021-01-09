@@ -10,8 +10,8 @@ const getAdditionalParams = async (req: Request): Promise<any> => {
 
     //Search relevant users onbly for private organizations.
     if (req.org!.orgType === OrganizationType.Private) {
-        const usersQuery = `SELECT "userId" FROM organizationteamsusers WHERE "organizationId"=${req.org!.id}`;
-        query.id = { [Op.in]: [literal(usersQuery)] };
+        //const usersQuery = `SELECT "userId" FROM organizationteamsusers WHERE "organizationId"=${req.org!.id}`;
+        //query.id = { [Op.in]: [literal(usersQuery)] };
     }
     else {
         //Allow to search only github accounts for public organizations

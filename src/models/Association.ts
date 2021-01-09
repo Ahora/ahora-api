@@ -58,11 +58,13 @@ export const forceInit = async () => {
     await DocType.bulkCreate([
         {
             name: "Issue",
-            code: "issue"
+            code: "issue",
+            hideFromSelection: true
         },
         {
             name: "PullRequest",
-            code: "pr"
+            code: "pr",
+            hideFromSelection: true
         },
         {
             name: "Discussion",
@@ -93,10 +95,12 @@ export const forceInit = async () => {
         },
         {
             name: "merged",
-            updateCloseTime: true
+            updateCloseTime: true,
+            hideFromSelection: true
         },
         {
-            name: "draft"
+            name: "draft",
+            hideFromSelection: true
         }
     ]);
 
