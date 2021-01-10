@@ -10,6 +10,7 @@ import OrganizationStatus from './docStatuses';
 import DocSource from './docSource';
 import OrganizationTeamUser from './organizationTeamsUsers';
 import OrganizationShortcut from './OrganizationShortcut';
+import User from './users';
 
 export enum OrganizationType {
     Public = 0,
@@ -119,6 +120,7 @@ export const initAssociationOrganization = () => {
     Organization.hasMany(OrganizationTeamUser, { foreignKey: "organizationId", onDelete: 'CASCADE' });
     Organization.hasMany(DocSource, { foreignKey: "organizationId", onDelete: 'CASCADE', as: "organizationFK" });
     Organization.hasMany(DocType, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    Organization.hasMany(User, { foreignKey: "userId", onDelete: 'CASCADE' });
 }
 
 export default Organization;

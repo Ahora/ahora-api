@@ -9,21 +9,24 @@ import DocWatcher from './docWatcher';
 import DocUserView from './docUserView';
 import OrganizationNotification from './OrganizationNotifications';
 import OrganizationShortcut from './OrganizationShortcut';
+import UserSource from './userSource';
+import OrganizationTeam from './organizationTeams';
+import Organization from './organization';
 
-export enum UserAuthSource {
-    Github = 0,
-    Google = 1
+export enum UserType {
+    User = 0,
+    Group = 1
 }
 class User extends Model {
     public id!: number;
     public displayName!: string | null;
     public username!: string;
-    public authSource!: UserAuthSource;
-    public avatar!: string | null;
-    public gitHubId!: string | null;
+    public userType!: UserType;
     public email!: string | null;
-    public accessToken!: string | null;
-    public refreshToken!: string | null;
+    public organizationId!: number | null;
+    public avatar!: string | null;
+    public teamId!: number | null;
+
 }
 
 User.init({
@@ -36,29 +39,25 @@ User.init({
         type: DataTypes.STRING,
         allowNull: true
     },
-    authSource: {
-        type: DataTypes.ENUM("Github", "Google"),
+    userType: {
+        type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: UserAuthSource.Github
+        defaultValue: UserType.User
     },
-    avatar: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    gitHubId: {
-        type: DataTypes.STRING,
+    organizationId: {
+        type: DataTypes.INTEGER,
         allowNull: true
     },
     username: {
         type: DataTypes.STRING,
         allowNull: true
     },
-    accessToken: {
+    avatar: {
         type: DataTypes.STRING,
         allowNull: true
     },
-    refreshToken: {
-        type: DataTypes.STRING,
+    teamId: {
+        type: DataTypes.INTEGER,
         allowNull: true
     },
     email: {
@@ -71,7 +70,7 @@ User.init({
     indexes: [
         {
             unique: true,
-            name: 'unique_username',
+            name: 'unique_username_users',
             fields: ["username"]
         }
     ]
@@ -87,7 +86,10 @@ export const initAssociationUser = () => {
     User.hasMany(Doc, { foreignKey: "updatedByUserId", onDelete: 'CASCADE', as: "updatedBy" });
     User.hasMany(DocWatcher, { foreignKey: "userId", onDelete: 'CASCADE', as: "watcher" });
     User.hasMany(DocUserView, { foreignKey: "userId", onDelete: 'CASCADE' });
+    User.hasMany(UserSource, { foreignKey: "userId", onDelete: 'CASCADE' });
     User.hasMany(Comment, { foreignKey: "authorUserId", onDelete: 'CASCADE', as: "author", });
+    User.belongsTo(OrganizationTeam, { foreignKey: "teamId", onDelete: 'CASCADE' });
+    Doc.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
 }
 
 export default User;

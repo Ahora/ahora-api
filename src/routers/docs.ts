@@ -9,22 +9,22 @@ import Label from "../models/labels";
 import { getUserFromId } from "../helpers/users";
 import { addUsersToWatcherList, addUserToWatchersList, deleteUserFromWatchers, unWatch } from "../helpers/docWatchers";
 import GroupByManager from "../helpers/groups/GroupByManager";
-import DocRepoterGroupHandler from "../helpers/groups/docs/DocRepoterGroupHandler";
-import DocAssigneeGroupHandler from "../helpers/groups/docs/DocAssigneeGroupHandler";
-import DocStatusGroupHandler from "../helpers/groups/docs/DocStatusGroupHandler";
-import DocLabelGroupHandler from "../helpers/groups/docs/DocLabelGroupHandler";
-import DocDocTypeGroupHandler from "../helpers/groups/docs/DocDocTypeGroupHandler";
+import DocRepoterGroupHandler from "../helpers/groups/groups/DocRepoterGroupHandler";
+import DocAssigneeGroupHandler from "../helpers/groups/groups/DocAssigneeGroupHandler";
+import DocStatusGroupHandler from "../helpers/groups/groups/DocStatusGroupHandler";
+import DocLabelGroupHandler from "../helpers/groups/groups/DocLabelGroupHandler";
+import DocDocTypeGroupHandler from "../helpers/groups/groups/DocDocTypeGroupHandler";
 import { IGroupHandler, IGroupParameters, GroupInfo } from "../helpers/groups/IGroupHandler";
-import DocRepoGroupHandler from "../helpers/groups/docs/DocRepoGroupHandler";
-import DateGroupHandler from "../helpers/groups/docs/DateGroupHandler";
+import DocRepoGroupHandler from "../helpers/groups/groups/DocRepoGroupHandler";
+import DateGroupHandler from "../helpers/groups/groups/DateGroupHandler";
 import { Op } from "sequelize";
-import DocMilestoneGroupHandler from "../helpers/groups/docs/DocMilestoneGroupHandler";
+import DocMilestoneGroupHandler from "../helpers/groups/groups/DocMilestoneGroupHandler";
 import OrganizationStatus from "../models/docStatuses";
 import DocType from "../models/docType";
 import OrganizationMilestone from "../models/milestones";
 import DocSource from "../models/docSource";
 import DocUserView from "../models/docUserView";
-import DocTeamGroupHandler from "../helpers/groups/docs/DocTeamGroupHandler";
+import DocTeamGroupHandler from "../helpers/groups/groups/DocTeamGroupHandler";
 import OrganizationTeam from "../models/organizationTeams";
 import OrganizationTeamUser from "../models/organizationTeamsUsers";
 import moment from "moment";
@@ -33,6 +33,13 @@ import DocWatcher, { DocWatcherType } from "../models/docWatcher";
 import Comment from "../models/comments";
 import { addAssigneeComment, addIsPrivateComment, addLabelAddedComment, addStatusComment } from "../helpers/comments";
 import { reportCommentToWS, reportDocToWS } from "../helpers/websockets/webSocketHelper";
+import ConditionManager from "../helpers/groups/ConditionManager";
+import UserGroupMentionCondition from "../helpers/groups/docs/conditions/UserGroupCondition";
+import StatusCondition from "../helpers/groups/docs/conditions/StatusCondition";
+import DocTypeCondition from "../helpers/groups/docs/conditions/DocTypeCondition";
+import MilestoneCondition from "../helpers/groups/docs/conditions/MilestoneCondition";
+import IsPrivateCondition from "../helpers/groups/docs/conditions/IsPrivateCondition";
+import LabelCondition from "../helpers/groups/docs/conditions/LabelCondition";
 
 const afterPost = async (doc: Doc, req: Request): Promise<Doc> => {
     await updateLabels(doc, req);
@@ -160,10 +167,20 @@ const beforePost = async (doc: Doc, req: Request): Promise<Doc> => {
     return doc;
 };
 
+const conditionManager = new ConditionManager();
+conditionManager.registerField("reporter", new UserGroupMentionCondition("reporterUserId"));
+conditionManager.registerField("assignee", new UserGroupMentionCondition("assigneeUserId"));
+conditionManager.registerField("status", new StatusCondition());
+conditionManager.registerField("milestone", new MilestoneCondition());
+conditionManager.registerField("isPrivate", new IsPrivateCondition());
+conditionManager.registerField("docType", new DocTypeCondition());
+conditionManager.registerField("label", new LabelCondition());
+
 const generateQuery = async (req: Request): Promise<any> => {
 
     const currentOrg: Organization = req.org!;
     const query: any = { organizationId: currentOrg.id };
+
 
     if (req.user) {
         const docWatchersQuery = `SELECT "docId" FROM docwatchers as "docwatchers" WHERE "watcherType"=${DocWatcherType.Watcher} and "userId"=${req.user.id} `;
@@ -172,103 +189,20 @@ const generateQuery = async (req: Request): Promise<any> => {
             [Op.and]: { isPrivate: true, id: { [Op.in]: [literal(docWatchersQuery)] } }
         }
     }
-
-    //--------------Status-------------------------------------------------
-    const statuses: OrganizationStatus[] = await OrganizationStatus.findAll({
-        where: {
-            [Op.or]: [
-                { organizationId: currentOrg.id },
-                { organizationId: null }
-            ]
-        }
-    });
-    const Statusmap: Map<string, OrganizationStatus> = new Map();
-    statuses.forEach(status => {
-        Statusmap.set(status.name.toLowerCase(), status);
-    });
-
-
-    if (req.query.status) {
-        if (typeof (req.query.status) === "string") {
-            req.query.status = [req.query.status];
-        }
+    else {
+        query[Op.or] = { isPrivate: false };
     }
 
-    if (Array.isArray(req.query.status)) {
-        const statusIds: number[] = [];
-        req.query.status.forEach((statusName: string) => {
-            const value: OrganizationStatus | undefined = Statusmap.get(statusName.toLowerCase());
-            if (value) {
-                statusIds.push(value.id);
+    for (const key in req.query) {
+        const condition = conditionManager.getField(key);
+        if (condition) {
+            if (typeof (req.query[key]) === "string") {
+                req.query[key] = [req.query[key]];
             }
-        });
-        query.statusId = statusIds;
-    }
-
-    //--------------Label-------------------------------------------------
-    if (req.query.label) {
-        if (typeof (req.query.label) === "string") {
-            req.query.label = [req.query.label];
+            const values = req.query[key];
+            const sqlCondition = await condition.generate(values, req.org!, req.user);
+            query[condition.getFieldName()] = sqlCondition;
         }
-    }
-
-    if (Array.isArray(req.query.label)) {
-        const labelOrs = req.query.label.map((label: string) => {
-            return {
-                name: {
-                    [Op.iLike]: label
-                }
-            }
-        });
-
-        const labels: Label[] = await Label.findAll({
-            attributes: ["id"],
-            where: {
-                organizationId: currentOrg.id,
-                [Op.or]: labelOrs
-            }
-        });
-
-
-        const labelIds: number[] = labels.map((label) => label.id);
-        if (labelIds.length > 0) {
-            const labelsQuery = `SELECT "docId" FROM doclabels as "docquery" WHERE "labelId" in (${labelIds.join(",")}) GROUP BY "docId" HAVING COUNT(*) = ${labelIds.length} `;
-            query.id = { [Op.and]: [{ [Op.in]: [literal(labelsQuery)] }] }
-        }
-        else {
-            query.id = { [Op.and]: [-1] }
-        }
-    }
-
-    //--------------team-------------------------------------------------
-    if (req.query.team || req.query.team === null) {
-        req.query.team = [req.query.team];
-    }
-
-    if (Array.isArray(req.query.team)) {
-
-        const nullIndex: number = (req.query.team).indexOf(null);
-        const teams: OrganizationTeam[] = await OrganizationTeam.findAll({ where: { organizationId: currentOrg.id, name: req.query.team } });
-        const teamIds: (number | string)[] = teams.map((team) => team.id);
-
-        if (nullIndex > -1) {
-            teamIds.push("null");
-        }
-
-        if (teamIds.length > 0 && nullIndex === -1) {
-            const labelsQuery = `SELECT "userId" FROM ${OrganizationTeamUser.tableName} WHERE "teamId" in (${teamIds.join(",")})`;
-            query.reporterUserId = { [Op.in]: [literal(labelsQuery)] }
-        }
-        else if (teamIds.length === 1 && nullIndex > -1) {
-            const labelsQuery = `SELECT "userId" FROM ${OrganizationTeamUser.tableName} WHERE "organizationId"=${currentOrg.id} and "teamId" is not null`;
-            query.reporterUserId = { [Op.notIn]: [literal(labelsQuery)] }
-        }
-    }
-
-    //--------------Is Private------------------------------------------------
-
-    if (req.query.private) {
-        query.isPrivate = req.query.private === "true"
     }
 
     //--------------Relevant To-------------------------------------------------
@@ -318,43 +252,7 @@ const generateQuery = async (req: Request): Promise<any> => {
         }
     }
 
-    //--------------Assignee-------------------------------------------------
 
-    if (req.query.assignee) {
-        if (typeof (req.query.assignee) === "string") {
-            req.query.assignee = [req.query.assignee];
-        }
-    }
-
-    if (req.query.assignee) {
-        req.query.assignee = req.query.assignee.map((assignee: string) => {
-            switch (assignee) {
-                case "me":
-                    if (req.user) {
-                        return req.user.username;
-                    } else {
-                        return undefined
-                    }
-                case "null":
-                    return null;
-                default:
-                    return assignee;
-            }
-        });
-
-        const usersWithoutNull: string[] = req.query.assignee.filter((assignee: string) => assignee !== null);
-
-        const users: User[] = await User.findAll({
-            where: { username: usersWithoutNull },
-            attributes: ["id"]
-        });
-
-        const userIds = users.map((user: any) => user.id);
-        if (usersWithoutNull.length !== req.query.assignee.length) {
-            userIds.push(null);
-        }
-        query.assigneeUserId = userIds;
-    }
     //--------------Dates---------------------------------------------------
     if (req.query.createdAt) {
         if (!Array.isArray(req.query.createdAt)) {
@@ -419,89 +317,6 @@ const generateQuery = async (req: Request): Promise<any> => {
             }
 
         }
-    }
-
-
-    //--------------reporter-------------------------------------------------
-
-    if (req.query.reporter) {
-        if (typeof (req.query.reporter) === "string") {
-            req.query.reporter = [req.query.reporter];
-        }
-    }
-
-    if (req.query.reporter) {
-        req.query.reporter = req.query.reporter.map((reporter: string) => {
-            switch (reporter) {
-                case "me":
-                    if (req.user) {
-                        return req.user.username;
-                    } else {
-                        return undefined
-                    }
-                case "null":
-                    return null;
-                default:
-                    return reporter;
-            }
-        });
-
-        const usersWithoutNull: string[] = req.query.reporter.filter((assignee: string) => assignee !== null);
-
-        const users: User[] = await User.findAll({
-            where: { username: usersWithoutNull },
-            attributes: ["id"]
-        });
-
-        const userIds = users.map((user: any) => user.id);
-
-
-        if (usersWithoutNull.length !== req.query.reporter.length) {
-            userIds.push(null);
-        }
-
-        query.reporterUserId = userIds;
-    }
-
-
-    if (req.query.docType) {
-        if (typeof (req.query.docType) === "string") {
-            req.query.docType = [req.query.docType];
-        }
-    }
-
-    if (req.query.docType) {
-        const docTypes: (DocType)[] = await DocType.findAll({
-            where: {
-                code: req.query.docType, [Op.or]: [
-                    { organizationId: currentOrg.id },
-                    { organizationId: null }
-                ]
-            },
-            attributes: ["id"]
-        });
-
-        const docTypesIds = docTypes.map((docType: any) => docType.id);
-        query.docTypeId = docTypesIds;
-    }
-
-    // --------------------------------------------------------
-    if (req.query.milestone) {
-        if (typeof (req.query.milestone) === "string") {
-            req.query.milestone = [req.query.milestone];
-        }
-    }
-
-    if (req.query.milestone) {
-        const milestones: OrganizationMilestone[] = await OrganizationMilestone.findAll({
-            where: {
-                title: req.query.milestone,
-                organizationId: currentOrg.id
-            },
-            attributes: ["id"]
-        });
-
-        query.milestoneId = milestones.map((milestone: any) => milestone.id);;
     }
 
     if (req.query.docId) {

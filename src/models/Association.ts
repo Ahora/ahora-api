@@ -22,6 +22,7 @@ import { initAssociationMentions } from "./mention";
 import { initAssociationOrganizationShortcut } from "./OrganizationShortcut";
 import Reaction, { initAssociationReaction } from "./reactions";
 import { initAssociationCommentReactions } from "./commentReactions";
+import { initAssociationUserSources } from "./userSource";
 
 export default () => {
     initAssociationReaction()
@@ -47,7 +48,8 @@ export default () => {
     initAssociationUser();
     initAssociationMentions();
     initAssociationOrganizationShortcut();
-
+    initAssociationOrganizationShortcut();
+    initAssociationUserSources();
 
     //forceInit();
 }
