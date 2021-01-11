@@ -12,7 +12,6 @@ export default class DocTypeCondition implements ICondition {
 
     async generate(values: string[], organization: Organization, currentUser?: User): Promise<any> {
         const query = `SELECT id FROM "${DocType.tableName}" WHERE ("organizationId"=${organization.id} OR "organizationId" is null) AND lower(name) IN (${values.map((docType) => `'${docType.toLowerCase()}'`).join(",")})`;
-        console.log(query);
         return { [Op.in]: [literal(query)] }
     }
 }

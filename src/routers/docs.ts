@@ -172,7 +172,7 @@ conditionManager.registerField("reporter", new UserGroupMentionCondition("report
 conditionManager.registerField("assignee", new UserGroupMentionCondition("assigneeUserId"));
 conditionManager.registerField("status", new StatusCondition());
 conditionManager.registerField("milestone", new MilestoneCondition());
-conditionManager.registerField("isPrivate", new IsPrivateCondition());
+conditionManager.registerField("private", new IsPrivateCondition());
 conditionManager.registerField("docType", new DocTypeCondition());
 conditionManager.registerField("label", new LabelCondition());
 

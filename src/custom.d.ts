@@ -7,7 +7,7 @@ import DocSource from "./models/docSource";
 declare global {
   export namespace Express {
     export interface User extends AhoraUser {
-
+      DocSources: DocSource[]
     }
 
     export interface Request {

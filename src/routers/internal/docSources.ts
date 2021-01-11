@@ -1,11 +1,12 @@
 import express, { Router, Request, Response, NextFunction, request } from "express";
 import DocSource from "../../models/docSource";
-import { Op, where } from "sequelize";
+import { literal, Op, where } from "sequelize";
 import Organization from "../../models/organization";
 import db from "../../models";
 import users from "../users";
 import User from "../../models/users";
 import OrganizationTeamUser from "../../models/organizationTeamsUsers";
+import UserSource, { UserAuthSource } from "../../models/userSource";
 
 const router: Router = express.Router();
 
@@ -49,14 +50,14 @@ router.get("/internal/organizations/:organizationId/accesstokens", async (req: R
     try {
 
         const organizationId = parseInt(req.params.organizationId);
-        const users = await User.findAll({
+        const query = `SELECT "userId" FROM "${OrganizationTeamUser.tableName}" WHERE "organizationId"=${organizationId}`;
+        const users = await UserSource.findAll({
             attributes: ["accessToken"],
             where: {
-                accessToken: { [Op.not]: null }
-            },
-            include: [
-                { model: OrganizationTeamUser, where: { organizationId }, attributes: [] }
-            ]
+                authSource: UserAuthSource.Github,
+                accessToken: { [Op.not]: null },
+                userId: { [Op.in]: [literal(query)] }
+            }
         });
         res.send(users.map((user) => user.accessToken));
     } catch (error) {

@@ -89,7 +89,7 @@ export const initAssociationUser = () => {
     User.hasMany(UserSource, { foreignKey: "userId", onDelete: 'CASCADE' });
     User.hasMany(Comment, { foreignKey: "authorUserId", onDelete: 'CASCADE', as: "author", });
     User.belongsTo(OrganizationTeam, { foreignKey: "teamId", onDelete: 'CASCADE' });
-    Doc.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    User.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
 }
 
 export default User;

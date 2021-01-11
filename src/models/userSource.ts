@@ -74,7 +74,4 @@ export const initAssociationUserSources = () => {
     UserSource.belongsTo(User, { foreignKey: "userId", onDelete: 'CASCADE' });
 }
 
-
-UserSource.sync({ force: true });
-
 export default UserSource;

@@ -19,7 +19,10 @@ passport.serializeUser(function (user: any, cb: any) {
 
 passport.deserializeUser(async (id: number, cb) => {
     try {
-        const user: User | null = await User.findOne({ where: { id } });
+        const user: User | null = await User.findOne({
+            where: { id }
+        });
+
         cb(null, user);
 
     } catch (error) {
@@ -57,7 +60,7 @@ passport.use(new GoogleStrategy({
 
             if (existingUserSource != null) {
                 const updatedInstances = await UserSource.update(userToUpdateOrCreate, { where: { id: existingUserSource.id } });
-                const user: User | null = await User.findOne({ where: { id: existingUserSource.userId, authSource: UserAuthSource.Google } });
+                const user: User | null = await User.findOne({ where: { id: existingUserSource.userId } });
                 if (user) {
                     cb(undefined, user);
                 }
@@ -95,6 +98,7 @@ passport.use(new GitHubStrategy({
                 where: { authSourceId: profile.id, authSource: UserAuthSource.Github }
             });
 
+
             let email: string | null = null;
             if (profile.emails && profile.emails.length > 0) {
                 email = profile.emails[0].value
@@ -112,8 +116,9 @@ passport.use(new GitHubStrategy({
             }
 
             if (existingUserSource != null) {
-                const updatedInstances = await UserSource.update(userToUpdateOrCreate, { where: { id: existingUserSource.id } });
-                const user: User | null = await User.findOne({ where: { id: existingUserSource.userId, authSource: UserAuthSource.Google } });
+                await UserSource.update(userToUpdateOrCreate, { where: { id: existingUserSource.id } });
+
+                const user: User | null = await User.findOne({ where: { id: existingUserSource.userId } });
                 if (user) {
                     cb(undefined, user);
                 }
