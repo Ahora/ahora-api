@@ -115,7 +115,7 @@ Comment.beforeSave(async (instance) => {
 
 Comment.afterDestroy(async (instance) => {
     await Promise.all([
-        updateCommentsNumberAndTime(instance.docId, new Date()),
+        updateCommentsNumberAndTime(instance.docId, (instance.sourceId) ? undefined : new Date()),
         updateLastView(instance.docId, instance.authorUserId)
     ]);
 });
