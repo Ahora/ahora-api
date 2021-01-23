@@ -38,6 +38,8 @@ class Organization extends Model {
     public defaultStatus!: number | null; // for nullable fields
     public paymentInfo!: PaymentData | null; // for nullable fields
     public orgType!: OrganizationType;
+    public locale!: string | null;
+    public isRTL!: boolean;
 
 
     // timestamps!
@@ -75,6 +77,15 @@ Organization.init({
     description: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+    locale: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    isRTL: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
     },
     orgType: {
         type: DataTypes.INTEGER,

@@ -118,14 +118,12 @@ app.use("/api/organizations/:login", async (req: Request, res: Response, next: N
 app.get("/api/organizations/:login", async (req: Request, res: Response) => {
   if (req.org) {
     res.send({
-      login: req.org.login,
-      displayName: req.org.displayName,
-      id: req.org.id,
-      orgType: req.org.orgType,
+      ...req.org.toJSON(),
       permission: req.orgPermission,
-      defaultStatus: req.org.defaultStatus,
-      hasPayment: !!req.org.paymentInfo
     });
+  }
+  else {
+    res.status(404).send();
   }
 });
 app.use("/api/payments", paymentsRoute);
