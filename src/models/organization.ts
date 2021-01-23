@@ -39,6 +39,7 @@ class Organization extends Model {
     public paymentInfo!: PaymentData | null; // for nullable fields
     public orgType!: OrganizationType;
     public locale!: string | null;
+    public defaultDomain!: string | null;
     public isRTL!: boolean;
 
 
@@ -86,6 +87,10 @@ Organization.init({
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false
+    },
+    defaultDomain: {
+        type: DataTypes.STRING,
+        allowNull: true
     },
     orgType: {
         type: DataTypes.INTEGER,

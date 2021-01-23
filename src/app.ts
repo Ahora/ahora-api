@@ -34,6 +34,8 @@ import internalDocSourceRoute from "./routers/internal/docSources";
 import usersInternalRoute from "./routers/internal/users";
 
 import githubRouter from "./routers/github";
+import { underscoredIf } from "sequelize/types/lib/utils";
+import { getStatusesFromStrings } from "./helpers/docs/db";
 
 initAssociation();
 
@@ -102,11 +104,30 @@ app.use("/api/organizations/:login", async (req: Request, res: Response, next: N
       if (req.org.orgType == OrganizationType.Public) {
         next();
       } else {
-        //We are in private mode!
+
         if (req.orgPermission) {
           next();
         } else {
-          res.status(401).send();
+          if (req.org.defaultDomain) {
+
+            let emailDomain: string | undefined = undefined;
+            if (req.user && req.user.email) {
+              const emailSplit = req.user.email.split("@");
+              if (emailSplit.length > 1) {
+                emailDomain = emailSplit[1];
+              }
+            }
+
+            if (emailDomain && emailDomain === req.org.defaultDomain) {
+              next();
+            }
+            else {
+              res.status(401).send();
+            }
+          }
+          else {
+            res.status(401).send();
+          }
         }
       }
     } else {

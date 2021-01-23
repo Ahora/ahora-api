@@ -3,6 +3,7 @@ import routeCreate from "./base";
 import Organization, { OrganizationType } from "../models/organization";
 import OrganizationTeamUser, { TeamUserType } from "../models/organizationTeamsUsers";
 import OrganizationTeam from "../models/organizationTeams";
+import { Op } from "sequelize";
 
 
 //Create default statuses, update default status.
@@ -41,8 +42,17 @@ const getAdditionalParams = async (req: Request): Promise<any> => {
             attributes: ["organizationId"],
             where: { userId: req.user!.id }
         });
+
+        const query: any = {};
+        query.id = currentUserPermissions.map(per => per.organizationId);
+        if (req.user.email) {
+            const emailSplit = req.user.email.split("@");
+            if (emailSplit.length > 1) {
+                query.defaultDomain = emailSplit[1];
+            }
+        }
         return {
-            id: currentUserPermissions.map(per => per.organizationId)
+            [Op.or]: query
         }
     }
     else {
