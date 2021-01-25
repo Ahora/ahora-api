@@ -467,32 +467,35 @@ export default (path: string) => {
 
     router.post(`${path}/:id/assignee`, async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const toUserId: number = req.body.userId;
+            const toUserId: number | null = req.body.userId;
             const docId = parseInt(req.params.id);
-            const user: User | null = await getUserFromId(toUserId);
+            let user: User | null = null;
+            if (toUserId) {
+                user = await getUserFromId(toUserId);
+            }
             let prevAssignee: User | null = null;
             if (req.doc && req.doc.assigneeUserId) {
                 prevAssignee = await getUserFromId(req.doc.assigneeUserId);
             }
 
-            if (user) {
-                const [recordsUpdated, updatedDocs] = await Doc.update({
-                    assigneeUserId: user.id,
-                    updatedAt: new Date()
-                }, { where: { id: req.params.id } });
-                await addUserToWatchersList(docId, user.id);
-                if (req.user) {
-                    await updateLastView(docId, req.user.id);
-                    const comment = await addAssigneeComment(docId, prevAssignee, user, req.user);
-                    await reportCommentToWS(req.org!.login, req.doc!.isPrivate, comment, "docupdate");
-                }
+            const [recordsUpdated, updatedDocs] = await Doc.update({
+                assigneeUserId: toUserId,
+                updatedAt: new Date()
+            }, { where: { id: req.params.id } });
 
-                if (updatedDocs && updatedDocs.length > 0)
-                    reportDocToWS(req.org!.login, updatedDocs[0], "put");
-                res.send(user);
-            } else {
-                res.status(400).send();
+            if (toUserId) {
+                await addUserToWatchersList(docId, toUserId);
             }
+            if (req.user) {
+                await updateLastView(docId, req.user.id);
+                const comment = await addAssigneeComment(docId, prevAssignee, user, req.user);
+                await reportCommentToWS(req.org!.login, req.doc!.isPrivate, comment, "docupdate");
+            }
+
+            if (updatedDocs && updatedDocs.length > 0)
+                reportDocToWS(req.org!.login, updatedDocs[0], "put");
+            res.send(user);
+
         } catch (error) {
             next(error);
         }

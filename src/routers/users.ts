@@ -1,41 +1,44 @@
 import { Request, Response, NextFunction } from "express";
 import routeCreate from "./base";
-import db from "../models/index";
 import { literal, Op } from "sequelize";
 import User from "../models/users";
 import { OrganizationType } from "../models/organization";
+import { UserAuthSource } from "../models/userSource";
 
-const getAdditionalParams = async (req: Request): Promise<any> => {
+const getAdditionalParams = (req: Request): any => {
     const query: any = {};
 
-    /*//Search relevant users onbly for private organizations.
-    if (req.org!.orgType === OrganizationType.Private) {
-        //const usersQuery = `SELECT "userId" FROM organizationteamsusers WHERE "organizationId"=${req.org!.id}`;
-        //query.id = { [Op.in]: [literal(usersQuery)] };
+    if (req.query.userType) {
+        query.userType = req.query.userType;
     }
-    else {
-        //Allow to search only github accounts for public organizations
-        query.authSource = UserAuthSource.Github;
-    }
-    */
 
+    const usersQuery = `SELECT "userId" FROM organizationteamsusers WHERE "organizationId"=${req.org!.id}`;
+
+    const ors: any = {};
+    ors.id = { [Op.in]: [literal(usersQuery)] };
+
+    if (req.org!.defaultDomain) {
+        ors.email = { [Op.iLike]: `%${req.org?.defaultDomain}` }
+    }
+    query[Op.or] = ors;
 
     if (req.query.q) {
-        query[Op.or] = [
-            {
-                username: {
-                    [Op.iLike]: `%${req.query.q.trim()}%`
+        query[Op.and] = {
+            [Op.or]: [
+                {
+                    username: {
+                        [Op.iLike]: `%${req.query.q.trim()}%`
+                    }
+                },
+                {
+                    displayName: {
+                        [Op.iLike]: `%${req.query.q.trim()}%`
+                    }
                 }
-            },
-            {
-                displayName: {
-                    [Op.iLike]: `%${req.query.q.trim()}%`
-                }
-            }
-        ];
+            ]
+        };
     }
     return query;
-
 }
 
 export default (path: string) => {
