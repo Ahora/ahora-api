@@ -3,6 +3,8 @@ import Organization from "../../../../models/organization";
 import OrganizationTeamUser from "../../../../models/organizationTeamsUsers";
 import User, { UserType } from "../../../../models/users";
 import ICondition from "./ICondition";
+const queryGenerator: any = OrganizationTeamUser.sequelize!.getQueryInterface().QueryGenerator;
+
 
 export default class UserGroupMentionCondition implements ICondition {
 
@@ -48,7 +50,13 @@ export default class UserGroupMentionCondition implements ICondition {
                 return currentUser.id;
             }
             else {
-                const query = `select "userId" from ${OrganizationTeamUser.tableName} where "teamId"=${currentUser.teamId}`;
+                const query: string = queryGenerator.selectQuery(
+                    OrganizationTeamUser.tableName, {
+                    where: {
+                        teamId: currentUser.teamId
+                    },
+                    attributes: ["userId"]
+                });
                 return { [Op.in]: [literal(query)] }
             }
         })

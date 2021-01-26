@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import routeCreate from "./base";
 import { literal, Op } from "sequelize";
-import User from "../models/users";
-import { OrganizationType } from "../models/organization";
-import { UserAuthSource } from "../models/userSource";
+import User, { UserType } from "../models/users";
 
 const getAdditionalParams = (req: Request): any => {
     const query: any = {};
@@ -20,6 +18,8 @@ const getAdditionalParams = (req: Request): any => {
     if (req.org!.defaultDomain) {
         ors.email = { [Op.iLike]: `%${req.org?.defaultDomain}` }
     }
+
+    ors[Op.and] = { userType: UserType.Group, organizationId: req.org!.id };
     query[Op.or] = ors;
 
     if (req.query.q) {

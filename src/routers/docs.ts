@@ -40,6 +40,7 @@ import DocTypeCondition from "../helpers/groups/docs/conditions/DocTypeCondition
 import MilestoneCondition from "../helpers/groups/docs/conditions/MilestoneCondition";
 import IsPrivateCondition from "../helpers/groups/docs/conditions/IsPrivateCondition";
 import LabelCondition from "../helpers/groups/docs/conditions/LabelCondition";
+import MentionCondition from "../helpers/groups/docs/conditions/MentionCondition";
 
 const afterPost = async (doc: Doc, req: Request): Promise<Doc> => {
     await updateLabels(doc, req);
@@ -175,6 +176,8 @@ conditionManager.registerField("milestone", new MilestoneCondition());
 conditionManager.registerField("private", new IsPrivateCondition());
 conditionManager.registerField("docType", new DocTypeCondition());
 conditionManager.registerField("label", new LabelCondition());
+conditionManager.registerField("mention", new MentionCondition());
+
 
 const generateQuery = async (req: Request): Promise<any> => {
 
@@ -206,7 +209,7 @@ const generateQuery = async (req: Request): Promise<any> => {
     }
 
     //--------------Relevant To-------------------------------------------------
-
+    /*
     if (req.query.mention) {
         if (typeof (req.query.mention) === "string") {
             req.query.mention = [req.query.mention];
@@ -251,6 +254,7 @@ const generateQuery = async (req: Request): Promise<any> => {
             };
         }
     }
+    */
 
 
     //--------------Dates---------------------------------------------------
