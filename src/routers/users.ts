@@ -17,8 +17,14 @@ const getAdditionalParams = (req: Request): any => {
         where: { organizationId: req.org!.id }
     });
 
-    const ors: any[] = [];
-    ors.push({ id: { [Op.in]: [literal(usersQuery)] } });
+    //Add default organization users
+    const ors: any[] = [
+        {
+            id: { [Op.in]: [literal(usersQuery)] }
+        },
+        {
+            organizationId: req.org!.id
+        }];
 
     if (req.org!.defaultDomain) {
         ors.push({ email: { [Op.iLike]: `%${req.org?.defaultDomain}` } });
@@ -50,8 +56,8 @@ export default (path: string) => {
     const router = routeCreate(path, User, (req) => {
         return {
             post: { disable: true },
-            getSingle: { getAdditionalParams, useOnlyAdditionalParams: true, attributes: ["id", "username", "displayName", "avatar"] },
-            get: { order: [["displayName", "asc"]], getAdditionalParams, useOnlyAdditionalParams: true, attributes: ["id", "username", "displayName", "avatar"] },
+            getSingle: { getAdditionalParams, useOnlyAdditionalParams: true, attributes: ["id", "username", "displayName", "avatar", "userType"] },
+            get: { order: [["displayName", "asc"]], getAdditionalParams, useOnlyAdditionalParams: true, attributes: ["id", "username", "displayName", "avatar", "userType"] },
             put: { getAdditionalParams, disable: true },
             delete: { getAdditionalParams, disable: true }
         }

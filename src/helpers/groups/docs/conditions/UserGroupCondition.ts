@@ -37,11 +37,12 @@ export default class UserGroupMentionCondition implements ICondition {
             attributes: ["id", "userType", "teamId"]
         });
 
-        const orConditions: any[] = users.map((currentUser) => {
-            if (currentUser.userType === UserType.User) {
-                return currentUser.id;
-            }
-            else {
+        const conditions: any[] = [];
+
+
+        users.forEach((currentUser) => {
+            conditions.push(currentUser.id);
+            if (currentUser.userType === UserType.Group) {
                 const query: string = buildQuery(
                     OrganizationTeamUser.tableName, {
                     where: {
@@ -49,16 +50,17 @@ export default class UserGroupMentionCondition implements ICondition {
                     },
                     attributes: ["userId"]
                 });
-                return { [Op.in]: [literal(query)] }
+                conditions.push({ [Op.in]: [literal(query)] });
+                conditions.push(currentUser.id);
             }
         });
 
         if (hasNull) {
-            orConditions.push(null)
+            conditions.push(null)
         }
 
         return {
-            [Op.or]: orConditions
+            [Op.or]: conditions
         }
     }
 
