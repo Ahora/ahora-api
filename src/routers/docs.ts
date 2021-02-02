@@ -199,7 +199,7 @@ const generateQuery = async (req: Request): Promise<any> => {
     for (const key in req.query) {
         const condition = conditionManager.getField(key);
         if (condition) {
-            if (typeof (req.query[key]) === "string") {
+            if (!Array.isArray(req.query[key])) {
                 req.query[key] = [req.query[key]];
             }
             const values = req.query[key];

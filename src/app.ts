@@ -164,12 +164,11 @@ app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments")
 app.use("/api/organizations/:login", routeAttachmentstCreate("/attachments"));
 app.use("/api/organizations/:login", organizationNotificationRoute("/notifications"));
 app.use("/api/organizations/:login", organizationShortcutRoute("/shortcuts"));
-
+app.use("/api/organizations/:login", usersCreate("/users"));
 app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watchers"));
 app.use(routeOrgCreate("/api/organizations"));
 
 app.use("/api/github", githubRouter);
-app.use("/api/organizations/:login", usersCreate("/users"));
 app.use("/auth", authRouter);
 
 export default app;

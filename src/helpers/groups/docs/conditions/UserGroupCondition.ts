@@ -1,10 +1,9 @@
 import { literal, Op } from "sequelize";
+import { buildQuery } from "../../../../models";
 import Organization from "../../../../models/organization";
 import OrganizationTeamUser from "../../../../models/organizationTeamsUsers";
 import User, { UserType } from "../../../../models/users";
 import ICondition from "./ICondition";
-const queryGenerator: any = OrganizationTeamUser.sequelize!.getQueryInterface().QueryGenerator;
-
 
 export default class UserGroupMentionCondition implements ICondition {
 
@@ -16,41 +15,34 @@ export default class UserGroupMentionCondition implements ICondition {
     }
 
     async generate(values: string[], organization: Organization, currentUser?: User): Promise<any> {
-        const t = values.map((username: string) => {
-            switch (username) {
+        let hasNull: boolean = false;
+        const userIds: any[] = values.map((usernameOrId: string) => {
+            switch (usernameOrId) {
                 case "me":
                     if (currentUser) {
-                        return currentUser.username;
+                        return currentUser.id;
                     } else {
                         return null
                     }
+                case null:
+                    hasNull = true;
+                    return null;
                 default:
-                    return username;
+                    return parseInt(usernameOrId);
             }
         });
 
-        const usersWithoutNull: string[] = t.filter((username) => username !== null) as any;
         const users: User[] = await User.findAll({
-            where: {
-                [Op.or]: [
-                    {
-                        organizationId: organization.id,
-                        username: usersWithoutNull
-                    }, {
-                        organizationId: null,
-                        username: usersWithoutNull
-                    }
-                ]
-            },
+            where: { id: userIds },
             attributes: ["id", "userType", "teamId"]
         });
 
-        const orConditions = users.map((currentUser) => {
+        const orConditions: any[] = users.map((currentUser) => {
             if (currentUser.userType === UserType.User) {
                 return currentUser.id;
             }
             else {
-                const query: string = queryGenerator.selectQuery(
+                const query: string = buildQuery(
                     OrganizationTeamUser.tableName, {
                     where: {
                         teamId: currentUser.teamId
@@ -59,7 +51,11 @@ export default class UserGroupMentionCondition implements ICondition {
                 });
                 return { [Op.in]: [literal(query)] }
             }
-        })
+        });
+
+        if (hasNull) {
+            orConditions.push(null)
+        }
 
         return {
             [Op.or]: orConditions

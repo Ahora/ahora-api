@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import routeCreate from "./base";
 import { literal, Op } from "sequelize";
 import User, { UserType } from "../models/users";
+import { buildQuery } from "../models";
+import OrganizationTeamUser from "../models/organizationTeamsUsers";
 
 const getAdditionalParams = (req: Request): any => {
     const query: any = {};
@@ -10,16 +12,18 @@ const getAdditionalParams = (req: Request): any => {
         query.userType = req.query.userType;
     }
 
-    const usersQuery = `SELECT "userId" FROM organizationteamsusers WHERE "organizationId"=${req.org!.id}`;
+    const usersQuery = buildQuery(OrganizationTeamUser.tableName, {
+        attributes: ["userId"],
+        where: { organizationId: req.org!.id }
+    });
 
-    const ors: any = {};
-    ors.id = { [Op.in]: [literal(usersQuery)] };
+    const ors: any[] = [];
+    ors.push({ id: { [Op.in]: [literal(usersQuery)] } });
 
     if (req.org!.defaultDomain) {
-        ors.email = { [Op.iLike]: `%${req.org?.defaultDomain}` }
+        ors.push({ email: { [Op.iLike]: `%${req.org?.defaultDomain}` } });
     }
 
-    ors[Op.and] = { userType: UserType.Group, organizationId: req.org!.id };
     query[Op.or] = ors;
 
     if (req.query.q) {
@@ -38,6 +42,7 @@ const getAdditionalParams = (req: Request): any => {
             ]
         };
     }
+
     return query;
 }
 

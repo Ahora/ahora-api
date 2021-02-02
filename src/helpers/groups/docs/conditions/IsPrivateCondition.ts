@@ -8,6 +8,13 @@ export default class IsPrivateCondition implements ICondition {
     }
 
     async generate(values: string[], organization: Organization, currentUser?: User): Promise<any> {
-        return values[0] === "true"
+        switch (values[0]) {
+            case "true":
+                return true;
+            case "false":
+                return false;
+            default:
+                return [true, false]
+        }
     }
 }

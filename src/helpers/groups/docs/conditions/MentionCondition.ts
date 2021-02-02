@@ -1,4 +1,5 @@
 import { literal, Op, } from "sequelize";
+import { buildQuery } from "../../../../models";
 import Mention from "../../../../models/mention";
 import Organization from "../../../../models/organization";
 import OrganizationTeamUser from "../../../../models/organizationTeamsUsers";
@@ -19,7 +20,7 @@ export default class MentionCondition extends UserGroupMentionCondition {
     async generate(values: string[], organization: Organization, currentUser?: User): Promise<any> {
         const result: any = await super.generate(values, organization, currentUser);
 
-        const mentionsQuery: string = queryGenerator.selectQuery(
+        const mentionsQuery: string = buildQuery(
             Mention.tableName, {
             where: {
                 userId: result
@@ -27,7 +28,7 @@ export default class MentionCondition extends UserGroupMentionCondition {
             attributes: ["docId"]
         });
 
-        const watchersQuery: string = queryGenerator.selectQuery(
+        const watchersQuery: string = buildQuery(
             Mention.tableName, {
             where: {
                 userId: result
@@ -37,8 +38,8 @@ export default class MentionCondition extends UserGroupMentionCondition {
 
         return {
             [Op.or]: [
-                { id: { [Op.in]: [literal(mentionsQuery.replace(";", ""))] } },
-                { id: { [Op.in]: [literal(watchersQuery.replace(";", ""))] } }
+                { id: { [Op.in]: [literal(mentionsQuery)] } },
+                { id: { [Op.in]: [literal(watchersQuery)] } }
             ]
         }
     }
