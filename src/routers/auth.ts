@@ -2,8 +2,9 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import passport from "passport";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import { GIT_HUB_CLIENT_ID, GIT_HUB_CLIENT_SECRET, GIT_HUB_CALLBACK_URL, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL } from "../config";
-import User, { UserAuthSource } from "../models/users";
+import User, { UserType } from "../models/users";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import UserSource, { UserAuthSource } from "../models/userSource";
 
 // Configure Passport authenticated session persistence.
 //
@@ -18,7 +19,10 @@ passport.serializeUser(function (user: any, cb: any) {
 
 passport.deserializeUser(async (id: number, cb) => {
     try {
-        const user: User | null = await User.findOne({ where: { id } });
+        const user: User | null = await User.findOne({
+            where: { id }
+        });
+
         cb(null, user);
 
     } catch (error) {
@@ -34,8 +38,8 @@ passport.use(new GoogleStrategy({
 },
     async (accessToken, refreshToken, profile, cb) => {
         try {
-            let existingUser: User | null = await User.findOne({
-                where: { gitHubId: profile.id, authSource: UserAuthSource.Google }
+            let existingUserSource: UserSource | null = await UserSource.findOne({
+                where: { authSourceId: profile.id, authSource: UserAuthSource.Google }
             });
 
             let email: string | null = null;
@@ -45,19 +49,18 @@ passport.use(new GoogleStrategy({
 
 
             const userToUpdateOrCreate: any = {
-                displayName: profile.displayName,
                 authSource: UserAuthSource.Google,
-                gitHubId: profile.id,
-                username: email?.replace(/[^a-zA-Z0-9]/g, ""),
-                avatar: (profile.photos && profile.photos.length > 0) && profile.photos[0].value,
+                authSourceId: profile.id,
+                username: email?.replace(/[^a-zA-Z0-9]/g, "")!,
+                avatar: (profile.photos && profile.photos.length > 0) ? profile.photos[0].value : null,
                 accessToken,
                 refreshToken,
                 email: email
             }
 
-            if (existingUser != null) {
-                const updatedInstances = await User.update(userToUpdateOrCreate, { where: { id: existingUser.id, authSource: UserAuthSource.Google } });
-                const user: User | null = await User.findOne({ where: { id: existingUser.id, authSource: UserAuthSource.Google } });
+            if (existingUserSource != null) {
+                const updatedInstances = await UserSource.update(userToUpdateOrCreate, { where: { id: existingUserSource.id } });
+                const user: User | null = await User.findOne({ where: { id: existingUserSource.userId } });
                 if (user) {
                     cb(undefined, user);
                 }
@@ -66,7 +69,14 @@ passport.use(new GoogleStrategy({
                 }
 
             } else {
-                const newUser: User = await User.create(userToUpdateOrCreate);
+                const newUser = await User.create({
+                    displayName: profile.displayName,
+                    username: userToUpdateOrCreate.username,
+                    avatar: userToUpdateOrCreate.avatar,
+                    userType: UserType.User,
+                    email: email
+                });
+                const userSource: UserSource = await UserSource.create({ ...userToUpdateOrCreate, userId: newUser.id });
                 cb(undefined, newUser);
             }
         }
@@ -84,9 +94,10 @@ passport.use(new GitHubStrategy({
 },
     async (accessToken: string, refreshToken: string, profile: any, cb: any) => {
         try {
-            let existingUser: User | null = await User.findOne({
-                where: { gitHubId: profile.id, authSource: UserAuthSource.Github }
+            let existingUserSource: UserSource | null = await UserSource.findOne({
+                where: { authSourceId: profile.id, authSource: UserAuthSource.Github }
             });
+
 
             let email: string | null = null;
             if (profile.emails && profile.emails.length > 0) {
@@ -95,29 +106,36 @@ passport.use(new GitHubStrategy({
 
 
             const userToUpdateOrCreate: any = {
-                displayName: profile.displayName,
                 authSource: UserAuthSource.Github,
-                gitHubId: profile.id,
-                username: profile.username!,
-                avatar: (profile.photos && profile.photos.length > 0) && profile.photos[0].value,
+                authSourceId: profile.id,
+                username: profile.username,
+                avatar: (profile.photos && profile.photos.length > 0) ? profile.photos[0].value : null,
                 accessToken,
                 refreshToken,
                 email: email
             }
 
-            if (existingUser != null) {
-                const updatedInstances = await User.update(userToUpdateOrCreate, { where: { id: existingUser.id, authSource: UserAuthSource.Github } });
-                const user: User | null = await User.findOne({ where: { id: existingUser.id, authSource: UserAuthSource.Github } });
+            if (existingUserSource != null) {
+                await UserSource.update(userToUpdateOrCreate, { where: { id: existingUserSource.id } });
+
+                const user: User | null = await User.findOne({ where: { id: existingUserSource.userId } });
                 if (user) {
-                    cb(null, user);
+                    cb(undefined, user);
                 }
                 else {
                     cb(new Error("notfound"));
                 }
 
             } else {
-                const newUser: User = await User.create(userToUpdateOrCreate);
-                cb(null, newUser);
+                const newUser = await User.create({
+                    displayName: profile.displayName,
+                    username: userToUpdateOrCreate.username,
+                    avatar: userToUpdateOrCreate.avatar,
+                    userType: UserType.User,
+                    email: email
+                });
+                const userSource: UserSource = await UserSource.create({ ...userToUpdateOrCreate, userId: newUser.id });
+                cb(undefined, newUser);
             }
         }
         catch (error) {

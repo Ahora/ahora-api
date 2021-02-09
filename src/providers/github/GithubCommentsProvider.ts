@@ -1,18 +1,13 @@
 import { ICommentProvider, CommentInput } from "../ICommentsProvider";
 import { RestCollectorClient, RestCollectorRequest } from "rest-collector";
-import User from "../../models/users";
-
+import { decorateGithubRequest } from "./decorateGithubRequest";
 
 const githubCommentClient = new RestCollectorClient("https://api.github.com/repos/{organizationId}/{repository}/issues/{issueId}/comments", {
-    decorateRequest: (req: RestCollectorRequest, bag: User) => {
-        req.headers.Authorization = `token ${bag.accessToken}`;
-    }
+    decorateRequest: decorateGithubRequest
 });
 
 const githubUpdateDeleteCommentsClient = new RestCollectorClient("https://api.github.com/repos/{organizationId}/{repository}/issues/comments/{commentId}", {
-    decorateRequest: (req: RestCollectorRequest, bag: User) => {
-        req.headers.Authorization = `token ${bag.accessToken}`;
-    }
+    decorateRequest: decorateGithubRequest
 });
 export default class GithubCommentsProvider implements ICommentProvider {
     public async addComment(commentInput: CommentInput): Promise<number> {

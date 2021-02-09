@@ -34,6 +34,8 @@ import internalDocSourceRoute from "./routers/internal/docSources";
 import usersInternalRoute from "./routers/internal/users";
 
 import githubRouter from "./routers/github";
+import { underscoredIf } from "sequelize/types/lib/utils";
+import { getStatusesFromStrings } from "./helpers/docs/db";
 
 initAssociation();
 
@@ -102,11 +104,30 @@ app.use("/api/organizations/:login", async (req: Request, res: Response, next: N
       if (req.org.orgType == OrganizationType.Public) {
         next();
       } else {
-        //We are in private mode!
+
         if (req.orgPermission) {
           next();
         } else {
-          res.status(401).send();
+          if (req.org.defaultDomain) {
+
+            let emailDomain: string | undefined = undefined;
+            if (req.user && req.user.email) {
+              const emailSplit = req.user.email.split("@");
+              if (emailSplit.length > 1) {
+                emailDomain = emailSplit[1];
+              }
+            }
+
+            if (emailDomain && emailDomain === req.org.defaultDomain) {
+              next();
+            }
+            else {
+              res.status(401).send();
+            }
+          }
+          else {
+            res.status(401).send();
+          }
         }
       }
     } else {
@@ -118,14 +139,12 @@ app.use("/api/organizations/:login", async (req: Request, res: Response, next: N
 app.get("/api/organizations/:login", async (req: Request, res: Response) => {
   if (req.org) {
     res.send({
-      login: req.org.login,
-      displayName: req.org.displayName,
-      id: req.org.id,
-      orgType: req.org.orgType,
+      ...req.org.toJSON(),
       permission: req.orgPermission,
-      defaultStatus: req.org.defaultStatus,
-      hasPayment: !!req.org.paymentInfo
     });
+  }
+  else {
+    res.status(404).send();
   }
 });
 app.use("/api/payments", paymentsRoute);
@@ -145,12 +164,11 @@ app.use("/api/organizations/:login", routeCommentCreate("/docs/:docId/comments")
 app.use("/api/organizations/:login", routeAttachmentstCreate("/attachments"));
 app.use("/api/organizations/:login", organizationNotificationRoute("/notifications"));
 app.use("/api/organizations/:login", organizationShortcutRoute("/shortcuts"));
-
+app.use("/api/organizations/:login", usersCreate("/users"));
 app.use("/api/organizations/:login", routeDocWatchersCreate("/docs/:docId/watchers"));
 app.use(routeOrgCreate("/api/organizations"));
 
 app.use("/api/github", githubRouter);
-app.use("/api/organizations/:login", usersCreate("/users"));
 app.use("/auth", authRouter);
 
 export default app;

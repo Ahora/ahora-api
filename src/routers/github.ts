@@ -1,16 +1,12 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import { RestCollectorClient, RestCollectorRequest } from "rest-collector";
-import User from "../models/users";
+import { decorateGithubRequest } from "../providers/github/decorateGithubRequest";
 
 const router: Router = express.Router();
 
-const githubSearchUsersClient = new RestCollectorClient("https://api.github.com/search/users", {
-    decorateRequest: (req: RestCollectorRequest, bag: User) => {
-        req.headers.Authorization = `token ${bag.accessToken}`;
-    }
-});
+const githubSearchUsersClient = new RestCollectorClient("https://api.github.com/search/users", { decorateRequest: decorateGithubRequest });
 
-const githubRepoClient: RestCollectorClient = new RestCollectorClient("https://api.github.com/search/repositories");
+const githubRepoClient: RestCollectorClient = new RestCollectorClient("https://api.github.com/search/repositories", { decorateRequest: decorateGithubRequest });
 
 router.get('/search/users', async (req: Request, res: Response, next: NextFunction) => {
     try {

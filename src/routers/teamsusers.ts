@@ -1,6 +1,5 @@
 import express, { Router, Request, Response, NextFunction } from "express";
 import routeCreate, { RouterHooks } from "./base";
-import db from "../models/index";
 import OrganizationTeamUser from "../models/organizationTeamsUsers";
 import User from "../models/users";
 

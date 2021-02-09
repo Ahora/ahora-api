@@ -1,5 +1,5 @@
 // src/models/index.ts
-import { Sequelize, Model } from "sequelize";
+import { Sequelize, Model, FindOptions } from "sequelize";
 import { DB_CONNECTION_STRING } from "../config";
 
 export interface IDBInterface {
@@ -35,5 +35,12 @@ db.sequelize.sync({ force: false }).then(() => {
   console.error("database sync failed", error);
 });
 */
+
+
+const queryGenerator: any = db.sequelize.getQueryInterface().QueryGenerator;
+export const buildQuery = (tableName: string, options: FindOptions): string => {
+  const sql: string = queryGenerator.selectQuery(tableName, options);
+  return sql.replace(";", "");
+}
 
 export default db;

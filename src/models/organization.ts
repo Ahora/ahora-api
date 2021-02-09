@@ -10,6 +10,7 @@ import OrganizationStatus from './docStatuses';
 import DocSource from './docSource';
 import OrganizationTeamUser from './organizationTeamsUsers';
 import OrganizationShortcut from './OrganizationShortcut';
+import User from './users';
 
 export enum OrganizationType {
     Public = 0,
@@ -37,6 +38,9 @@ class Organization extends Model {
     public defaultStatus!: number | null; // for nullable fields
     public paymentInfo!: PaymentData | null; // for nullable fields
     public orgType!: OrganizationType;
+    public locale!: string | null;
+    public defaultDomain!: string | null;
+    public isRTL!: boolean;
 
 
     // timestamps!
@@ -72,6 +76,19 @@ Organization.init({
         allowNull: true
     },
     description: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    locale: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    isRTL: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+    },
+    defaultDomain: {
         type: DataTypes.STRING,
         allowNull: true
     },
@@ -119,6 +136,7 @@ export const initAssociationOrganization = () => {
     Organization.hasMany(OrganizationTeamUser, { foreignKey: "organizationId", onDelete: 'CASCADE' });
     Organization.hasMany(DocSource, { foreignKey: "organizationId", onDelete: 'CASCADE', as: "organizationFK" });
     Organization.hasMany(DocType, { foreignKey: "organizationId", onDelete: 'CASCADE' });
+    Organization.hasMany(User, { foreignKey: "userId", onDelete: 'CASCADE' });
 }
 
 export default Organization;
