@@ -56,7 +56,7 @@ export default (path: string) => {
     const router = routeCreate(path, User, (req) => {
         return {
             post: { disable: true },
-            getSingle: { getAdditionalParams, useOnlyAdditionalParams: true, attributes: ["id", "username", "displayName", "avatar", "userType"] },
+            getSingle: { useOnlyAdditionalParams: true, attributes: ["id", "username", "displayName", "avatar", "userType"] },
             get: { order: [["displayName", "asc"]], getAdditionalParams, useOnlyAdditionalParams: true, attributes: ["id", "username", "displayName", "avatar", "userType"] },
             put: { getAdditionalParams, disable: true },
             delete: { getAdditionalParams, disable: true }
