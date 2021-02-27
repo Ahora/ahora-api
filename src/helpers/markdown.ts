@@ -3,7 +3,6 @@ import DocSource from "../models/docSource";
 import User from "../models/users";
 const github = require("remark-github");
 const html = require('remark-html');
-import sanitize from "rehype-sanitize";
 
 export const markdownToHTML = async (markdown: string, docSource?: DocSource): Promise<string> => {
 

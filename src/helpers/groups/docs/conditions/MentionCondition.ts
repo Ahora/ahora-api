@@ -1,9 +1,11 @@
 import { literal, Op, } from "sequelize";
 import { buildQuery } from "../../../../models";
+import DocWatcher, { DocWatcherType } from "../../../../models/docWatcher";
 import Mention from "../../../../models/mention";
 import Organization from "../../../../models/organization";
 import OrganizationTeamUser from "../../../../models/organizationTeamsUsers";
 import User from "../../../../models/users";
+import docWatchers from "../../../../routers/docWatchers";
 import UserGroupMentionCondition from "./UserGroupCondition";
 const queryGenerator: any = OrganizationTeamUser.sequelize!.getQueryInterface().QueryGenerator;
 
@@ -29,9 +31,11 @@ export default class MentionCondition extends UserGroupMentionCondition {
         });
 
         const watchersQuery: string = buildQuery(
-            Mention.tableName, {
+            DocWatcher.tableName, {
             where: {
-                userId: result
+                userId: result,
+                watcherType: DocWatcherType.Watcher
+
             },
             attributes: ["docId"]
         });

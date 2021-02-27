@@ -46,7 +46,7 @@ app.use(session({
     conString: DB_CONNECTION_STRING
   }),
 
-  secret: COOKIE_SECRET,
+  secret: COOKIE_SECRET + "12",
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 365 * 24 * 60 * 60 * 1000 } // 365 days
@@ -82,6 +82,9 @@ app.get("/api/me", (req: Request, res: Response, next: NextFunction) => {
       avatar: req.user.avatar,
       id: req.user.id
     });
+  }
+  else {
+    res.send();
   }
 
 });

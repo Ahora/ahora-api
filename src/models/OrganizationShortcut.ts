@@ -64,7 +64,6 @@ OrganizationShortcut.init({
     tableName: "organizationshortcut",
 });
 
-OrganizationShortcut.sync();
 export const initAssociationOrganizationShortcut = () => {
     OrganizationShortcut.belongsTo(Organization, { foreignKey: "organizationId", onDelete: 'CASCADE' });
     OrganizationShortcut.belongsTo(User, { foreignKey: "userId", onDelete: 'CASCADE' });
