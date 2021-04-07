@@ -28,7 +28,7 @@ import DocTeamGroupHandler from "../helpers/groups/groups/DocTeamGroupHandler";
 import OrganizationTeam from "../models/organizationTeams";
 import OrganizationTeamUser from "../models/organizationTeamsUsers";
 import moment from "moment";
-import { updateLastView } from "../helpers/docs/db";
+import { updateLastView, updatUserStar } from "../helpers/docs/db";
 import DocWatcher, { DocWatcherType } from "../models/docWatcher";
 import Comment from "../models/comments";
 import { addAssigneeComment, addIsPrivateComment, addLabelAddedComment, addStatusComment } from "../helpers/comments";
@@ -41,6 +41,7 @@ import MilestoneCondition from "../helpers/groups/docs/conditions/MilestoneCondi
 import IsPrivateCondition from "../helpers/groups/docs/conditions/IsPrivateCondition";
 import LabelCondition from "../helpers/groups/docs/conditions/LabelCondition";
 import MentionCondition from "../helpers/groups/docs/conditions/MentionCondition";
+import StarCondition from "../helpers/groups/docs/conditions/StarCondition";
 
 const afterPost = async (doc: Doc, req: Request): Promise<Doc> => {
     await updateLabels(doc, req);
@@ -172,6 +173,7 @@ const conditionManager = new ConditionManager();
 conditionManager.registerField("reporter", new UserGroupMentionCondition("reporterUserId"));
 conditionManager.registerField("assignee", new UserGroupMentionCondition("assigneeUserId"));
 conditionManager.registerField("status", new StatusCondition());
+conditionManager.registerField("star", new StarCondition());
 conditionManager.registerField("milestone", new MilestoneCondition());
 conditionManager.registerField("private", new IsPrivateCondition());
 conditionManager.registerField("docType", new DocTypeCondition());
@@ -417,7 +419,7 @@ export default (path: string) => {
             ];
 
             if (req && req.user) {
-                includes.push({ required: false, as: "lastView", model: DocUserView, attributes: ["updatedAt"], where: { userId: req.user.id } })
+                includes.push({ required: false, as: "lastView", model: DocUserView, where: { userId: req.user.id } })
             }
             after = afterGet
             limit = (req && req.query) ? parseInt(req.query.limit) : 30;
@@ -594,6 +596,20 @@ export default (path: string) => {
             if (req.user) {
                 const watcher = await addUserToWatchersList(parseInt(req.params.id), req.user.id);
                 res.send(watcher);
+            } else {
+                res.status(400).send();
+            }
+        } catch (error) {
+            next(error);
+        }
+    });
+
+    router.post(`${path}/:id/star`, async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const docId = parseInt(req.params.id);
+            if (req.user) {
+                updatUserStar(docId, req.user.id, req.body.star);
+                res.send();
             } else {
                 res.status(400).send();
             }

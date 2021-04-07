@@ -129,3 +129,11 @@ export const updateLastView = async (docId: number, userId: number): Promise<voi
         docId
     });
 }
+
+export const updatUserStar = async (docId: number, userId: number, star: boolean): Promise<void> => {
+    await DocUserView.upsert({
+        userId,
+        star,
+        docId
+    });
+}

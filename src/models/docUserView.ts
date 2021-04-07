@@ -8,6 +8,7 @@ class DocUserView extends Model {
     public id!: number;
     public docId!: number;
     public userId!: number;
+    public star!: boolean;
 
     // timestamps!
     public readonly createdAt!: Date;
@@ -22,6 +23,11 @@ DocUserView.init({
     },
     docId: {
         type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    star: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
         allowNull: false
     },
     userId: {
