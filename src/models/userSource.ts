@@ -15,6 +15,8 @@ class UserSource extends Model {
     public authSourceId!: string | null;
     public email!: string | null;
     public accessToken!: string | null;
+    public location!: string | null;
+    public company!: string | null;
     public refreshToken!: string | null;
     public userId!: number;
 }
@@ -54,10 +56,19 @@ UserSource.init({
         type: DataTypes.STRING,
         allowNull: true
     },
+    location: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    company: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     userId: {
         type: DataTypes.INTEGER,
         allowNull: false
-    }
+    },
+
 }, {
     sequelize: db.sequelize,
     tableName: "usersources",

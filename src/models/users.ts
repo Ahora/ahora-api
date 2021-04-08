@@ -26,7 +26,8 @@ class User extends Model {
     public organizationId!: number | null;
     public avatar!: string | null;
     public teamId!: number | null;
-
+    public location!: string | null;
+    public company!: string | null;
 }
 
 User.init({
@@ -61,6 +62,14 @@ User.init({
         allowNull: true
     },
     email: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    location: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    company: {
         type: DataTypes.STRING,
         allowNull: true
     }

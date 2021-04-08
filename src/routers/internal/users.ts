@@ -16,7 +16,9 @@ const beforePost = async (entity: UserSource, req?: Request): Promise<UserSource
     const user = await User.create({
         username: entity.username,
         email: entity.email,
-        avatar: entity.avatar
+        avatar: entity.avatar,
+        location: entity.location,
+        company: entity.company
     });
 
     entity.userId = user.id;
