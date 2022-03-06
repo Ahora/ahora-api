@@ -42,6 +42,8 @@ import IsPrivateCondition from "../helpers/groups/docs/conditions/IsPrivateCondi
 import LabelCondition from "../helpers/groups/docs/conditions/LabelCondition";
 import MentionCondition from "../helpers/groups/docs/conditions/MentionCondition";
 import StarCondition from "../helpers/groups/docs/conditions/StarCondition";
+import DocRepoerterLocationGroupHandler from "../helpers/groups/groups/DocRepoerterLocationGroupHandler";
+import DocRepoerterCompanyGroupHandler from "../helpers/groups/groups/DocRepoerterCompanyGroupHandler";
 
 const afterPost = async (doc: Doc, req: Request): Promise<Doc> => {
     await updateLabels(doc, req);
@@ -351,6 +353,8 @@ const generateQuery = async (req: Request): Promise<any> => {
 
 const groupByManager = new GroupByManager();
 groupByManager.registerGroup("reporter", new DocRepoterGroupHandler());
+groupByManager.registerGroup("location", new DocRepoerterLocationGroupHandler());
+groupByManager.registerGroup("company", new DocRepoerterCompanyGroupHandler());
 groupByManager.registerGroup("assignee", new DocAssigneeGroupHandler());
 groupByManager.registerGroup("status", new DocStatusGroupHandler());
 groupByManager.registerGroup("label", new DocLabelGroupHandler());
