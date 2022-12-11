@@ -77,7 +77,7 @@
     "connect-sqlite3": "^0.9.11",
     "cookie-parser": "^1.4.5",
     "dotenv": "^4.0.0",
-    "express": "^4.16.4",
+    "express": "^4.17.3",
     "express-session": "^1.17.0",
     "install": "^0.13.0",
     "mailparser": "^2.7.7",
